@@ -133,21 +133,39 @@ interface StreamingToolCall {
 function getMetadataField(metadata: any, field: string, defaultValue: any = null): any {
   if (!metadata) return defaultValue;
   
+  // Debug the type of metadata
+  console.log(`[METADATA DEBUG] Type: ${typeof metadata}, Field: ${field}`);
+  
   // If it's already an object
   if (typeof metadata === 'object' && !Array.isArray(metadata)) {
-    return metadata[field] !== undefined ? metadata[field] : defaultValue;
+    // Log the metadata object to see its structure
+    console.log('[METADATA DEBUG] Object metadata:', metadata);
+    
+    // Check if the field exists directly in the object
+    if (metadata[field] !== undefined) {
+      console.log(`[METADATA DEBUG] Found field ${field} in object:`, metadata[field]);
+      return metadata[field];
+    }
+    return defaultValue;
   }
   
   // If it's a string, try to parse it
   if (typeof metadata === 'string') {
     try {
+      console.log('[METADATA DEBUG] Attempting to parse string metadata:', metadata);
       const parsed = JSON.parse(metadata);
-      return parsed[field] !== undefined ? parsed[field] : defaultValue;
+      if (parsed[field] !== undefined) {
+        console.log(`[METADATA DEBUG] Found field ${field} in parsed string:`, parsed[field]);
+        return parsed[field];
+      }
+      return defaultValue;
     } catch (e) {
+      console.log('[METADATA DEBUG] Error parsing metadata string:', e);
       return defaultValue;
     }
   }
   
+  console.log('[METADATA DEBUG] Metadata is neither object nor string, returning default value');
   return defaultValue;
 }
 
@@ -324,14 +342,20 @@ function renderAttachments(
 
 // Restore the safeJsonParse function with improved typing
 function safeJsonParse<T>(jsonString: any, defaultValue: T): T {
+  // Debug the input
+  console.log(`[JSON PARSE DEBUG] Type: ${typeof jsonString}`);
+  
   if (typeof jsonString !== 'string') {
     // If it's already an object, just return it
+    console.log('[JSON PARSE DEBUG] Already an object, returning as-is');
     return jsonString as unknown as T;
   }
   
   try {
+    console.log('[JSON PARSE DEBUG] Attempting to parse string:', jsonString.substring(0, 50) + (jsonString.length > 50 ? '...' : ''));
     return JSON.parse(jsonString) as T;
   } catch (e) {
+    console.log('[JSON PARSE DEBUG] Error parsing JSON string:', e);
     return defaultValue;
   }
 }
@@ -902,13 +926,24 @@ export default function ThreadPage({
 
   // Automatically detect and populate tool calls from messages
   useEffect(() => {
+    console.log('[TOOL CALLS] Starting tool calls detection');
+    
     // Calculate historical tool pairs regardless of panel state
     const historicalToolPairs: ToolCallInput[] = [];
     const assistantMessages = messages.filter(
       (m) => m.type === 'assistant' && m.message_id,
     );
+    
+    console.log(`[TOOL CALLS] Found ${assistantMessages.length} assistant messages`);
 
     assistantMessages.forEach((assistantMsg) => {
+      console.log('[TOOL CALLS] Processing assistant message:', assistantMsg.message_id);
+      console.log('[TOOL CALLS] Assistant message content type:', typeof assistantMsg.content);
+      console.log('[TOOL CALLS] Assistant message content preview:', 
+        typeof assistantMsg.content === 'string' 
+          ? assistantMsg.content.substring(0, 50) 
+          : JSON.stringify(assistantMsg.content).substring(0, 50));
+      
       const resultMessage = messages.find((toolMsg) => {
         if (
           toolMsg.type !== 'tool' ||
@@ -917,34 +952,82 @@ export default function ThreadPage({
         )
           return false;
         const metadata = getMetadataField(toolMsg.metadata, 'assistant_message_id');
-        return metadata === assistantMsg.message_id;
+        const matches = metadata === assistantMsg.message_id;
+        if (matches) {
+          console.log('[TOOL CALLS] Found matching tool message:', toolMsg.message_id);
+        }
+        return matches;
       });
 
       if (resultMessage) {
-        // Determine tool name from assistant message content
+        console.log('[TOOL CALLS] Processing result message for assistant:', assistantMsg.message_id);
+        
+        // Determine tool name from assistant message content or metadata
         let toolName = 'unknown';
         try {
-          // Try to extract tool name from content
-          const xmlMatch = assistantMsg.content.match(
-            /<([a-zA-Z\-_]+)(?:\s+[^>]*)?>|<([a-zA-Z\-_]+)(?:\s+[^>]*)?\/>/,
-          );
-          if (xmlMatch) {
-            toolName = xmlMatch[1] || xmlMatch[2] || 'unknown';
-          } else {
-            // Fallback to checking for tool_calls JSON structure
-            const assistantContentParsed = safeJsonParse<{
-              tool_calls?: Array<{ name: string }>
-            }>(assistantMsg.content, { tool_calls: [] });
-
-            if (
-              assistantContentParsed && 
-              assistantContentParsed.tool_calls &&
-              assistantContentParsed.tool_calls.length > 0
-            ) {
-              toolName = assistantContentParsed.tool_calls[0].name || 'unknown';
+          // First check if we can extract the tool type from parsing_details in metadata
+          if (resultMessage.metadata) {
+            // Try to get from metadata parsing_details
+            const parsingDetails = getMetadataField(resultMessage.metadata, 'parsing_details');
+            console.log('[TOOL CALLS] Parsing details:', parsingDetails);
+            
+            if (parsingDetails && parsingDetails.raw_chunk) {
+              // Extract from the raw XML chunk - this is the most reliable way
+              const xmlTagMatch = parsingDetails.raw_chunk.match(/<([a-zA-Z\-_]+)(?:\s+[^>]*)?>|<([a-zA-Z\-_]+)(?:\s+[^>]*)?\/>/);
+              if (xmlTagMatch) {
+                toolName = xmlTagMatch[1] || xmlTagMatch[2] || 'unknown';
+                console.log('[TOOL CALLS] Extracted tool name from raw_chunk:', toolName);
+              }
             }
           }
-        } catch {}
+          
+          // If we couldn't get it from the metadata, try from the assistant message content
+          if (toolName === 'unknown' && typeof assistantMsg.content === 'string') {
+            console.log('[TOOL CALLS] Trying to extract tool name from assistant content');
+            
+            // Try to extract tool name from content
+            const xmlMatch = assistantMsg.content.match(
+              /<([a-zA-Z\-_]+)(?:\s+[^>]*)?>|<([a-zA-Z\-_]+)(?:\s+[^>]*)?\/>/,
+            );
+            
+            if (xmlMatch) {
+              toolName = xmlMatch[1] || xmlMatch[2] || 'unknown';
+              console.log('[TOOL CALLS] Found XML tool name from assistant content:', toolName);
+            } else {
+              console.log('[TOOL CALLS] No XML tags found in assistant content, checking for JSON structure');
+              
+              // Fallback to checking for tool_calls JSON structure
+              try {
+                const assistantContentParsed = safeJsonParse<{
+                  tool_calls?: Array<{ name?: string; function?: { name?: string } }>
+                }>(assistantMsg.content, { tool_calls: [] });
+                
+                console.log('[TOOL CALLS] Parsed assistant content:', assistantContentParsed);
+                
+                if (
+                  assistantContentParsed && 
+                  assistantContentParsed.tool_calls &&
+                  assistantContentParsed.tool_calls.length > 0
+                ) {
+                  // Try to get name directly or from function.name
+                  const toolCall = assistantContentParsed.tool_calls[0];
+                  toolName = 
+                    toolCall.name || 
+                    (toolCall.function ? toolCall.function.name : null) || 
+                    'unknown';
+                  
+                  console.log('[TOOL CALLS] Found tool name from JSON:', toolName);
+                }
+              } catch (parseError) {
+                console.log('[TOOL CALLS] Error parsing assistant content as JSON:', parseError);
+              }
+            }
+          }
+        } catch (error) {
+          console.log('[TOOL CALLS] Error extracting tool name:', error);
+        }
+
+        console.log('[TOOL CALLS] Final determined tool name:', toolName);
 
         // Skip adding <ask> tags to the tool calls
         if (toolName === 'ask' || toolName === 'complete') {
@@ -953,32 +1036,76 @@ export default function ThreadPage({
 
         let isSuccess = true;
         try {
-          const toolContent = resultMessage.content?.toLowerCase() || '';
-          isSuccess = !(
-            toolContent.includes('failed') ||
-            toolContent.includes('error') ||
-            toolContent.includes('failure')
-          );
-        } catch {}
+          console.log('[TOOL CALLS] Processing tool result message');
+          console.log('[TOOL CALLS] Content type:', typeof resultMessage.content);
+          
+          // Prepare content for historicalToolPairs
+          let assistantCallContent = '';
+          let toolResultContent = '';
+          
+          // Process assistant content
+          if (typeof assistantMsg.content === 'string') {
+            assistantCallContent = assistantMsg.content;
+          } else if (assistantMsg.content && typeof assistantMsg.content === 'object') {
+            try {
+              assistantCallContent = JSON.stringify(assistantMsg.content);
+            } catch (e) {
+              console.log('[TOOL CALLS] Failed to stringify assistant content:', e);
+              assistantCallContent = 'Error: Content could not be displayed';
+            }
+          }
+          
+          // Process tool result content
+          if (typeof resultMessage.content === 'string') {
+            toolResultContent = resultMessage.content;
+          } else if (resultMessage.content && typeof resultMessage.content === 'object') {
+            try {
+              toolResultContent = JSON.stringify(resultMessage.content, null, 2);
+            } catch (e) {
+              console.log('[TOOL CALLS] Failed to stringify tool result content:', e);
+              toolResultContent = 'Error: Content could not be displayed';
+            }
+          }
+          
+          console.log('[TOOL CALLS] Final assistantCallContent type:', typeof assistantCallContent);
+          console.log('[TOOL CALLS] Final toolResultContent type:', typeof toolResultContent);
+          
+          // Determine success by checking for error indicators in a lower-cased version of the content
+          const lowerCaseContent = (typeof toolResultContent === 'string' ? toolResultContent : '').toLowerCase();
+          const errorIndicators = ['failed', 'error', 'failure', 'exception'];
+          const hasErrorIndicator = errorIndicators.some(indicator => lowerCaseContent.includes(indicator));
+          
+          // Set success state
+          isSuccess = !hasErrorIndicator;
+          console.log('[TOOL CALLS] Success determination:', isSuccess);
 
-        historicalToolPairs.push({
-          assistantCall: {
-            name: toolName,
-            content: assistantMsg.content,
-            timestamp: assistantMsg.created_at,
-          },
-          toolResult: {
-            content: resultMessage.content,
-            isSuccess: isSuccess,
-            timestamp: resultMessage.created_at,
-          },
-        });
+          historicalToolPairs.push({
+            assistantCall: {
+              name: toolName,
+              content: assistantCallContent,
+              timestamp: assistantMsg.created_at,
+            },
+            toolResult: {
+              content: toolResultContent,
+              isSuccess: isSuccess,
+              timestamp: resultMessage.created_at,
+            },
+          });
+        } catch (error) {
+          console.log('[TOOL CALLS] Error processing tool result:', error);
+        }
       }
+    });
+
+    // Log the tool pairs we've found
+    console.log(`[TOOL CALLS] Found ${historicalToolPairs.length} tool pairs`);
+    historicalToolPairs.forEach((pair, idx) => {
+      console.log(`[TOOL CALLS] Tool pair ${idx}:`, pair.assistantCall?.name);
     });
 
     // Always update the toolCalls state
     setToolCalls(historicalToolPairs);
-
+    
     // Logic to open/update the panel index
     if (historicalToolPairs.length > 0) {
       // If the panel is open (or was just auto-opened) and the user didn't close it
@@ -1084,53 +1211,94 @@ export default function ThreadPage({
         'Tool Name:',
         clickedToolName,
       );
-
-      // Find the index of the tool call associated with the clicked assistant message
-      const toolIndex = toolCalls.findIndex((tc) => {
-        // Check if the assistant message ID matches the one stored in the tool result's metadata
-        if (!tc.toolResult?.content || tc.toolResult.content === 'STREAMING')
-          return false; // Skip streaming or incomplete calls
-
-        // Directly compare assistant message IDs if available in the structure
-        // Find the original assistant message based on the ID
-        const assistantMessage = messages.find(
-          (m) =>
-            m.message_id === clickedAssistantMessageId &&
-            m.type === 'assistant',
-        );
-        if (!assistantMessage) return false;
-
-        // Find the corresponding tool message using metadata
-        const toolMessage = messages.find((m) => {
-          if (m.type !== 'tool' || !m.metadata) return false;
-          const metadata = getMetadataField(m.metadata, 'assistant_message_id');
-          return metadata === assistantMessage.message_id;
-        });
-
-        // Check if the current toolCall 'tc' corresponds to this assistant/tool message pair
-        return (
-          tc.assistantCall?.content === assistantMessage.content &&
-          tc.toolResult?.content === toolMessage?.content
-        );
+      
+      // Log toolCalls for debugging
+      console.log('[PAGE] Available tool calls:', toolCalls.length);
+      toolCalls.forEach((tc, idx) => {
+        console.log(`[PAGE] Tool call ${idx}: name=${tc.assistantCall?.name}`);
       });
 
-      if (toolIndex !== -1) {
-        console.log(
-          `[PAGE] Found tool call at index ${toolIndex} for assistant message ${clickedAssistantMessageId}`,
-        );
-        setCurrentToolIndex(toolIndex);
-        setIsSidePanelOpen(true); // Explicitly open the panel
-      } else {
-        console.warn(
-          `[PAGE] Could not find matching tool call in toolCalls array for assistant message ID: ${clickedAssistantMessageId}`,
-        );
-        toast.info('Could not find details for this tool call.');
-        // Optionally, still open the panel but maybe at the last index or show a message?
-        // setIsSidePanelOpen(true);
+      // Find all assistant messages by ID (should be just one)
+      const assistantMessage = messages.find(
+        (m) => m.message_id === clickedAssistantMessageId && m.type === 'assistant'
+      );
+      
+      if (!assistantMessage) {
+        console.error(`[PAGE] Could not find assistant message with ID: ${clickedAssistantMessageId}`);
+        toast.error('Could not find assistant message');
+        return;
       }
+      
+      console.log('[PAGE] Found assistant message:', assistantMessage.message_id);
+      
+      // Find tool messages that reference this assistant message
+      const matchingToolMessages = messages.filter((m) => {
+        if (m.type !== 'tool' || !m.metadata) return false;
+        const metadata = getMetadataField(m.metadata, 'assistant_message_id');
+        const isMatch = metadata === assistantMessage.message_id;
+        if (isMatch) {
+          console.log('[PAGE] Found matching tool message:', m.message_id);
+        }
+        return isMatch;
+      });
+      
+      if (matchingToolMessages.length === 0) {
+        console.error('[PAGE] No tool messages found for this assistant message');
+        toast.error('No tool results found for this command');
+        return;
+      }
+
+      // Look for any tool call with matching tool name
+      const toolIndex = toolCalls.findIndex((tc) => {
+        // First try to match by the specific clicked tool name
+        if (tc.assistantCall?.name?.toLowerCase() === clickedToolName.toLowerCase()) {
+          console.log('[PAGE] Found tool call with matching name:', clickedToolName);
+          return true;
+        }
+        
+        // Otherwise try to match by looking at the assistant content
+        if (typeof tc.assistantCall?.content === 'string' && 
+            tc.assistantCall.content.includes(`<${clickedToolName}`)) {
+          console.log('[PAGE] Found tool call with matching tag in content:', clickedToolName);
+          return true;
+        }
+        
+        return false;
+      });
+      
+      // If no exact match, try to find any tool call with matching assistant message ID
+      if (toolIndex === -1) {
+        // Try a less strict approach - just find any tool call where assistant content matches
+        const lessStrictMatch = toolCalls.findIndex((tc) => {
+          return tc.assistantCall?.content === assistantMessage.content;
+        });
+        
+        if (lessStrictMatch !== -1) {
+          console.log('[PAGE] Found tool call with matching assistant content at index:', lessStrictMatch);
+          setCurrentToolIndex(lessStrictMatch);
+          setIsSidePanelOpen(true);
+          return;
+        }
+        
+        // If still no match, just open the latest tool call
+        if (toolCalls.length > 0) {
+          console.log('[PAGE] No exact match found, showing latest tool call');
+          setCurrentToolIndex(toolCalls.length - 1);
+          setIsSidePanelOpen(true);
+          return;
+        }
+        
+        console.warn('[PAGE] No tool calls available to show');
+        toast.info('Could not find details for this tool call.');
+        return;
+      }
+
+      console.log(`[PAGE] Found matching tool call at index ${toolIndex}`);
+      setCurrentToolIndex(toolIndex);
+      setIsSidePanelOpen(true); // Explicitly open the panel
     },
     [messages, toolCalls],
-  ); // Add toolCalls as a dependency
+  );
 
   // Handle streaming tool calls
   const handleStreamingToolCall = useCallback(
