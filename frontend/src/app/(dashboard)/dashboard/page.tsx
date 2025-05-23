@@ -3,7 +3,7 @@
 import React, { useState, Suspense, useEffect, useRef } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
-import { Menu } from 'lucide-react';
+import { Menu, ChevronDown, Edit } from 'lucide-react';
 import {
   ChatInput,
   ChatInputHandles,
@@ -31,14 +31,48 @@ import { useAccounts } from '@/hooks/use-accounts';
 import { isLocalMode, config } from '@/lib/config';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { AgentConfigurator } from '@/components/agent-configurator';
 
 // Constant for localStorage key to ensure consistency
 const PENDING_PROMPT_KEY = 'pendingAgentPrompt';
+
+// Agent definitions
+const AGENTS = [
+  {
+    id: 'suna',
+    name: 'Suna',
+    description: 'General-purpose AI assistant for coding, writing, and problem-solving',
+  },
+  {
+    id: 'code-expert',
+    name: 'Code Expert',
+    description: 'Specialized in software development, debugging, and code reviews',
+  },
+  {
+    id: 'writer',
+    name: 'Writer',
+    description: 'Focused on content creation, copywriting, and documentation',
+  },
+  {
+    id: 'analyst',
+    name: 'Analyst',
+    description: 'Data analysis, research, and business intelligence specialist',
+  },
+];
 
 function DashboardContent() {
   const [inputValue, setInputValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autoSubmit, setAutoSubmit] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState('suna');
+  const [showAgentConfigurator, setShowAgentConfigurator] = useState(false);
   const { billingError, handleBillingError, clearBillingError } =
     useBillingError();
   const router = useRouter();
@@ -50,6 +84,8 @@ function DashboardContent() {
 
   const secondaryGradient =
     'bg-gradient-to-r from-blue-500 to-blue-500 bg-clip-text text-transparent';
+
+  const selectedAgentData = AGENTS.find(agent => agent.id === selectedAgent) || AGENTS[0];
 
   const handleSubmit = async (
     message: string,
@@ -128,6 +164,48 @@ function DashboardContent() {
     }
   };
 
+  const handleAgentChange = (value: string) => {
+    if (value === 'create-new') {
+      setShowAgentConfigurator(true);
+    } else {
+      setSelectedAgent(value);
+    }
+  };
+
+  const handleAgentConfigSave = (config: {
+    id?: string;
+    name: string;
+    systemInstructions: string;
+    selectedTools: string[];
+    isEdit: boolean;
+  }) => {
+    console.log('Agent configuration saved:', config);
+    
+    if (config.isEdit && config.id) {
+      // Update existing agent
+      toast.success(`Agent "${config.name}" updated successfully!`);
+    } else {
+      // Create new agent
+      const newAgent = {
+        id: config.name.toLowerCase().replace(/\s+/g, '-'),
+        name: config.name,
+        description: config.systemInstructions || 'Custom agent',
+        systemInstructions: config.systemInstructions,
+        selectedTools: config.selectedTools,
+      };
+      
+      setSelectedAgent(newAgent.id);
+      toast.success(`Agent "${config.name}" created successfully!`);
+    }
+    
+    setShowAgentConfigurator(false);
+  };
+
+  const handleEditAgent = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent the select from opening
+    setShowAgentConfigurator(true);
+  };
+
   // Check for pending prompt in localStorage on mount
   useEffect(() => {
     // Use a small delay to ensure we're fully mounted
@@ -178,24 +256,64 @@ function DashboardContent() {
 
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[650px] max-w-[90%]">
         <div className="flex flex-col items-center text-center mb-2 w-full">
-          <h1 className={cn('tracking-tight text-4xl font-semibold leading-tight')}>
-            Hey
-          </h1>
-          <p className="tracking-tight text-3xl font-normal text-muted-foreground/80 mt-2 flex items-center gap-2">
-            What would you like Suna to do today?
-          </p>
+          <div className="tracking-tight text-3xl font-normal text-muted-foreground/80 mt-2 flex flex-col items-center gap-1">
+            <div className="flex items-center gap-2">
+              <span>Hey, I am</span>
+              <div className="flex items-center gap-1">
+                <Select value={selectedAgent} onValueChange={handleAgentChange}>
+                  <SelectTrigger className="w-auto h-auto p-0 border-none bg-transparent hover:bg-muted/50 transition-colors rounded-md px-2 py-1 inline-flex items-center gap-1">
+                    <SelectValue asChild>
+                      <span className="text-foreground font-semibold text-3xl underline decoration-dashed underline-offset-4 decoration-muted-foreground/40">
+                        {selectedAgentData.name}
+                      </span>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="w-64">
+                    {AGENTS.map((agent) => (
+                      <SelectItem key={agent.id} value={agent.id} className="p-3">
+                        <div className="font-medium">{agent.name}</div>
+                      </SelectItem>
+                    ))}
+                    <div className="border-t mt-1 pt-1">
+                      <SelectItem value="create-new" className="text-muted-foreground">
+                        + Create new agent
+                      </SelectItem>
+                    </div>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 hover:bg-muted/50 transition-colors"
+                  onClick={handleEditAgent}
+                >
+                  <Edit className="h-3 w-3 text-muted-foreground" />
+                </Button>
+              </div>
+            </div>
+            <span>What would you like me to do today?</span>
+          </div>
         </div>
 
         <ChatInput
           ref={chatInputRef}
           onSubmit={handleSubmit}
           loading={isSubmitting}
-          placeholder="Describe what you need help with..."
+          placeholder={`Describe what you need help with using ${selectedAgentData.name}...`}
           value={inputValue}
           onChange={setInputValue}
           hideAttachments={false}
         />
       </div>
+
+      {/* Agent Configurator Modal */}
+      <AgentConfigurator
+        isOpen={showAgentConfigurator}
+        onClose={() => setShowAgentConfigurator(false)}
+        onSave={handleAgentConfigSave}
+        availableAgents={AGENTS}
+        currentAgentId={selectedAgent}
+      />
 
       {/* Billing Error Alert */}
       <BillingErrorAlert
