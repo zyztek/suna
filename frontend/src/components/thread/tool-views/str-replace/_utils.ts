@@ -162,7 +162,7 @@ export const generateCharDiff = (oldText: string, newText: string): CharDiffPart
   const parsedOldText = parseNewlines(oldText);
   const parsedNewText = parseNewlines(newText);
   
-  let prefixLength = 0;
+  const prefixLength = 0;
   while (
     prefixLength < parsedOldText.length &&
     prefixLength < parsedNewText.length &&
@@ -171,8 +171,8 @@ export const generateCharDiff = (oldText: string, newText: string): CharDiffPart
     prefixLength++;
   }
 
-  let oldSuffixStart = parsedOldText.length;
-  let newSuffixStart = parsedNewText.length;
+  const oldSuffixStart = parsedOldText.length;
+  const newSuffixStart = parsedNewText.length;
   while (
     oldSuffixStart > prefixLength &&
     newSuffixStart > prefixLength &&

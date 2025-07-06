@@ -412,7 +412,7 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                 };
                                 const groupedMessages: MessageGroup[] = [];
                                 let currentGroup: MessageGroup | null = null;
-                                let assistantGroupCounter = 0; // Counter for assistant groups
+                                const assistantGroupCounter = 0; // Counter for assistant groups
 
                                 displayMessages.forEach((message, index) => {
                                     const messageType = message.type;
@@ -684,7 +684,7 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
 
                                                                 const renderedToolResultIds = new Set<string>();
                                                                 const elements: React.ReactNode[] = [];
-                                                                let assistantMessageCount = 0; // Move this outside the loop
+                                                                const assistantMessageCount = 0; // Move this outside the loop
 
                                                                 group.messages.forEach((message, msgIndex) => {
                                                                     if (message.type === 'assistant') {

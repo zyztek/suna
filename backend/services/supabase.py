@@ -12,7 +12,7 @@ from datetime import datetime
 
 class DBConnection:
     """Singleton database connection manager using Supabase."""
-    
+
     _instance: Optional['DBConnection'] = None
     _initialized = False
     _client: Optional[AsyncClient] = None
@@ -30,12 +30,12 @@ class DBConnection:
         """Initialize the database connection."""
         if self._initialized:
             return
-                
+
         try:
             supabase_url = config.SUPABASE_URL
             # Use service role key preferentially for backend operations
             supabase_key = config.SUPABASE_SERVICE_ROLE_KEY or config.SUPABASE_ANON_KEY
-            
+
             if not supabase_url or not supabase_key:
                 logger.error("Missing required environment variables for Supabase connection")
                 raise RuntimeError("SUPABASE_URL and a key (SERVICE_ROLE_KEY or ANON_KEY) environment variables must be set.")
@@ -71,11 +71,11 @@ class DBConnection:
 
     async def upload_base64_image(self, base64_data: str, bucket_name: str = "browser-screenshots") -> str:
         """Upload a base64 encoded image to Supabase storage and return the URL.
-        
+
         Args:
             base64_data (str): Base64 encoded image data (with or without data URL prefix)
             bucket_name (str): Name of the storage bucket to upload to
-            
+
         Returns:
             str: Public URL of the uploaded image
         """
@@ -83,15 +83,15 @@ class DBConnection:
             # Remove data URL prefix if present
             if base64_data.startswith('data:'):
                 base64_data = base64_data.split(',')[1]
-            
+
             # Decode base64 data
             image_data = base64.b64decode(base64_data)
-            
+
             # Generate unique filename
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             unique_id = str(uuid.uuid4())[:8]
             filename = f"image_{timestamp}_{unique_id}.png"
-            
+
             # Upload to Supabase storage
             client = await self.client
             storage_response = await client.storage.from_(bucket_name).upload(
@@ -99,15 +99,14 @@ class DBConnection:
                 image_data,
                 {"content-type": "image/png"}
             )
-            
+
             # Get public URL
             public_url = await client.storage.from_(bucket_name).get_public_url(filename)
-            
+
             logger.debug(f"Successfully uploaded image to {public_url}")
             return public_url
-            
+
         except Exception as e:
             logger.error(f"Error uploading base64 image: {e}")
             raise RuntimeError(f"Failed to upload image: {str(e)}")
-
 

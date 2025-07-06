@@ -28,7 +28,6 @@ rabbitmq_port = int(os.getenv('RABBITMQ_PORT', 5672))
 rabbitmq_broker = RabbitmqBroker(host=rabbitmq_host, port=rabbitmq_port, middleware=[dramatiq.middleware.AsyncIO()])
 dramatiq.set_broker(rabbitmq_broker)
 
-
 _initialized = False
 db = DBConnection()
 instance_id = "single"
@@ -83,10 +82,10 @@ async def run_agent_background(
 
     # Idempotency check: prevent duplicate runs
     run_lock_key = f"agent_run_lock:{agent_run_id}"
-    
+
     # Try to acquire a lock for this agent run
     lock_acquired = await redis.set(run_lock_key, instance_id, nx=True, ex=redis.REDIS_KEY_TTL)
-    
+
     if not lock_acquired:
         # Check if the run is already being handled by another instance
         existing_instance = await redis.get(run_lock_key)
@@ -170,7 +169,6 @@ async def run_agent_background(
 
         # Ensure active run key exists and has TTL
         await redis.set(instance_active_key, "running", ex=redis.REDIS_KEY_TTL)
-
 
         # Initialize agent generator
         agent_gen = run_agent(

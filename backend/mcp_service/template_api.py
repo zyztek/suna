@@ -76,7 +76,7 @@ async def create_agent_template(
 ):
     """Create an agent template from an existing agent"""
     logger.info(f"Creating template from agent {request.agent_id} for user {user_id}")
-    
+
     try:
         template_id = await template_manager.create_template_from_agent(
             agent_id=request.agent_id,
@@ -84,12 +84,12 @@ async def create_agent_template(
             make_public=request.make_public,
             tags=request.tags
         )
-        
+
         return {
             "template_id": template_id,
             "message": "Template created successfully"
         }
-        
+
     except Exception as e:
         logger.error(f"Error creating template: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to create template: {str(e)}")
@@ -102,19 +102,19 @@ async def publish_template(
 ):
     """Publish a template to the marketplace"""
     logger.info(f"Publishing template {template_id} for user {user_id}")
-    
+
     try:
         success = await template_manager.publish_template(
             template_id=template_id,
             creator_id=user_id,
             tags=request.tags
         )
-        
+
         if not success:
             raise HTTPException(status_code=404, detail="Template not found or access denied")
-        
+
         return {"message": "Template published to marketplace successfully"}
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -128,18 +128,18 @@ async def unpublish_template(
 ):
     """Unpublish a template from the marketplace"""
     logger.info(f"Unpublishing template {template_id} for user {user_id}")
-    
+
     try:
         success = await template_manager.unpublish_template(
             template_id=template_id,
             creator_id=user_id
         )
-        
+
         if not success:
             raise HTTPException(status_code=404, detail="Template not found or access denied")
-        
+
         return {"message": "Template unpublished from marketplace successfully"}
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -153,7 +153,7 @@ async def install_template(
 ):
     """Install a template as an agent instance"""
     logger.info(f"Installing template {request.template_id} for user {user_id}")
-    
+
     try:
         result = await template_manager.install_template(
             template_id=request.template_id,
@@ -163,9 +163,9 @@ async def install_template(
             profile_mappings=request.profile_mappings,
             custom_mcp_configs=request.custom_mcp_configs
         )
-        
+
         return InstallationResponse(**result)
-        
+
     except Exception as e:
         logger.error(f"Error installing template: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to install template: {str(e)}")
@@ -180,12 +180,12 @@ async def get_marketplace_templates(
 ):
     """Get public templates from the marketplace"""
     logger.info(f"Getting marketplace templates for user {user_id}")
-    
+
     try:
         tag_list = None
         if tags:
             tag_list = [tag.strip() for tag in tags.split(',') if tag.strip()]
-        
+
         templates = await template_manager.get_marketplace_templates(
             limit=limit,
             offset=offset,
@@ -194,7 +194,7 @@ async def get_marketplace_templates(
         )
         print("templates", templates)
         return [TemplateResponse(**template) for template in templates]
-        
+
     except Exception as e:
         logger.error(f"Error getting marketplace templates: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get marketplace templates: {str(e)}")
@@ -207,16 +207,16 @@ async def get_my_templates(
 ):
     """Get all templates created by the current user"""
     logger.info(f"Getting user templates for user {user_id}")
-    
+
     try:
         templates = await template_manager.get_user_templates(
             creator_id=user_id,
             limit=limit,
             offset=offset
         )
-        
+
         return [TemplateResponse(**template) for template in templates]
-        
+
     except Exception as e:
         logger.error(f"Error getting user templates: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get user templates: {str(e)}")
@@ -228,17 +228,17 @@ async def get_template_details(
 ):
     """Get detailed information about a specific template"""
     logger.info(f"Getting template {template_id} details for user {user_id}")
-    
+
     try:
         template = await template_manager.get_template(template_id)
-        
+
         if not template:
             raise HTTPException(status_code=404, detail="Template not found")
-        
+
         # Check access permissions
         if not template.is_public and template.creator_id != user_id:
             raise HTTPException(status_code=403, detail="Access denied to private template")
-        
+
         return TemplateResponse(
             template_id=template.template_id,
             name=template.name,
@@ -261,9 +261,9 @@ async def get_template_details(
             avatar=template.avatar,
             avatar_color=template.avatar_color
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error getting template details: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get template details: {str(e)}") 
+        raise HTTPException(status_code=500, detail=f"Failed to get template details: {str(e)}")

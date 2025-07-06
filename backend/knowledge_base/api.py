@@ -79,10 +79,10 @@ async def get_thread_knowledge_base(
 ):
     if not await is_enabled("knowledge_base"):
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="This feature is not available at the moment."
         )
-    
+
     """Get all knowledge base entries for a thread"""
     try:
         client = await db.client
@@ -95,10 +95,10 @@ async def get_thread_knowledge_base(
             'p_thread_id': thread_id,
             'p_include_inactive': include_inactive
         }).execute()
-        
+
         entries = []
         total_tokens = 0
-        
+
         for entry_data in result.data or []:
             entry = KnowledgeBaseEntryResponse(
                 entry_id=entry_data['entry_id'],
@@ -113,13 +113,13 @@ async def get_thread_knowledge_base(
             )
             entries.append(entry)
             total_tokens += entry_data.get('content_tokens', 0) or 0
-        
+
         return KnowledgeBaseListResponse(
             entries=entries,
             total_count=len(entries),
             total_tokens=total_tokens
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -134,19 +134,19 @@ async def create_knowledge_base_entry(
 ):
     if not await is_enabled("knowledge_base"):
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="This feature is not available at the moment."
         )
-    
+
     """Create a new knowledge base entry for a thread"""
     try:
         client = await db.client
         thread_result = await client.table('threads').select('account_id').eq('thread_id', thread_id).execute()
         if not thread_result.data:
             raise HTTPException(status_code=404, detail="Thread not found")
-        
+
         account_id = thread_result.data[0]['account_id']
-        
+
         insert_data = {
             'thread_id': thread_id,
             'account_id': account_id,
@@ -155,14 +155,14 @@ async def create_knowledge_base_entry(
             'content': entry_data.content,
             'usage_context': entry_data.usage_context
         }
-        
+
         result = await client.table('knowledge_base_entries').insert(insert_data).execute()
-        
+
         if not result.data:
             raise HTTPException(status_code=500, detail="Failed to create knowledge base entry")
-        
+
         created_entry = result.data[0]
-        
+
         return KnowledgeBaseEntryResponse(
             entry_id=created_entry['entry_id'],
             name=created_entry['name'],
@@ -174,7 +174,7 @@ async def create_knowledge_base_entry(
             created_at=created_entry['created_at'],
             updated_at=created_entry['updated_at']
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -189,10 +189,10 @@ async def get_agent_knowledge_base(
 ):
     if not await is_enabled("knowledge_base"):
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="This feature is not available at the moment."
         )
-    
+
     """Get all knowledge base entries for an agent"""
     try:
         client = await db.client
@@ -205,10 +205,10 @@ async def get_agent_knowledge_base(
             'p_agent_id': agent_id,
             'p_include_inactive': include_inactive
         }).execute()
-        
+
         entries = []
         total_tokens = 0
-        
+
         for entry_data in result.data or []:
             entry = KnowledgeBaseEntryResponse(
                 entry_id=entry_data['entry_id'],
@@ -227,13 +227,13 @@ async def get_agent_knowledge_base(
             )
             entries.append(entry)
             total_tokens += entry_data.get('content_tokens', 0) or 0
-        
+
         return KnowledgeBaseListResponse(
             entries=entries,
             total_count=len(entries),
             total_tokens=total_tokens
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -248,20 +248,20 @@ async def create_agent_knowledge_base_entry(
 ):
     if not await is_enabled("knowledge_base"):
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="This feature is not available at the moment."
         )
-    
+
     """Create a new knowledge base entry for an agent"""
     try:
         client = await db.client
-        
+
         agent_result = await client.table('agents').select('account_id').eq('agent_id', agent_id).eq('account_id', user_id).execute()
         if not agent_result.data:
             raise HTTPException(status_code=404, detail="Agent not found or access denied")
-        
+
         account_id = agent_result.data[0]['account_id']
-        
+
         insert_data = {
             'agent_id': agent_id,
             'account_id': account_id,
@@ -270,14 +270,14 @@ async def create_agent_knowledge_base_entry(
             'content': entry_data.content,
             'usage_context': entry_data.usage_context
         }
-        
+
         result = await client.table('agent_knowledge_base_entries').insert(insert_data).execute()
-        
+
         if not result.data:
             raise HTTPException(status_code=500, detail="Failed to create agent knowledge base entry")
-        
+
         created_entry = result.data[0]
-        
+
         return KnowledgeBaseEntryResponse(
             entry_id=created_entry['entry_id'],
             name=created_entry['name'],
@@ -289,7 +289,7 @@ async def create_agent_knowledge_base_entry(
             created_at=created_entry['created_at'],
             updated_at=created_entry['updated_at']
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -305,20 +305,20 @@ async def upload_file_to_agent_kb(
 ):
     if not await is_enabled("knowledge_base"):
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="This feature is not available at the moment."
         )
-    
+
     """Upload and process a file for agent knowledge base"""
     try:
         client = await db.client
-        
+
         agent_result = await client.table('agents').select('account_id').eq('agent_id', agent_id).eq('account_id', user_id).execute()
         if not agent_result.data:
             raise HTTPException(status_code=404, detail="Agent not found or access denied")
-        
+
         account_id = agent_result.data[0]['account_id']
-        
+
         file_content = await file.read()
         job_id = await client.rpc('create_agent_kb_processing_job', {
             'p_agent_id': agent_id,
@@ -330,10 +330,10 @@ async def upload_file_to_agent_kb(
                 'file_size': len(file_content)
             }
         }).execute()
-        
+
         if not job_id.data:
             raise HTTPException(status_code=500, detail="Failed to create processing job")
-        
+
         job_id = job_id.data
         background_tasks.add_task(
             process_file_background,
@@ -344,19 +344,18 @@ async def upload_file_to_agent_kb(
             file.filename,
             file.content_type or 'application/octet-stream'
         )
-        
+
         return {
             "job_id": job_id,
             "message": "File upload started. Processing in background.",
             "filename": file.filename
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error uploading file to agent {agent_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to upload file")
-
 
 @router.get("/agents/{agent_id}/processing-jobs", response_model=List[ProcessingJobResponse])
 async def get_agent_processing_jobs(
@@ -366,10 +365,10 @@ async def get_agent_processing_jobs(
 ):
     if not await is_enabled("knowledge_base"):
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="This feature is not available at the moment."
         )
-    
+
     """Get processing jobs for an agent"""
     try:
         client = await db.client
@@ -377,12 +376,12 @@ async def get_agent_processing_jobs(
         agent_result = await client.table('agents').select('account_id').eq('agent_id', agent_id).eq('account_id', user_id).execute()
         if not agent_result.data:
             raise HTTPException(status_code=404, detail="Agent not found or access denied")
-        
+
         result = await client.rpc('get_agent_kb_processing_jobs', {
             'p_agent_id': agent_id,
             'p_limit': limit
         }).execute()
-        
+
         jobs = []
         for job_data in result.data or []:
             job = ProcessingJobResponse(
@@ -398,9 +397,9 @@ async def get_agent_processing_jobs(
                 error_message=job_data.get('error_message')
             )
             jobs.append(job)
-        
+
         return jobs
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -416,7 +415,7 @@ async def process_file_background(
     mime_type: str
 ):
     """Background task to process uploaded files"""
-    
+
     processor = FileProcessor()
     client = await processor.db.client
     try:
@@ -424,11 +423,11 @@ async def process_file_background(
             'p_job_id': job_id,
             'p_status': 'processing'
         }).execute()
-        
+
         result = await processor.process_file_upload(
             agent_id, account_id, file_content, filename, mime_type
         )
-        
+
         if result['success']:
             await client.rpc('update_agent_kb_job_status', {
                 'p_job_id': job_id,
@@ -443,7 +442,7 @@ async def process_file_background(
                 'p_status': 'failed',
                 'p_error_message': result.get('error', 'Unknown error')
             }).execute()
-            
+
     except Exception as e:
         logger.error(f"Error in background file processing for job {job_id}: {str(e)}")
         try:
@@ -455,7 +454,6 @@ async def process_file_background(
         except:
             pass
 
-
 @router.get("/agents/{agent_id}/context")
 async def get_agent_knowledge_base_context(
     agent_id: str,
@@ -464,31 +462,31 @@ async def get_agent_knowledge_base_context(
 ):
     if not await is_enabled("knowledge_base"):
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="This feature is not available at the moment."
         )
-    
+
     """Get knowledge base context for agent prompts"""
     try:
         client = await db.client
-        
+
         agent_result = await client.table('agents').select('agent_id').eq('agent_id', agent_id).eq('account_id', user_id).execute()
         if not agent_result.data:
             raise HTTPException(status_code=404, detail="Agent not found or access denied")
-        
+
         result = await client.rpc('get_agent_knowledge_base_context', {
             'p_agent_id': agent_id,
             'p_max_tokens': max_tokens
         }).execute()
-        
+
         context = result.data if result.data else None
-        
+
         return {
             "context": context,
             "max_tokens": max_tokens,
             "agent_id": agent_id
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -503,23 +501,23 @@ async def update_knowledge_base_entry(
 ):
     if not await is_enabled("knowledge_base"):
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="This feature is not available at the moment."
         )
-    
+
     """Update a knowledge base entry (works for both thread and agent entries)"""
     try:
         client = await db.client
         entry_result = await client.table('knowledge_base_entries').select('*').eq('entry_id', entry_id).execute()
         table_name = 'knowledge_base_entries'
-        
+
         if not entry_result.data:
             entry_result = await client.table('agent_knowledge_base_entries').select('*').eq('entry_id', entry_id).execute()
             table_name = 'agent_knowledge_base_entries'
-            
+
         if not entry_result.data:
             raise HTTPException(status_code=404, detail="Knowledge base entry not found")
-        
+
         update_data = {}
         if entry_data.name is not None:
             update_data['name'] = entry_data.name
@@ -531,17 +529,17 @@ async def update_knowledge_base_entry(
             update_data['usage_context'] = entry_data.usage_context
         if entry_data.is_active is not None:
             update_data['is_active'] = entry_data.is_active
-        
+
         if not update_data:
             raise HTTPException(status_code=400, detail="No fields to update")
-        
+
         result = await client.table(table_name).update(update_data).eq('entry_id', entry_id).execute()
-        
+
         if not result.data:
             raise HTTPException(status_code=500, detail="Failed to update knowledge base entry")
-        
+
         updated_entry = result.data[0]
-        
+
         return KnowledgeBaseEntryResponse(
             entry_id=updated_entry['entry_id'],
             name=updated_entry['name'],
@@ -557,7 +555,7 @@ async def update_knowledge_base_entry(
             file_size=updated_entry.get('file_size'),
             file_mime_type=updated_entry.get('file_mime_type')
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -571,28 +569,28 @@ async def delete_knowledge_base_entry(
 ):
     if not await is_enabled("knowledge_base"):
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="This feature is not available at the moment."
         )
 
     """Delete a knowledge base entry (works for both thread and agent entries)"""
     try:
         client = await db.client
-        
+
         entry_result = await client.table('knowledge_base_entries').select('entry_id').eq('entry_id', entry_id).execute()
         table_name = 'knowledge_base_entries'
-        
+
         if not entry_result.data:
             entry_result = await client.table('agent_knowledge_base_entries').select('entry_id').eq('entry_id', entry_id).execute()
             table_name = 'agent_knowledge_base_entries'
-            
+
         if not entry_result.data:
             raise HTTPException(status_code=404, detail="Knowledge base entry not found")
-        
+
         result = await client.table(table_name).delete().eq('entry_id', entry_id).execute()
-        
+
         return {"message": "Knowledge base entry deleted successfully"}
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -606,23 +604,23 @@ async def get_knowledge_base_entry(
 ):
     if not await is_enabled("knowledge_base"):
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="This feature is not available at the moment."
         )
     """Get a specific knowledge base entry (works for both thread and agent entries)"""
     try:
         client = await db.client
-        
+
         result = await client.table('knowledge_base_entries').select('*').eq('entry_id', entry_id).execute()
-        
+
         if not result.data:
             result = await client.table('agent_knowledge_base_entries').select('*').eq('entry_id', entry_id).execute()
-        
+
         if not result.data:
             raise HTTPException(status_code=404, detail="Knowledge base entry not found")
-        
+
         entry = result.data[0]
-        
+
         return KnowledgeBaseEntryResponse(
             entry_id=entry['entry_id'],
             name=entry['name'],
@@ -638,7 +636,7 @@ async def get_knowledge_base_entry(
             file_size=entry.get('file_size'),
             file_mime_type=entry.get('file_mime_type')
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -653,30 +651,30 @@ async def get_knowledge_base_context(
 ):
     if not await is_enabled("knowledge_base"):
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="This feature is not available at the moment."
         )
-    
+
     """Get knowledge base context for agent prompts"""
     try:
         client = await db.client
         thread_result = await client.table('threads').select('thread_id').eq('thread_id', thread_id).execute()
         if not thread_result.data:
             raise HTTPException(status_code=404, detail="Thread not found")
-        
+
         result = await client.rpc('get_knowledge_base_context', {
             'p_thread_id': thread_id,
             'p_max_tokens': max_tokens
         }).execute()
-        
+
         context = result.data if result.data else None
-        
+
         return {
             "context": context,
             "max_tokens": max_tokens,
             "thread_id": thread_id
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -692,34 +690,34 @@ async def get_combined_knowledge_base_context(
 ):
     if not await is_enabled("knowledge_base"):
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="This feature is not available at the moment."
         )
-    
+
     """Get combined knowledge base context from both thread and agent sources"""
     try:
         client = await db.client
         thread_result = await client.table('threads').select('thread_id').eq('thread_id', thread_id).execute()
         if not thread_result.data:
             raise HTTPException(status_code=404, detail="Thread not found")
-        
+
         result = await client.rpc('get_combined_knowledge_base_context', {
             'p_thread_id': thread_id,
             'p_agent_id': agent_id,
             'p_max_tokens': max_tokens
         }).execute()
-        
+
         context = result.data if result.data else None
-        
+
         return {
             "context": context,
             "max_tokens": max_tokens,
             "thread_id": thread_id,
             "agent_id": agent_id
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error getting combined knowledge base context for thread {thread_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve combined knowledge base context") 
+        raise HTTPException(status_code=500, detail="Failed to retrieve combined knowledge base context")

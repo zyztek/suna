@@ -21,7 +21,7 @@ async def connect_streamable_http_server(url):
             await session.initialize()
             tool_result = await session.list_tools()
             print(f"Connected via HTTP ({len(tool_result.tools)} tools)")
-            
+
             tools_info = []
             for tool in tool_result.tools:
                 tool_info = {
@@ -30,21 +30,21 @@ async def connect_streamable_http_server(url):
                     "inputSchema": tool.inputSchema
                 }
                 tools_info.append(tool_info)
-            
+
             return tools_info
 
 async def discover_custom_tools(request_type: str, config: Dict[str, Any]):
     logger.info(f"Received custom MCP discovery request: type={request_type}")
     logger.debug(f"Request config: {config}")
-    
+
     tools = []
     server_name = None
-    
+
     if request_type == 'http':
         if 'url' not in config:
             raise HTTPException(status_code=400, detail="HTTP configuration must include 'url' field")
         url = config['url']
-        
+
         try:
             async with asyncio.timeout(15):
                 tools_info = await connect_streamable_http_server(url)
@@ -63,10 +63,10 @@ async def discover_custom_tools(request_type: str, config: Dict[str, Any]):
     elif request_type == 'sse':
         if 'url' not in config:
             raise HTTPException(status_code=400, detail="SSE configuration must include 'url' field")
-        
+
         url = config['url']
         headers = config.get('headers', {})
-        
+
         try:
             async with asyncio.timeout(15):
                 try:
@@ -82,7 +82,7 @@ async def discover_custom_tools(request_type: str, config: Dict[str, Any]):
                                     "input_schema": tool.inputSchema
                                 }
                                 tools_info.append(tool_info)
-                            
+
                             for tool_info in tools_info:
                                 tools.append({
                                     "name": tool_info["name"],
@@ -103,7 +103,7 @@ async def discover_custom_tools(request_type: str, config: Dict[str, Any]):
                                         "input_schema": tool.inputSchema
                                     }
                                     tools_info.append(tool_info)
-                                
+
                                 for tool_info in tools_info:
                                     tools.append({
                                         "name": tool_info["name"],
@@ -119,11 +119,11 @@ async def discover_custom_tools(request_type: str, config: Dict[str, Any]):
             raise HTTPException(status_code=400, detail=f"Failed to connect to MCP server: {str(e)}")
     else:
         raise HTTPException(status_code=400, detail="Invalid server type. Must be 'http' or 'sse'")
-    
+
     response_data = {"tools": tools, "count": len(tools)}
-    
+
     if server_name:
         response_data["serverName"] = server_name
-    
+
     logger.info(f"Returning {len(tools)} tools for server {server_name}")
-    return response_data 
+    return response_data

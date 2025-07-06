@@ -113,7 +113,7 @@ export default function AgentsPage() {
   }, [agents]);
 
   const activeFiltersCount = useMemo(() => {
-    let count = 0;
+    const count = 0;
     if (filters.hasDefaultAgent) count++;
     if (filters.hasMcpTools) count++;
     if (filters.hasAgentpressTools) count++;

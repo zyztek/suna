@@ -211,8 +211,7 @@ export default function AgentConfigurationPage() {
     />
   ), [agentId, formData, handleFieldChange, handleStyleChange, currentStyle]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const getSaveStatusBadge = () => {
+    const getSaveStatusBadge = () => {
     const showSaved = saveStatus === 'idle' && !hasDataChanged(formData, originalDataRef.current);
     switch (saveStatus) {
       case 'saving':

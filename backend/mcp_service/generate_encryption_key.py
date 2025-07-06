@@ -27,7 +27,7 @@ def validate_key(key_string):
 
 if __name__ == "__main__":
     key = generate_encryption_key()
-    
+
     print("=" * 60)
     print("MCP CREDENTIAL ENCRYPTION KEY GENERATOR")
     print("=" * 60)
@@ -45,15 +45,15 @@ if __name__ == "__main__":
     print()
     print("4. Restart your backend server")
     print()
-    
+
     # Validate the generated key
     is_valid, message = validate_key(key)
     if is_valid:
         print("✅ Key validation: PASSED")
     else:
         print(f"❌ Key validation: FAILED - {message}")
-    
+
     print()
     print("⚠️  IMPORTANT: Keep this key secure and backed up!")
     print("   If you lose this key, all stored credentials will be unrecoverable.")
-    print("=" * 60) 
+    print("=" * 60)

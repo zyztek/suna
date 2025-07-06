@@ -179,8 +179,7 @@ export const OneClickIntegrations: React.FC<OneClickIntegrationsProps> = ({
                 if (provider === 'schedule') {
                   handleInstall(provider); 
                 } else {
-                  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-                  isInstalled ? handleUninstall(provider, triggerId) : handleInstall(provider);
+                                    isInstalled ? handleUninstall(provider, triggerId) : handleInstall(provider);
                 }
               }}
               disabled={isLoading}

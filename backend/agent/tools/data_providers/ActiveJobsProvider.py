@@ -2,7 +2,6 @@ from typing import Dict
 
 from agent.tools.data_providers.RapidDataProviderBase import RapidDataProviderBase, EndpointSchema
 
-
 class ActiveJobsProvider(RapidDataProviderBase):
     def __init__(self):
         endpoints: Dict[str, EndpointSchema] = {
@@ -33,10 +32,9 @@ class ActiveJobsProvider(RapidDataProviderBase):
                 }
             }
         }
-           
+
         base_url = "https://active-jobs-db.p.rapidapi.com"
         super().__init__(base_url, endpoints)
-
 
 if __name__ == "__main__":
     from dotenv import load_dotenv

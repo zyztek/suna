@@ -3,7 +3,6 @@ from typing import TypeVar, Callable, Awaitable, Optional
 
 T = TypeVar("T")
 
-
 async def retry(
     fn: Callable[[], Awaitable[T]],
     max_attempts: int = 3,

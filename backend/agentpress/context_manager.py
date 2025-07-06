@@ -16,10 +16,10 @@ DEFAULT_TOKEN_THRESHOLD = 120000
 
 class ContextManager:
     """Manages thread context including token counting and summarization."""
-    
+
     def __init__(self, token_threshold: int = DEFAULT_TOKEN_THRESHOLD):
         """Initialize the ContextManager.
-        
+
         Args:
             token_threshold: Token count threshold to trigger summarization
         """
@@ -31,23 +31,23 @@ class ContextManager:
         if not ("content" in msg and msg['content']):
             return False
         content = msg['content']
-        if isinstance(content, str) and "ToolResult" in content: 
+        if isinstance(content, str) and "ToolResult" in content:
             return True
-        if isinstance(content, dict) and "tool_execution" in content: 
+        if isinstance(content, dict) and "tool_execution" in content:
             return True
-        if isinstance(content, dict) and "interactive_elements" in content: 
+        if isinstance(content, dict) and "interactive_elements" in content:
             return True
         if isinstance(content, str):
             try:
                 parsed_content = json.loads(content)
-                if isinstance(parsed_content, dict) and "tool_execution" in parsed_content: 
+                if isinstance(parsed_content, dict) and "tool_execution" in parsed_content:
                     return True
-                if isinstance(parsed_content, dict) and "interactive_elements" in content: 
+                if isinstance(parsed_content, dict) and "interactive_elements" in content:
                     return True
             except (json.JSONDecodeError, TypeError):
                 pass
         return False
-    
+
     def compress_message(self, msg_content: Union[str, dict], message_id: Optional[str] = None, max_length: int = 3000) -> Union[str, dict]:
         """Compress the message content."""
         if isinstance(msg_content, str):
@@ -60,7 +60,7 @@ class ContextManager:
                 return json.dumps(msg_content)[:max_length] + "... (truncated)" + f"\n\nmessage_id \"{message_id}\"\nUse expand-message tool to see contents"
             else:
                 return msg_content
-        
+
     def safe_truncate(self, msg_content: Union[str, dict], max_length: int = 100000) -> Union[str, dict]:
         """Truncate the message content safely by removing the middle portion."""
         max_length = min(max_length, 100000)
@@ -70,10 +70,10 @@ class ContextManager:
                 keep_length = max_length - 150  # Reserve space for truncation message
                 start_length = keep_length // 2
                 end_length = keep_length - start_length
-                
+
                 start_part = msg_content[:start_length]
                 end_part = msg_content[-end_length:] if end_length > 0 else ""
-                
+
                 return start_part + f"\n\n... (middle truncated) ...\n\n" + end_part + f"\n\nThis message is too long, repeat relevant information in your response to remember it"
             else:
                 return msg_content
@@ -84,14 +84,14 @@ class ContextManager:
                 keep_length = max_length - 150  # Reserve space for truncation message
                 start_length = keep_length // 2
                 end_length = keep_length - start_length
-                
+
                 start_part = json_str[:start_length]
                 end_part = json_str[-end_length:] if end_length > 0 else ""
-                
+
                 return start_part + f"\n\n... (middle truncated) ...\n\n" + end_part + f"\n\nThis message is too long, repeat relevant information in your response to remember it"
             else:
                 return msg_content
-  
+
     def compress_tool_result_messages(self, messages: List[Dict[str, Any]], llm_model: str, max_tokens: Optional[int], token_threshold: int = 1000) -> List[Dict[str, Any]]:
         """Compress the tool result messages except the most recent one."""
         uncompressed_total_token_count = token_counter(model=llm_model, messages=messages)
@@ -140,7 +140,7 @@ class ContextManager:
         """Compress the assistant messages except the most recent one."""
         uncompressed_total_token_count = token_counter(model=llm_model, messages=messages)
         max_tokens_value = max_tokens or (100 * 1000)
-        
+
         if uncompressed_total_token_count > max_tokens_value:
             _i = 0  # Count the number of Assistant messages
             for msg in reversed(messages):  # Start from the end and work backwards
@@ -156,7 +156,7 @@ class ContextManager:
                                 logger.warning(f"UNEXPECTED: Message has no message_id {str(msg)[:100]}")
                         else:
                             msg["content"] = self.safe_truncate(msg["content"], int(max_tokens_value * 2))
-                            
+
         return messages
 
     def remove_meta_messages(self, messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -166,9 +166,9 @@ class ContextManager:
             msg_content = msg.get('content')
             # Try to parse msg_content as JSON if it's a string
             if isinstance(msg_content, str):
-                try: 
+                try:
                     msg_content = json.loads(msg_content)
-                except json.JSONDecodeError: 
+                except json.JSONDecodeError:
                     pass
             if isinstance(msg_content, dict):
                 # Create a copy to avoid modifying the original
@@ -188,7 +188,7 @@ class ContextManager:
 
     def compress_messages(self, messages: List[Dict[str, Any]], llm_model: str, max_tokens: Optional[int] = 41000, token_threshold: int = 4096, max_iterations: int = 5) -> List[Dict[str, Any]]:
         """Compress the messages.
-        
+
         Args:
             messages: List of messages to compress
             llm_model: Model name for token counting
@@ -231,17 +231,17 @@ class ContextManager:
             result = self.compress_messages(messages, llm_model, max_tokens, token_threshold // 2, max_iterations - 1)
 
         return self.middle_out_messages(result)
-    
+
     def compress_messages_by_omitting_messages(
-            self, 
-            messages: List[Dict[str, Any]], 
-            llm_model: str, 
+            self,
+            messages: List[Dict[str, Any]],
+            llm_model: str,
             max_tokens: Optional[int] = 41000,
             removal_batch_size: int = 10,
             min_messages_to_keep: int = 10
         ) -> List[Dict[str, Any]]:
         """Compress the messages by omitting messages from the middle.
-        
+
         Args:
             messages: List of messages to compress
             llm_model: Model name for token counting
@@ -251,27 +251,27 @@ class ContextManager:
         """
         if not messages:
             return messages
-            
+
         result = messages
         result = self.remove_meta_messages(result)
 
         # Early exit if no compression needed
         initial_token_count = token_counter(model=llm_model, messages=result)
         max_allowed_tokens = max_tokens or (100 * 1000)
-        
+
         if initial_token_count <= max_allowed_tokens:
             return result
 
         # Separate system message (assumed to be first) from conversation messages
         system_message = messages[0] if messages and messages[0].get('role') == 'system' else None
         conversation_messages = result[1:] if system_message else result
-        
+
         safety_limit = 500
         current_token_count = initial_token_count
-        
+
         while current_token_count > max_allowed_tokens and safety_limit > 0:
             safety_limit -= 1
-            
+
             if len(conversation_messages) <= min_messages_to_keep:
                 logger.warning(f"Cannot compress further: only {len(conversation_messages)} messages remain (min: {min_messages_to_keep})")
                 break
@@ -298,18 +298,18 @@ class ContextManager:
         # Prepare final result
         final_messages = ([system_message] + conversation_messages) if system_message else conversation_messages
         final_token_count = token_counter(model=llm_model, messages=final_messages)
-        
+
         logger.info(f"compress_messages_by_omitting_messages: {initial_token_count} -> {final_token_count} tokens ({len(messages)} -> {len(final_messages)} messages)")
-            
+
         return final_messages
-    
+
     def middle_out_messages(self, messages: List[Dict[str, Any]], max_messages: int = 320) -> List[Dict[str, Any]]:
         """Remove messages from the middle of the list, keeping max_messages total."""
         if len(messages) <= max_messages:
             return messages
-        
+
         # Keep half from the beginning and half from the end
         keep_start = max_messages // 2
         keep_end = max_messages - keep_start
-        
-        return messages[:keep_start] + messages[-keep_end:] 
+
+        return messages[:keep_start] + messages[-keep_end:]

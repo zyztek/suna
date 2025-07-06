@@ -20,7 +20,7 @@ from utils.logger import logger
 from utils.config import config
 
 # litellm.set_verbose=True
-litellm.modify_params=True
+litellm.modify_params = True
 
 # Constants
 MAX_RETRIES = 2
@@ -62,7 +62,10 @@ def setup_api_keys() -> None:
         os.environ['AWS_SECRET_ACCESS_KEY'] = aws_secret_key
         os.environ['AWS_REGION_NAME'] = aws_region
     else:
-        logger.warning(f"Missing AWS credentials for Bedrock integration - access_key: {bool(aws_access_key)}, secret_key: {bool(aws_secret_key)}, region: {aws_region}")
+        logger.warning(
+            f"Missing AWS credentials for Bedrock integration - access_key: {bool(aws_access_key)}, "
+            f"secret_key: {bool(aws_secret_key)}, region: {aws_region}"
+        )
 
 async def handle_error(error: Exception, attempt: int, max_attempts: int) -> None:
     """Handle API errors with appropriate delays and logging."""
@@ -150,25 +153,28 @@ def prepare_params(
             if app_name:
                 extra_headers["X-Title"] = app_name
             params["extra_headers"] = extra_headers
-            logger.debug(f"Added OpenRouter site URL and app name to headers")
+            logger.debug("Added OpenRouter site URL and app name to headers")
 
     # Add Bedrock-specific parameters
     if model_name.startswith("bedrock/"):
         logger.debug(f"Preparing AWS Bedrock parameters for model: {model_name}")
 
         if not model_id and "anthropic.claude-3-7-sonnet" in model_name:
-            params["model_id"] = "arn:aws:bedrock:us-west-2:935064898258:inference-profile/us.anthropic.claude-3-7-sonnet-20250219-v1:0"
+            params["model_id"] = (
+                "arn:aws:bedrock:us-west-2:935064898258:inference-profile/"
+                "us.anthropic.claude-3-7-sonnet-20250219-v1:0"
+            )
             logger.debug(f"Auto-set model_id for Claude 3.7 Sonnet: {params['model_id']}")
 
     # Apply Anthropic prompt caching (minimal implementation)
     # Check model name *after* potential modifications (like adding bedrock/ prefix)
-    effective_model_name = params.get("model", model_name) # Use model from params if set, else original
+    effective_model_name = params.get("model", model_name)  # Use model from params if set, else original
     if "claude" in effective_model_name.lower() or "anthropic" in effective_model_name.lower():
-        messages = params["messages"] # Direct reference, modification affects params
+        messages = params["messages"]  # Direct reference, modification affects params
 
         # Ensure messages is a list
         if not isinstance(messages, list):
-            return params # Return early if messages format is unexpected
+            return params  # Return early if messages format is unexpected
 
         # Apply cache control to the first 4 text blocks across all messages
         cache_control_count = 0
@@ -177,9 +183,9 @@ def prepare_params(
         for message in messages:
             if cache_control_count >= max_cache_control_blocks:
                 break
-                
+
             content = message.get("content")
-            
+
             if isinstance(content, str):
                 message["content"] = [
                     {"type": "text", "text": content, "cache_control": {"type": "ephemeral"}}
@@ -200,7 +206,7 @@ def prepare_params(
     if is_anthropic and use_thinking:
         effort_level = reasoning_effort if reasoning_effort else 'low'
         params["reasoning_effort"] = effort_level
-        params["temperature"] = 1.0 # Required by Anthropic when reasoning_effort is used
+        params["temperature"] = 1.0  # Required by Anthropic when reasoning_effort is used
         logger.info(f"Anthropic thinking enabled with reasoning_effort='{effort_level}'")
 
     return params
@@ -226,7 +232,8 @@ async def make_llm_api_call(
 
     Args:
         messages: List of message dictionaries for the conversation
-        model_name: Name of the model to use (e.g., "gpt-4", "claude-3", "openrouter/openai/gpt-4", "bedrock/anthropic.claude-3-sonnet-20240229-v1:0")
+        model_name: Name of the model to use (e.g., "gpt-4", "claude-3", "openrouter/openai/gpt-4",
+            "bedrock/anthropic.claude-3-sonnet-20240229-v1:0")
         response_format: Desired format for the response
         temperature: Sampling temperature (0-1)
         max_tokens: Maximum tokens in the response
@@ -248,7 +255,9 @@ async def make_llm_api_call(
         LLMError: For other API-related errors
     """
     # debug <timestamp>.json messages
-    logger.info(f"Making LLM API call to model: {model_name} (Thinking: {enable_thinking}, Effort: {reasoning_effort})")
+    logger.info(
+        f"Making LLM API call to model: {model_name} (Thinking: {enable_thinking}, Effort: {reasoning_effort})"
+    )
     logger.info(f"📡 API Call: Using model {model_name}")
     params = prepare_params(
         messages=messages,
@@ -363,8 +372,6 @@ async def test_bedrock():
         return False
 
 if __name__ == "__main__":
-    import asyncio
-
     test_success = asyncio.run(test_bedrock())
 
     if test_success:

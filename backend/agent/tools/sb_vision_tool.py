@@ -39,19 +39,19 @@ class SandboxVisionTool(SandboxToolsBase):
 
     def compress_image(self, image_bytes: bytes, mime_type: str, file_path: str) -> Tuple[bytes, str]:
         """Compress an image to reduce its size while maintaining reasonable quality.
-        
+
         Args:
             image_bytes: Original image bytes
             mime_type: MIME type of the image
             file_path: Path to the image file (for logging)
-            
+
         Returns:
             Tuple of (compressed_bytes, new_mime_type)
         """
         try:
             # Open image from bytes
             img = Image.open(BytesIO(image_bytes))
-            
+
             # Convert RGBA to RGB if necessary (for JPEG)
             if img.mode in ('RGBA', 'LA', 'P'):
                 # Create a white background
@@ -60,7 +60,7 @@ class SandboxVisionTool(SandboxToolsBase):
                     img = img.convert('RGBA')
                 background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
                 img = background
-            
+
             # Calculate new dimensions while maintaining aspect ratio
             width, height = img.size
             if width > DEFAULT_MAX_WIDTH or height > DEFAULT_MAX_HEIGHT:
@@ -69,10 +69,10 @@ class SandboxVisionTool(SandboxToolsBase):
                 new_height = int(height * ratio)
                 img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
                 print(f"[SeeImage] Resized image from {width}x{height} to {new_width}x{new_height}")
-            
+
             # Save to bytes with compression
             output = BytesIO()
-            
+
             # Determine output format based on original mime type
             if mime_type == 'image/gif':
                 # Keep GIFs as GIFs to preserve animation
@@ -86,17 +86,17 @@ class SandboxVisionTool(SandboxToolsBase):
                 # Convert everything else to JPEG for better compression
                 img.save(output, format='JPEG', quality=DEFAULT_JPEG_QUALITY, optimize=True)
                 output_mime = 'image/jpeg'
-            
+
             compressed_bytes = output.getvalue()
-            
+
             # Log compression results
             original_size = len(image_bytes)
             compressed_size = len(compressed_bytes)
             compression_ratio = (1 - compressed_size / original_size) * 100
             print(f"[SeeImage] Compressed '{file_path}' from {original_size / 1024:.1f}KB to {compressed_size / 1024:.1f}KB ({compression_ratio:.1f}% reduction)")
-            
+
             return compressed_bytes, output_mime
-            
+
         except Exception as e:
             print(f"[SeeImage] Failed to compress image: {str(e)}. Using original.")
             return image_bytes, mime_type
@@ -105,7 +105,7 @@ class SandboxVisionTool(SandboxToolsBase):
         """check if the file path is url"""
         parsed_url = urlparse(file_path)
         return parsed_url.scheme in ('http', 'https')
-    
+
     def download_image_from_url(self, url: str) -> Tuple[bytes, str]:
         """Download image from a URL"""
         try:
@@ -116,12 +116,12 @@ class SandboxVisionTool(SandboxToolsBase):
             # HEAD request to get the image size
             head_response = requests.head(url, timeout=10, headers=headers, stream=True)
             head_response.raise_for_status()
-            
+
             # Check content length
             content_length = int(head_response.headers.get('Content-Length'))
             if content_length and content_length > MAX_IMAGE_SIZE:
                 raise Exception(f"Image is too large ({(content_length)/(1024*1024):.2f}MB) for the maximum allowed size of {MAX_IMAGE_SIZE/(1024*1024):.2f}MB")
-            
+
             # Download the image
             response = requests.get(url, timeout=10, headers=headers, stream=True)
             response.raise_for_status()
@@ -134,11 +134,11 @@ class SandboxVisionTool(SandboxToolsBase):
             mime_type = response.headers.get('Content-Type')
             if not mime_type or not mime_type.startswith('image/'):
                 raise Exception(f"URL does not point to an image (Content-Type: {mime_type}): {url}")
-            
+
             return image_bytes, mime_type
         except Exception as e:
             return self.fail_response(f"Failed to download image from URL: {str(e)}")
-    
+
     @openapi_schema({
         "type": "function",
         "function": {
@@ -225,13 +225,12 @@ class SandboxVisionTool(SandboxToolsBase):
                     elif ext == '.webp': mime_type = 'image/webp'
                     else:
                         return self.fail_response(f"Unsupported or unknown image format for file: '{cleaned_path}'. Supported: JPG, PNG, GIF, WEBP.")
-                
+
                 original_size = file_info.size
-            
 
             # Compress the image
             compressed_bytes, compressed_mime_type = self.compress_image(image_bytes, mime_type, cleaned_path)
-            
+
             # Check if compressed image is still too large
             if len(compressed_bytes) > MAX_COMPRESSED_SIZE:
                 return self.fail_response(f"Image file '{cleaned_path}' is still too large after compression ({len(compressed_bytes) / (1024*1024):.2f}MB). Maximum compressed size is {MAX_COMPRESSED_SIZE / (1024*1024)}MB.")
@@ -261,4 +260,4 @@ class SandboxVisionTool(SandboxToolsBase):
             return self.success_response(f"Successfully loaded and compressed the image '{cleaned_path}' (reduced from {original_size / 1024:.1f}KB to {len(compressed_bytes) / 1024:.1f}KB).")
 
         except Exception as e:
-            return self.fail_response(f"An unexpected error occurred while trying to see the image: {str(e)}") 
+            return self.fail_response(f"An unexpected error occurred while trying to see the image: {str(e)}")

@@ -42,21 +42,21 @@ async def initiate_slack_install(
     """Initiate Slack OAuth flow for agent installation."""
     if not slack_oauth_manager:
         raise HTTPException(status_code=500, detail="Slack OAuth not initialized")
-    
+
     try:
         await verify_agent_access(request.agent_id, user_id)
-        
+
         install_url = slack_oauth_manager.generate_install_url(request.agent_id, user_id)
-        
+
         from urllib.parse import urlparse, parse_qs
         parsed_url = urlparse(install_url)
         state = parse_qs(parsed_url.query).get('state', [''])[0]
-        
+
         return SlackInstallResponse(
             install_url=install_url,
             state=state
         )
-        
+
     except Exception as e:
         logger.error(f"Error initiating Slack install: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -70,17 +70,17 @@ async def handle_slack_callback(
     """Handle Slack OAuth callback."""
     if not slack_oauth_manager:
         raise HTTPException(status_code=500, detail="Slack OAuth not initialized")
-    
+
     if error:
         logger.error(f"Slack OAuth error: {error}")
         return RedirectResponse(
             url=f"http://localhost:3000/agents?slack_error={error}",
             status_code=302
         )
-    
+
     try:
         result = await slack_oauth_manager.handle_oauth_callback(code, state)
-        
+
         if result["success"]:
             redirect_url = (
                 f"http://localhost:3000/agents?"
@@ -96,7 +96,7 @@ async def handle_slack_callback(
                 url=f"http://localhost:3000/agents?slack_error={result['error']}",
                 status_code=302
             )
-            
+
     except Exception as e:
         logger.error(f"Error handling Slack callback: {e}")
         return RedirectResponse(
@@ -112,23 +112,23 @@ async def get_slack_status(
     """Get Slack integration status for an agent."""
     try:
         await verify_agent_access(agent_id, user_id)
-        
+
         client = await db.client
         result = await client.table('agent_triggers')\
             .select('trigger_id, name, is_active')\
             .eq('agent_id', agent_id)\
             .eq('trigger_type', 'slack')\
             .execute()
-        
+
         slack_triggers = []
         for trigger in result.data:
             oauth_result = await client.table('slack_oauth_installations')\
                 .select('team_name, bot_name, installed_at')\
                 .eq('trigger_id', trigger['trigger_id'])\
                 .execute()
-            
+
             oauth_data = oauth_result.data[0] if oauth_result.data else {}
-            
+
             slack_triggers.append({
                 "trigger_id": trigger["trigger_id"],
                 "name": trigger["name"],
@@ -137,13 +137,13 @@ async def get_slack_status(
                 "bot_name": oauth_data.get("bot_name"),
                 "installed_at": oauth_data.get("installed_at")
             })
-        
+
         return {
             "agent_id": agent_id,
             "has_slack_integration": len(slack_triggers) > 0,
             "slack_triggers": slack_triggers
         }
-        
+
     except Exception as e:
         logger.error(f"Error getting Slack status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -160,27 +160,27 @@ async def uninstall_slack_integration(
             .select('agent_id')\
             .eq('trigger_id', trigger_id)\
             .execute()
-        
+
         if not trigger_result.data:
             raise HTTPException(status_code=404, detail="Trigger not found")
-        
+
         agent_id = trigger_result.data[0]['agent_id']
         await verify_agent_access(agent_id, user_id)
-        
+
         from .core import TriggerManager
         trigger_manager = TriggerManager(db)
         success = await trigger_manager.delete_trigger(trigger_id)
-        
+
         if success:
             await client.table('slack_oauth_installations')\
                 .delete()\
                 .eq('trigger_id', trigger_id)\
                 .execute()
-            
+
             return {"success": True, "message": "Slack integration uninstalled"}
         else:
             raise HTTPException(status_code=500, detail="Failed to uninstall integration")
-            
+
     except Exception as e:
         logger.error(f"Error uninstalling Slack integration: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -189,10 +189,10 @@ async def verify_agent_access(agent_id: str, user_id: str):
     """Verify that the user has access to the agent."""
     client = await db.client
     result = await client.table('agents').select('account_id').eq('agent_id', agent_id).execute()
-    
+
     if not result.data:
         raise HTTPException(status_code=404, detail="Agent not found")
-    
+
     agent = result.data[0]
     if agent['account_id'] != user_id:
-        raise HTTPException(status_code=403, detail="Access denied") 
+        raise HTTPException(status_code=403, detail="Access denied")

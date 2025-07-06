@@ -209,7 +209,7 @@ function useTextStream({
       const controller = new AbortController();
       streamRef.current = controller;
 
-      let displayed = '';
+      const displayed = '';
 
       try {
         for await (const chunk of stream) {

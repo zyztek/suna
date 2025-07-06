@@ -4,7 +4,6 @@ from .flags import list_flags, is_enabled, get_flag_details
 
 router = APIRouter()
 
-
 @router.get("/feature-flags")
 async def get_feature_flags():
     try:
@@ -30,4 +29,4 @@ async def get_feature_flag(flag_name: str):
             "flag_name": flag_name,
             "enabled": False,
             "details": None
-        } 
+        }

@@ -46,7 +46,7 @@ async def run_agent(
     enable_thinking: Optional[bool] = False,
     reasoning_effort: Optional[str] = 'low',
     enable_context_manager: bool = True,
-    agent_config: Optional[dict] = None,    
+    agent_config: Optional[dict] = None,
     trace: Optional[StatefulTraceClient] = None,
     is_agent_builder: Optional[bool] = False,
     target_agent_id: Optional[str] = None
@@ -79,13 +79,13 @@ async def run_agent(
 
     # Initialize tools with project_id instead of sandbox object
     # This ensures each tool independently verifies it's operating on the correct project
-    
+
     # Get enabled tools from agent config, or use defaults
     enabled_tools = None
     if agent_config and 'agentpress_tools' in agent_config:
         enabled_tools = agent_config['agentpress_tools']
         logger.info(f"Using custom tool configuration from agent")
-    
+
     # Register tools based on configuration
     # If no agent config (enabled_tools is None), register ALL tools for full Suna capabilities
     # If agent config exists, only register explicitly enabled tools
@@ -137,11 +137,11 @@ async def run_agent(
     if agent_config:
         # Merge configured_mcps and custom_mcps
         all_mcps = []
-        
+
         # Add standard configured MCPs
         if agent_config.get('configured_mcps'):
             all_mcps.extend(agent_config['configured_mcps'])
-        
+
         # Add custom MCPs
         if agent_config.get('custom_mcps'):
             for custom_mcp in agent_config['custom_mcps']:
@@ -157,16 +157,16 @@ async def run_agent(
                     'customType': custom_type
                 }
                 all_mcps.append(mcp_config)
-        
+
         if all_mcps:
             logger.info(f"Registering MCP tool wrapper for {len(all_mcps)} MCP servers (including {len(agent_config.get('custom_mcps', []))} custom)")
             thread_manager.add_tool(MCPToolWrapper, mcp_configs=all_mcps)
-            
+
             for tool_name, tool_info in thread_manager.tool_registry.tools.items():
                 if isinstance(tool_info['instance'], MCPToolWrapper):
                     mcp_wrapper_instance = tool_info['instance']
                     break
-            
+
             if mcp_wrapper_instance:
                 try:
                     await mcp_wrapper_instance.initialize_and_register_tools()
@@ -182,13 +182,13 @@ async def run_agent(
                                         "schema": schema
                                     }
                                     logger.info(f"Registered dynamic MCP tool: {method_name}")
-                    
+
                     # Log all registered tools for debugging
                     all_tools = list(thread_manager.tool_registry.tools.keys())
                     logger.info(f"All registered tools after MCP initialization: {all_tools}")
                     mcp_tools = [tool for tool in all_tools if tool not in ['call_mcp_tool', 'sb_files_tool', 'message_tool', 'expand_msg_tool', 'web_search_tool', 'sb_shell_tool', 'sb_vision_tool', 'sb_browser_tool', 'computer_use_tool', 'data_providers_tool', 'sb_deploy_tool', 'sb_expose_tool', 'update_agent_tool']]
                     logger.info(f"MCP tools registered: {mcp_tools}")
-                
+
                 except Exception as e:
                     logger.error(f"Failed to initialize MCP tools: {e}")
                     # Continue without MCP tools if initialization fails
@@ -200,18 +200,18 @@ async def run_agent(
     else:
         # Use the original prompt - the LLM can only use tools that are registered
         default_system_content = get_system_prompt()
-        
+
     # Add sample response for non-anthropic models
     if "anthropic" not in model_name.lower():
         sample_response_path = os.path.join(os.path.dirname(__file__), 'sample_responses/1.txt')
         with open(sample_response_path, 'r') as file:
             sample_response = file.read()
         default_system_content = default_system_content + "\n\n <sample_assistant_response>" + sample_response + "</sample_assistant_response>"
-    
+
     # Handle custom agent system prompt
     if agent_config and agent_config.get('system_prompt'):
         custom_system_prompt = agent_config['system_prompt'].strip()
-        
+
         # Completely replace the default system prompt with the custom one
         # This prevents confusion and tool hallucination
         system_content = custom_system_prompt
@@ -223,30 +223,29 @@ async def run_agent(
         # Use just the default system prompt
         system_content = default_system_content
         logger.info("Using default system prompt only")
-    
+
     if await is_enabled("knowledge_base"):
         try:
             from services.supabase import DBConnection
             kb_db = DBConnection()
             kb_client = await kb_db.client
-            
+
             current_agent_id = agent_config.get('agent_id') if agent_config else None
-            
+
             kb_result = await kb_client.rpc('get_combined_knowledge_base_context', {
                 'p_thread_id': thread_id,
                 'p_agent_id': current_agent_id,
                 'p_max_tokens': 4000
             }).execute()
-            
+
             if kb_result.data and kb_result.data.strip():
                 logger.info(f"Adding combined knowledge base context to system prompt for thread {thread_id}, agent {current_agent_id}")
                 system_content += "\n\n" + kb_result.data
             else:
                 logger.debug(f"No knowledge base context found for thread {thread_id}, agent {current_agent_id}")
-                
+
         except Exception as e:
             logger.error(f"Error retrieving knowledge base context for thread {thread_id}: {e}")
-
 
     if agent_config and (agent_config.get('configured_mcps') or agent_config.get('custom_mcps')) and mcp_wrapper_instance and mcp_wrapper_instance._initialized:
         mcp_info = "\n\n--- MCP Tools Available ---\n"
@@ -258,7 +257,7 @@ async def run_agent(
         mcp_info += '<parameter name="param2">value2</parameter>\n'
         mcp_info += '</invoke>\n'
         mcp_info += '</function_calls>\n\n'
-        
+
         # List available MCP tools
         mcp_info += "Available MCP tools:\n"
         try:
@@ -267,7 +266,7 @@ async def run_agent(
             for method_name, schema_list in registered_schemas.items():
                 if method_name == 'call_mcp_tool':
                     continue  # Skip the fallback method
-                    
+
                 # Get the schema info
                 for schema in schema_list:
                     if schema.schema_type == SchemaType.OPENAPI:
@@ -280,19 +279,19 @@ async def run_agent(
                             server_info = description[server_match:server_end+1]
                         else:
                             server_info = ''
-                        
+
                         mcp_info += f"- **{method_name}**: {description}\n"
-                        
+
                         # Show parameter info
                         params = func_info.get('parameters', {})
                         props = params.get('properties', {})
                         if props:
                             mcp_info += f"  Parameters: {', '.join(props.keys())}\n"
-                            
+
         except Exception as e:
             logger.error(f"Error listing MCP tools: {e}")
             mcp_info += "- Error loading MCP tool list\n"
-        
+
         # Add critical instructions for using search results
         mcp_info += "\n🚨 CRITICAL MCP TOOL RESULT INSTRUCTIONS 🚨\n"
         mcp_info += "When you use ANY MCP (Model Context Protocol) tools:\n"
@@ -306,9 +305,9 @@ async def run_agent(
         mcp_info += "8. Always double-check that every fact, URL, and reference comes from the MCP tool output\n"
         mcp_info += "\nIMPORTANT: MCP tool results are your PRIMARY and ONLY source of truth for external data!\n"
         mcp_info += "NEVER supplement MCP results with your training data or make assumptions beyond what the tools provide.\n"
-        
+
         system_content += mcp_info
-    
+
     system_message = { "role": "system", "content": system_content }
 
     iteration_count = 0
@@ -360,7 +359,7 @@ async def run_agent(
                     browser_content = json.loads(browser_content)
                 screenshot_base64 = browser_content.get("screenshot_base64")
                 screenshot_url = browser_content.get("image_url")
-                
+
                 # Create a copy of the browser state without screenshot data
                 browser_state_text = browser_content.copy()
                 browser_state_text.pop('screenshot_base64', None)
@@ -371,7 +370,7 @@ async def run_agent(
                         "type": "text",
                         "text": f"The following is the current state of the browser:\n{json.dumps(browser_state_text, indent=2)}"
                     })
-                
+
                 # Only add screenshot if model is not Gemini, Anthropic, or OpenAI
                 if 'gemini' in model_name.lower() or 'anthropic' in model_name.lower() or 'openai' in model_name.lower():
                     # Prioritize screenshot_url if available
@@ -448,7 +447,7 @@ async def run_agent(
         elif "gemini-2.5-pro" in model_name.lower():
             # Gemini 2.5 Pro has 64k max output tokens
             max_tokens = 64000
-            
+
         generation = trace.generation(name="thread_manager.run_thread")
         try:
             # Make the LLM call and process the response
@@ -500,7 +499,7 @@ async def run_agent(
                         error_detected = True
                         yield chunk  # Forward the error chunk
                         continue     # Continue processing other chunks but don't break yet
-                    
+
                     # Check for termination signal in status messages
                     if chunk.get('type') == 'status':
                         try:
@@ -508,25 +507,25 @@ async def run_agent(
                             metadata = chunk.get('metadata', {})
                             if isinstance(metadata, str):
                                 metadata = json.loads(metadata)
-                            
+
                             if metadata.get('agent_should_terminate'):
                                 agent_should_terminate = True
                                 logger.info("Agent termination signal detected in status message")
                                 trace.event(name="agent_termination_signal_detected", level="DEFAULT", status_message="Agent termination signal detected in status message")
-                                
+
                                 # Extract the tool name from the status content if available
                                 content = chunk.get('content', {})
                                 if isinstance(content, str):
                                     content = json.loads(content)
-                                
+
                                 if content.get('function_name'):
                                     last_tool_call = content['function_name']
                                 elif content.get('xml_tag_name'):
                                     last_tool_call = content['xml_tag_name']
-                                    
+
                         except Exception as e:
                             logger.debug(f"Error parsing status message for termination check: {e}")
-                        
+
                     # Check for XML versions like <ask>, <complete>, or <web-browser-takeover> in assistant content chunks
                     if chunk.get('type') == 'assistant' and 'content' in chunk:
                         try:
@@ -568,7 +567,7 @@ async def run_agent(
                     trace.event(name="stopping_due_to_error_detected_in_response", level="DEFAULT", status_message=(f"Stopping due to error detected in response"))
                     generation.end(output=full_response, status_message="error_detected", level="ERROR")
                     break
-                    
+
                 if agent_should_terminate or last_tool_call in ['ask', 'complete', 'web-browser-takeover']:
                     logger.info(f"Agent decided to stop with tool: {last_tool_call}")
                     trace.event(name="agent_decided_to_stop_with_tool", level="DEFAULT", status_message=(f"Agent decided to stop with tool: {last_tool_call}"))
@@ -588,7 +587,7 @@ async def run_agent(
                 }
                 # Stop execution immediately on any error
                 break
-                
+
         except Exception as e:
             # Just log the error and re-raise to stop all iterations
             error_msg = f"Error running thread: {str(e)}"

@@ -23,7 +23,7 @@ class StoreCredentialRequest(BaseModel):
     mcp_qualified_name: str
     display_name: str
     config: Dict[str, Any]
-    
+
     @validator('config')
     def validate_config_not_empty(cls, v):
         if not v:
@@ -37,7 +37,7 @@ class StoreCredentialProfileRequest(BaseModel):
     display_name: str
     config: Dict[str, Any]
     is_default: bool = False
-    
+
     @validator('config')
     def validate_config_not_empty(cls, v):
         if not v:
@@ -78,8 +78,6 @@ class TestCredentialResponse(BaseModel):
     message: str
     error_details: Optional[str] = None
 
-
-
 @router.post("/credentials", response_model=CredentialResponse)
 async def store_mcp_credential(
     request: StoreCredentialRequest,
@@ -87,7 +85,7 @@ async def store_mcp_credential(
 ):
     """Store encrypted MCP credentials for the current user"""
     logger.info(f"Storing credential for {request.mcp_qualified_name} for user {user_id}")
-    
+
     try:
         credential_id = await credential_manager.store_credential(
             account_id=user_id,
@@ -95,12 +93,12 @@ async def store_mcp_credential(
             display_name=request.display_name,
             config=request.config
         )
-        
+
         # Return credential info without sensitive data
         credential = await credential_manager.get_credential(user_id, request.mcp_qualified_name)
         if not credential:
             raise HTTPException(status_code=500, detail="Failed to retrieve stored credential")
-        
+
         return CredentialResponse(
             credential_id=credential.credential_id,
             mcp_qualified_name=credential.mcp_qualified_name,
@@ -111,7 +109,7 @@ async def store_mcp_credential(
             created_at=credential.created_at.isoformat() if credential.created_at and hasattr(credential.created_at, 'isoformat') else (str(credential.created_at) if credential.created_at else ""),
             updated_at=credential.updated_at.isoformat() if credential.updated_at and hasattr(credential.updated_at, 'isoformat') else (str(credential.updated_at) if credential.updated_at else "")
         )
-        
+
     except Exception as e:
         logger.error(f"Error storing credential: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to store credential: {str(e)}")
@@ -122,14 +120,14 @@ async def get_user_credentials(
 ):
     """Get all MCP credentials for the current user"""
     logger.info(f"Getting credentials for user {user_id}")
-    
+
     try:
         credentials = await credential_manager.get_user_credentials(user_id)
-        
+
         logger.debug(f"Found {len(credentials)} credentials for user {user_id}")
         for cred in credentials:
             logger.debug(f"Credential: '{cred.mcp_qualified_name}' (ID: {cred.credential_id})")
-        
+
         return [
             CredentialResponse(
                 credential_id=cred.credential_id,
@@ -143,7 +141,7 @@ async def get_user_credentials(
             )
             for cred in credentials
         ]
-        
+
     except Exception as e:
         logger.error(f"Error getting user credentials: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get credentials: {str(e)}")
@@ -157,23 +155,23 @@ async def delete_mcp_credential(
     # URL decode the mcp_qualified_name to handle special characters like @
     decoded_name = urllib.parse.unquote(mcp_qualified_name)
     logger.info(f"Deleting credential for '{decoded_name}' (raw: '{mcp_qualified_name}') for user {user_id}")
-    
+
     try:
         # First check if the credential exists
         existing_credential = await credential_manager.get_credential(user_id, decoded_name)
         if not existing_credential:
             logger.warning(f"Credential not found: '{decoded_name}' for user {user_id}")
             raise HTTPException(status_code=404, detail=f"Credential not found: {decoded_name}")
-        
+
         success = await credential_manager.delete_credential(user_id, decoded_name)
-        
+
         if not success:
             logger.error(f"Failed to delete credential: '{decoded_name}' for user {user_id}")
             raise HTTPException(status_code=404, detail="Credential not found")
-        
+
         logger.info(f"Successfully deleted credential: '{decoded_name}' for user {user_id}")
         return {"message": "Credential deleted successfully"}
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -187,7 +185,7 @@ async def store_credential_profile(
 ):
     """Store a named credential profile for an MCP server"""
     logger.info(f"Storing credential profile '{request.profile_name}' for {request.mcp_qualified_name} for user {user_id}")
-    
+
     try:
         profile_id = await credential_manager.store_credential_profile(
             account_id=user_id,
@@ -197,12 +195,12 @@ async def store_credential_profile(
             config=request.config,
             is_default=request.is_default
         )
-        
+
         # Return profile info without sensitive data
         profile = await credential_manager.get_credential_by_profile(user_id, profile_id)
         if not profile:
             raise HTTPException(status_code=500, detail="Failed to retrieve stored credential profile")
-        
+
         return CredentialProfileResponse(
             profile_id=profile.profile_id,
             mcp_qualified_name=profile.mcp_qualified_name,
@@ -215,7 +213,7 @@ async def store_credential_profile(
             created_at=profile.created_at.isoformat() if profile.created_at and hasattr(profile.created_at, 'isoformat') else (str(profile.created_at) if profile.created_at else ""),
             updated_at=profile.updated_at.isoformat() if profile.updated_at and hasattr(profile.updated_at, 'isoformat') else (str(profile.updated_at) if profile.updated_at else "")
         )
-        
+
     except Exception as e:
         logger.error(f"Error storing credential profile: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to store credential profile: {str(e)}")
@@ -226,10 +224,10 @@ async def get_all_user_credential_profiles(
 ):
     """Get all credential profiles for the current user across all MCP servers"""
     logger.info(f"Getting all credential profiles for user {user_id}")
-    
+
     try:
         profiles = await credential_manager.get_all_user_credential_profiles(user_id)
-        
+
         return [
             CredentialProfileResponse(
                 profile_id=profile.profile_id,
@@ -245,7 +243,7 @@ async def get_all_user_credential_profiles(
             )
             for profile in profiles
         ]
-        
+
     except Exception as e:
         logger.error(f"Error getting user credential profiles: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get credential profiles: {str(e)}")
@@ -258,10 +256,10 @@ async def get_credential_profiles_for_mcp(
     """Get all credential profiles for a specific MCP server"""
     decoded_name = urllib.parse.unquote(mcp_qualified_name)
     logger.info(f"Getting credential profiles for '{decoded_name}' for user {user_id}")
-    
+
     try:
         profiles = await credential_manager.get_credential_profiles(user_id, decoded_name)
-        
+
         return [
             CredentialProfileResponse(
                 profile_id=profile.profile_id,
@@ -277,7 +275,7 @@ async def get_credential_profiles_for_mcp(
             )
             for profile in profiles
         ]
-        
+
     except Exception as e:
         logger.error(f"Error getting credential profiles for {decoded_name}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get credential profiles: {str(e)}")
@@ -289,13 +287,13 @@ async def get_credential_profile_by_id(
 ):
     """Get a specific credential profile by its ID"""
     logger.info(f"Getting credential profile {profile_id} for user {user_id}")
-    
+
     try:
         profile = await credential_manager.get_credential_by_profile(user_id, profile_id)
-        
+
         if not profile:
             raise HTTPException(status_code=404, detail="Credential profile not found")
-        
+
         return CredentialProfileResponse(
             profile_id=profile.profile_id,
             mcp_qualified_name=profile.mcp_qualified_name,
@@ -308,7 +306,7 @@ async def get_credential_profile_by_id(
             created_at=profile.created_at.isoformat() if profile.created_at and hasattr(profile.created_at, 'isoformat') else (str(profile.created_at) if profile.created_at else ""),
             updated_at=profile.updated_at.isoformat() if profile.updated_at and hasattr(profile.updated_at, 'isoformat') else (str(profile.updated_at) if profile.updated_at else "")
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -322,15 +320,15 @@ async def set_default_credential_profile(
 ):
     """Set a credential profile as the default for its MCP server"""
     logger.info(f"Setting credential profile {profile_id} as default for user {user_id}")
-    
+
     try:
         success = await credential_manager.set_default_profile(user_id, profile_id)
-        
+
         if not success:
             raise HTTPException(status_code=404, detail="Credential profile not found")
-        
+
         return {"message": "Default profile set successfully"}
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -344,19 +342,18 @@ async def delete_credential_profile(
 ):
     """Delete (deactivate) a credential profile"""
     logger.info(f"Deleting credential profile {profile_id} for user {user_id}")
-    
+
     try:
         success = await credential_manager.delete_credential_profile(user_id, profile_id)
-        
+
         if not success:
             raise HTTPException(status_code=404, detail="Credential profile not found")
-        
+
         return {"message": "Credential profile deleted successfully"}
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error deleting credential profile {profile_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to delete credential profile: {str(e)}")
-
 

@@ -1,1 +1,1 @@
-# Local MCP (Model Context Protocol) integration module 
+# Local MCP (Model Context Protocol) integration module

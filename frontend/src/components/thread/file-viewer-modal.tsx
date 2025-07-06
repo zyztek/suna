@@ -201,7 +201,7 @@ export function FileViewerModal({
     startPath: string = '/workspace'
   ): Promise<{ files: FileInfo[], totalSize: number }> => {
     const allFiles: FileInfo[] = [];
-    let totalSize = 0;
+    const totalSize = 0;
     const visited = new Set<string>();
 
     const exploreDirectory = async (dirPath: string) => {

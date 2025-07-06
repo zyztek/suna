@@ -2,7 +2,6 @@ from typing import Dict
 
 from agent.tools.data_providers.RapidDataProviderBase import RapidDataProviderBase, EndpointSchema
 
-
 class YahooFinanceProvider(RapidDataProviderBase):
     def __init__(self):
         endpoints: Dict[str, EndpointSchema] = {
@@ -91,7 +90,6 @@ class YahooFinanceProvider(RapidDataProviderBase):
         base_url = "https://yahoo-finance15.p.rapidapi.com/api"
         super().__init__(base_url, endpoints)
 
-
 if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv()
@@ -106,7 +104,7 @@ if __name__ == "__main__":
         }
     )
     print("Tickers Result:", tickers_result)
-    
+
     # Example for searching financial instruments
     search_result = tool.call_endpoint(
         route="search",
@@ -115,7 +113,7 @@ if __name__ == "__main__":
         }
     )
     print("Search Result:", search_result)
-    
+
     # Example for getting financial news
     news_result = tool.call_endpoint(
         route="get_news",
@@ -125,7 +123,7 @@ if __name__ == "__main__":
         }
     )
     print("News Result:", news_result)
-    
+
     # Example for getting stock asset profile module
     stock_module_result = tool.call_endpoint(
         route="get_stock_module",
@@ -135,7 +133,7 @@ if __name__ == "__main__":
         }
     )
     print("Asset Profile Result:", stock_module_result)
-    
+
     # Example for getting financial data module
     financial_data_result = tool.call_endpoint(
         route="get_stock_module",
@@ -145,7 +143,7 @@ if __name__ == "__main__":
         }
     )
     print("Financial Data Result:", financial_data_result)
-    
+
     # Example for getting SMA indicator data
     sma_result = tool.call_endpoint(
         route="get_sma",
@@ -158,7 +156,7 @@ if __name__ == "__main__":
         }
     )
     print("SMA Result:", sma_result)
-    
+
     # Example for getting RSI indicator data
     rsi_result = tool.call_endpoint(
         route="get_rsi",
@@ -171,7 +169,7 @@ if __name__ == "__main__":
         }
     )
     print("RSI Result:", rsi_result)
-    
+
     # Example for getting earnings calendar data
     earnings_calendar_result = tool.call_endpoint(
         route="get_earnings_calendar",
@@ -180,7 +178,7 @@ if __name__ == "__main__":
         }
     )
     print("Earnings Calendar Result:", earnings_calendar_result)
-    
+
     # Example for getting insider trades
     insider_trades_result = tool.call_endpoint(
         route="get_insider_trades",

@@ -200,8 +200,8 @@ export const PlaybackControls = ({
       }
 
       let currentIndex = 0;
-      let chunkIndex = 0;
-      let currentText = '';
+      const chunkIndex = 0;
+      const currentText = '';
       let isPaused = false;
 
       const processNextCharacter = () => {

@@ -5,7 +5,6 @@ from agent.tools.data_providers.RapidDataProviderBase import RapidDataProviderBa
 
 logger = logging.getLogger(__name__)
 
-
 class ZillowProvider(RapidDataProviderBase):
     def __init__(self):
         endpoints: Dict[str, EndpointSchema] = {
@@ -97,7 +96,6 @@ class ZillowProvider(RapidDataProviderBase):
         base_url = "https://zillow56.p.rapidapi.com"
         super().__init__(base_url, endpoints)
 
-
 if __name__ == "__main__":
     from dotenv import load_dotenv
     from time import sleep
@@ -184,4 +182,3 @@ if __name__ == "__main__":
         }
     )
     logger.debug("Mortgage Rates Result: %s", mortgage_result)
-  

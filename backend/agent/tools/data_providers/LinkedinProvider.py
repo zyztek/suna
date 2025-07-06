@@ -2,7 +2,6 @@ from typing import Dict
 
 from agent.tools.data_providers.RapidDataProviderBase import RapidDataProviderBase, EndpointSchema
 
-
 class LinkedinProvider(RapidDataProviderBase):
     def __init__(self):
         endpoints: Dict[str, EndpointSchema] = {
@@ -235,7 +234,6 @@ class LinkedinProvider(RapidDataProviderBase):
         }
         base_url = "https://linkedin-data-scraper.p.rapidapi.com"
         super().__init__(base_url, endpoints)
-
 
 if __name__ == "__main__":
     from dotenv import load_dotenv

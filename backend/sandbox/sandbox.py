@@ -32,12 +32,12 @@ daytona = AsyncDaytona(daytona_config)
 
 async def get_or_start_sandbox(sandbox_id: str) -> AsyncSandbox:
     """Retrieve a sandbox by ID, check its state, and start it if needed."""
-    
+
     logger.info(f"Getting or starting sandbox with ID: {sandbox_id}")
 
     try:
         sandbox = await daytona.get(sandbox_id)
-        
+
         # Check if sandbox needs to be started
         if sandbox.state == SandboxState.ARCHIVED or sandbox.state == SandboxState.STOPPED:
             logger.info(f"Sandbox is in {sandbox.state} state. Starting...")
@@ -47,16 +47,16 @@ async def get_or_start_sandbox(sandbox_id: str) -> AsyncSandbox:
                 # sleep(5)
                 # Refresh sandbox state after starting
                 sandbox = await daytona.get(sandbox_id)
-                
+
                 # Start supervisord in a session when restarting
                 await start_supervisord_session(sandbox)
             except Exception as e:
                 logger.error(f"Error starting sandbox: {e}")
                 raise e
-        
+
         logger.info(f"Sandbox {sandbox_id} is ready")
         return sandbox
-        
+
     except Exception as e:
         logger.error(f"Error retrieving or starting sandbox: {str(e)}")
         raise e
@@ -67,7 +67,7 @@ async def start_supervisord_session(sandbox: AsyncSandbox):
     try:
         logger.info(f"Creating session {session_id} for supervisord")
         await sandbox.process.create_session(session_id)
-        
+
         # Execute supervisord command
         await sandbox.process.execute_session_command(session_id, SessionExecuteRequest(
             command="exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf",
@@ -80,15 +80,15 @@ async def start_supervisord_session(sandbox: AsyncSandbox):
 
 async def create_sandbox(password: str, project_id: str = None) -> AsyncSandbox:
     """Create a new sandbox with all required services configured and running."""
-    
+
     logger.debug("Creating new Daytona sandbox environment")
     logger.debug("Configuring sandbox with browser-use image and environment variables")
-    
+
     labels = None
     if project_id:
         logger.debug(f"Using sandbox_id as label: {project_id}")
         labels = {'id': project_id}
-        
+
     params = CreateSandboxFromImageParams(
         image=Configuration.SANDBOX_IMAGE_NAME,
         public=True,
@@ -114,14 +114,14 @@ async def create_sandbox(password: str, project_id: str = None) -> AsyncSandbox:
         auto_stop_interval=15,
         auto_archive_interval=24 * 60,
     )
-    
+
     # Create the sandbox
     sandbox = await daytona.create(params)
     logger.debug(f"Sandbox created with ID: {sandbox.id}")
-    
+
     # Start supervisord in a session for new sandbox
     await start_supervisord_session(sandbox)
-    
+
     logger.debug(f"Sandbox environment successfully initialized")
     return sandbox
 
@@ -132,10 +132,10 @@ async def delete_sandbox(sandbox_id: str) -> bool:
     try:
         # Get the sandbox
         sandbox = await daytona.get(sandbox_id)
-        
+
         # Delete the sandbox
         await daytona.delete(sandbox)
-        
+
         logger.info(f"Successfully deleted sandbox {sandbox_id}")
         return True
     except Exception as e:

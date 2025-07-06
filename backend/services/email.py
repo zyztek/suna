@@ -11,25 +11,25 @@ class EmailService:
         self.api_token = os.getenv('MAILTRAP_API_TOKEN')
         self.sender_email = os.getenv('MAILTRAP_SENDER_EMAIL', 'dom@kortix.ai')
         self.sender_name = os.getenv('MAILTRAP_SENDER_NAME', 'Suna Team')
-        
+
         if not self.api_token:
             logger.warning("MAILTRAP_API_TOKEN not found in environment variables")
             self.client = None
         else:
             self.client = mt.MailtrapClient(token=self.api_token)
-    
+
     def send_welcome_email(self, user_email: str, user_name: Optional[str] = None) -> bool:
         if not self.client:
             logger.error("Cannot send email: MAILTRAP_API_TOKEN not configured")
             return False
-    
+
         if not user_name:
             user_name = user_email.split('@')[0].title()
-        
+
         subject = "🎉 Welcome to Suna — Let's Get Started "
         html_content = self._get_welcome_email_template(user_name)
         text_content = self._get_welcome_email_text(user_name)
-        
+
         return self._send_email(
             to_email=user_email,
             to_name=user_name,
@@ -37,13 +37,13 @@ class EmailService:
             html_content=html_content,
             text_content=text_content
         )
-    
+
     def _send_email(
-        self, 
-        to_email: str, 
-        to_name: str, 
-        subject: str, 
-        html_content: str, 
+        self,
+        to_email: str,
+        to_name: str,
+        subject: str,
+        html_content: str,
         text_content: str
     ) -> bool:
         try:
@@ -55,16 +55,16 @@ class EmailService:
                 html=html_content,
                 category="welcome"
             )
-            
+
             response = self.client.send(mail)
-            
+
             logger.info(f"Welcome email sent to {to_email}. Response: {response}")
             return True
-                
+
         except Exception as e:
             logger.error(f"Error sending email to {to_email}: {str(e)}")
             return False
-    
+
     def _get_welcome_email_template(self, user_name: str) -> str:
         return f"""<!DOCTYPE html>
 <html lang="en">
@@ -145,15 +145,18 @@ class EmailService:
 
     <p><em><strong>Welcome to Kortix Suna — we're excited to have you on board!</strong></em></p>
 
-    <p>To get started, we'd like to get to know you better: fill out this short <a href="https://docs.google.com/forms/d/e/1FAIpQLSef1EHuqmIh_iQz-kwhjnzSC3Ml-V_5wIySDpMoMU9W_j24JQ/viewform">form</a>!</p>
+    <p>To get started, we'd like to get to know you better: fill out this short
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSef1EHuqmIh_iQz-kwhjnzSC3Ml-V_5wIySDpMoMU9W_j24JQ/viewform">form</a>!</p>
 
     <p>To celebrate your arrival, here's a <strong>15% discount</strong> for your first month to get more usage:</p>
 
     <p>🎁 Use code <strong>WELCOME15</strong> at checkout.</p>
 
-    <p>Let us know if you need help getting started or have questions — we're always here, and join our <a href="https://discord.com/invite/FjD644cfcs">Discord community</a>.</p>
+    <p>Let us know if you need help getting started or have questions — we're always here, and join our
+    <a href="https://discord.com/invite/FjD644cfcs">Discord community</a>.</p>
 
-    <p><strong>For your business:</strong> if you want to automate manual and ordinary tasks for your company, book a call with us <a href="https://cal.com/team/kortix/enterprise-demo">here</a></p>
+    <p><strong>For your business:</strong> if you want to automate manual and ordinary tasks for your company,
+    book a call with us <a href="https://cal.com/team/kortix/enterprise-demo">here</a></p>
 
     <p>Thanks again, and welcome to the Suna community <span class="emoji">🌞</span></p>
 
@@ -163,7 +166,7 @@ class EmailService:
   </div>
 </body>
 </html>"""
-    
+
     def _get_welcome_email_text(self, user_name: str) -> str:
         return f"""Hi {user_name},
 
@@ -177,7 +180,7 @@ To celebrate your arrival, here's a 15% discount for your first month to get mor
 
 Let us know if you need help getting started or have questions — we're always here, and join our Discord community: https://discord.com/invite/FjD644cfcs
 
-For your business: if you want to automate manual and ordinary tasks for your company, book a call with us here: https://cal.com/team/kortix/enterprise-demo 
+For your business: if you want to automate manual and ordinary tasks for your company, book a call with us here: https://cal.com/team/kortix/enterprise-demo
 
 Thanks again, and welcome to the Suna community 🌞
 
@@ -189,4 +192,4 @@ Go to the platform: https://www.suna.so/
 © 2024 Suna. All rights reserved.
 You received this email because you signed up for a Suna account."""
 
-email_service = EmailService() 
+email_service = EmailService()

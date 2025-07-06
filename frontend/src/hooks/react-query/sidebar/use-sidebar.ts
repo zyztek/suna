@@ -55,7 +55,7 @@ interface DeleteMultipleThreadsVariables {
 
 export const useDeleteMultipleThreads = createMutationHook(
   async ({ threadIds, threadSandboxMap, onProgress }: DeleteMultipleThreadsVariables) => {
-    let completedCount = 0;
+    const completedCount = 0;
     const results = await Promise.all(
       threadIds.map(async (threadId) => {
         try {

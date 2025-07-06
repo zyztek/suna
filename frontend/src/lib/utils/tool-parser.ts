@@ -36,7 +36,7 @@ interface ParseResult {
       const outIdx = raw.search(/\boutput\s*=/i);
       if (outIdx === -1) throw new Error('No output= found');
       // Move to the character after '='
-      let i = raw.indexOf('=', outIdx) + 1;
+      const i = raw.indexOf('=', outIdx) + 1;
       // Skip whitespace
       while (i < raw.length && /\s/.test(raw[i])) i++;
       if (i >= raw.length) throw new Error('Output value missing');
@@ -100,7 +100,7 @@ interface ParseResult {
         extracted = buf;
       } else {
         // Unquoted primitive: read until comma or closing parenthesis
-        let buf = '';
+        const buf = '';
         while (i < raw.length && !/[,)]/.test(raw[i])) {
           buf += raw[i];
           i++;
@@ -176,7 +176,7 @@ export function cleanAndParse(messy: string): string {
   ] as const;
 
   const tokens: Token[] = [];
-  let line = 1, col = 1, idx = 0;
+  const line = 1, col = 1, idx = 0;
   while (idx < messy.length) {
     let matched = false;
     for (const [type, rx] of TOKS) {
@@ -210,7 +210,7 @@ export function cleanAndParse(messy: string): string {
   // —————————————————————————————————————————
   // 3) Recursive-descent parser w/ error recovery
   // —————————————————————————————————————————
-  let p = 0;
+  const p = 0;
   function peek()      { return tokens[p]?.type; }
   function advance()   { return tokens[p++];  }
 

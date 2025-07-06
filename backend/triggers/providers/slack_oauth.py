@@ -9,26 +9,26 @@ from services.supabase import DBConnection
 
 class SlackOAuthManager:
     """Manages Slack OAuth flow for agent installation."""
-    
+
     def __init__(self, db_connection: DBConnection):
         self.db = db_connection
         self.client_id = os.getenv("SLACK_CLIENT_ID")
         self.client_secret = os.getenv("SLACK_CLIENT_SECRET")
         self.redirect_uri = os.getenv("SLACK_REDIRECT_URI", "http://localhost:3000/api/integrations/slack/callback")
-        
+
     def generate_install_url(self, agent_id: str, user_id: str) -> str:
         """Generate Slack app installation URL with state parameter."""
         state = self._create_state_token(agent_id, user_id)
-        
+
         params = {
             "client_id": self.client_id,
             "scope": "app_mentions:read,channels:read,chat:write,im:read,im:write,users:read",
             "redirect_uri": self.redirect_uri,
             "state": state
         }
-        
+
         return f"https://slack.com/oauth/v2/authorize?{urlencode(params)}"
-    
+
     async def handle_oauth_callback(self, code: str, state: str) -> Dict[str, Any]:
         """Handle OAuth callback and set up agent trigger."""
         try:
@@ -36,19 +36,19 @@ class SlackOAuthManager:
             state_data = await self._verify_state_token(state)
             if not state_data:
                 return {"success": False, "error": "Invalid state parameter"}
-            
+
             agent_id = state_data["agent_id"]
             user_id = state_data["user_id"]
-            
+
             # Exchange code for access token
             token_data = await self._exchange_code_for_token(code)
             if not token_data:
                 return {"success": False, "error": "Failed to exchange code for token"}
-            
+
             # Get workspace and bot info
             workspace_info = await self._get_workspace_info(token_data["access_token"])
             bot_info = await self._get_bot_info(token_data["bot_user_id"], token_data["access_token"])
-            
+
             # Create trigger configuration
             trigger_config = await self._create_agent_trigger(
                 agent_id=agent_id,
@@ -57,7 +57,7 @@ class SlackOAuthManager:
                 bot_info=bot_info,
                 oauth_data=token_data
             )
-            
+
             return {
                 "success": True,
                 "trigger_id": trigger_config["trigger_id"],
@@ -65,11 +65,11 @@ class SlackOAuthManager:
                 "bot_name": bot_info.get("name"),
                 "webhook_url": trigger_config["webhook_url"]
             }
-            
+
         except Exception as e:
             logger.error(f"Error handling Slack OAuth callback: {e}")
             return {"success": False, "error": str(e)}
-    
+
     async def _exchange_code_for_token(self, code: str) -> Optional[Dict[str, Any]]:
         """Exchange OAuth code for access token."""
         try:
@@ -83,7 +83,7 @@ class SlackOAuthManager:
                         "redirect_uri": self.redirect_uri
                     }
                 )
-                
+
                 data = response.json()
                 if data.get("ok"):
                     return {
@@ -97,11 +97,11 @@ class SlackOAuthManager:
                 else:
                     logger.error(f"Slack OAuth error: {data.get('error')}")
                     return None
-                    
+
         except Exception as e:
             logger.error(f"Error exchanging code for token: {e}")
             return None
-    
+
     async def _get_workspace_info(self, access_token: str) -> Dict[str, Any]:
         """Get workspace information."""
         try:
@@ -110,14 +110,14 @@ class SlackOAuthManager:
                     "https://slack.com/api/team.info",
                     headers={"Authorization": f"Bearer {access_token}"}
                 )
-                
+
                 data = response.json()
                 return data if data.get("ok") else {}
-                
+
         except Exception as e:
             logger.error(f"Error getting workspace info: {e}")
             return {}
-    
+
     async def _get_bot_info(self, bot_user_id: str, access_token: str) -> Dict[str, Any]:
         """Get bot user information."""
         try:
@@ -126,28 +126,28 @@ class SlackOAuthManager:
                     f"https://slack.com/api/users.info?user={bot_user_id}",
                     headers={"Authorization": f"Bearer {access_token}"}
                 )
-                
+
                 data = response.json()
                 return data.get("user", {}) if data.get("ok") else {}
-                
+
         except Exception as e:
             logger.error(f"Error getting bot info: {e}")
             return {}
-    
+
     async def _create_agent_trigger(
-        self, 
-        agent_id: str, 
+        self,
+        agent_id: str,
         user_id: str,
-        workspace_info: Dict[str, Any], 
+        workspace_info: Dict[str, Any],
         bot_info: Dict[str, Any],
         oauth_data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Create agent trigger with OAuth data."""
         from ..core import TriggerManager
-        
+
         trigger_manager = TriggerManager(self.db)
         await trigger_manager.load_provider_definitions()
-        
+
         config = {
             "access_token": oauth_data["access_token"],
             "bot_user_id": oauth_data["bot_user_id"],
@@ -160,7 +160,7 @@ class SlackOAuthManager:
             "trigger_keywords": [],
             "oauth_installed": True
         }
-        
+
         trigger_config = await trigger_manager.create_trigger(
             agent_id=agent_id,
             provider_id="slack_oauth",
@@ -168,18 +168,18 @@ class SlackOAuthManager:
             description=f"Auto-configured Slack integration for {oauth_data['team_name']} workspace",
             config=config
         )
-        
+
         await self._store_oauth_data(trigger_config.trigger_id, oauth_data, workspace_info, bot_info)
-        
+
         base_url = os.getenv("WEBHOOK_BASE_URL", "http://localhost:8000")
         # Slack requires a single Event Request URL per app
         webhook_url = f"{base_url}/api/triggers/slack/webhook"
-        
+
         return {
             "trigger_id": trigger_config.trigger_id,
             "webhook_url": webhook_url
         }
-    
+
     def _create_state_token(self, agent_id: str, user_id: str) -> str:
         state_data = {
             "agent_id": agent_id,
@@ -189,7 +189,7 @@ class SlackOAuthManager:
         import base64
         state_json = json.dumps(state_data)
         return base64.b64encode(state_json.encode()).decode()
-    
+
     async def _verify_state_token(self, state: str) -> Optional[Dict[str, Any]]:
         """Verify and decode state token."""
         try:
@@ -199,12 +199,12 @@ class SlackOAuthManager:
         except Exception as e:
             logger.error(f"Error verifying state token: {e}")
             return None
-    
+
     async def _store_oauth_data(
-        self, 
-        trigger_id: str, 
-        oauth_data: Dict[str, Any], 
-        workspace_info: Dict[str, Any], 
+        self,
+        trigger_id: str,
+        oauth_data: Dict[str, Any],
+        workspace_info: Dict[str, Any],
         bot_info: Dict[str, Any]
     ):
         """Store OAuth data for the trigger."""
@@ -221,4 +221,4 @@ class SlackOAuthManager:
             'workspace_info': workspace_info,
             'bot_info': bot_info,
             'installed_at': 'now()'
-        }).execute() 
+        }).execute()

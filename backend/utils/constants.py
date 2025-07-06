@@ -49,7 +49,7 @@ MODEL_ACCESS_TIERS = {
         "openrouter/deepseek/deepseek-chat",
         # "xai/grok-3-mini-fast-beta",
         "openai/gpt-4o",
-        
+
         # "openai/gpt-4-turbo",
         # "xai/grok-3-fast-latest",
         "openrouter/google/gemini-2.5-flash-preview-05-20",  # Added

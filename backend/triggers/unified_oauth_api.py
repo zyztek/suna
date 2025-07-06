@@ -52,7 +52,7 @@ async def get_available_integrations():
                 "color": "#4A154B"
             },
             {
-                "id": "discord", 
+                "id": "discord",
                 "name": "Discord",
                 "description": "Connect to Discord servers",
                 "icon": "discord",
@@ -60,7 +60,7 @@ async def get_available_integrations():
             },
             {
                 "id": "teams",
-                "name": "Microsoft Teams", 
+                "name": "Microsoft Teams",
                 "description": "Connect to Teams organizations",
                 "icon": "teams",
                 "color": "#6264A7"
@@ -77,18 +77,18 @@ async def initiate_integration_install(
         await verify_agent_access(request.agent_id, user_id)
         oauth_provider = get_oauth_provider(request.provider, db)
         install_url = oauth_provider.generate_authorization_url(request.agent_id, user_id)
-        
+
         return IntegrationInstallResponse(
             install_url=install_url,
             provider=request.provider.value
         )
-        
+
     except ValueError as e:
         error_msg = str(e)
         if "environment variable is required" in error_msg:
             logger.error(f"Missing OAuth configuration for {request.provider.value}: {e}")
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail=f"OAuth integration for {request.provider.value.title()} is not configured. Please contact your administrator to set up the required environment variables."
             )
         raise HTTPException(status_code=400, detail=str(e))
@@ -111,11 +111,11 @@ async def handle_oauth_callback(
             url=f"{frontend_url}/agents?{provider.value}_error={error}",
             status_code=302
         )
-    
+
     try:
         oauth_provider = get_oauth_provider(provider, db)
         result = await oauth_provider.handle_callback(code, state)
-        
+
         if result.success:
             frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
             redirect_url = (
@@ -132,7 +132,7 @@ async def handle_oauth_callback(
                 url=f"{frontend_url}/agents?{provider.value}_error={result.error}",
                 status_code=302
             )
-            
+
     except Exception as e:
         logger.error(f"Error handling {provider.value} callback: {e}")
         frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
@@ -149,25 +149,25 @@ async def get_integration_status(
     """Get integration status for an agent across all providers."""
     try:
         await verify_agent_access(agent_id, user_id)
-        
+
         client = await db.client
         result = await client.table('agent_triggers')\
             .select('trigger_id, trigger_type, name, is_active, created_at')\
             .eq('agent_id', agent_id)\
             .in_('trigger_type', ['slack', 'discord', 'teams'])\
             .execute()
-        
+
         integrations = []
         for trigger in result.data:
             oauth_result = await client.table('oauth_installations')\
                 .select('provider, provider_data, installed_at')\
                 .eq('trigger_id', trigger['trigger_id'])\
                 .execute()
-            
+
             if oauth_result.data:
                 oauth_data = oauth_result.data[0]
                 provider_data = oauth_data.get('provider_data', {})
-                
+
                 integrations.append({
                     "trigger_id": trigger["trigger_id"],
                     "provider": oauth_data["provider"],
@@ -178,12 +178,12 @@ async def get_integration_status(
                     "installed_at": oauth_data["installed_at"],
                     "created_at": trigger["created_at"]
                 })
-        
+
         return IntegrationStatusResponse(
             agent_id=agent_id,
             integrations=integrations
         )
-        
+
     except Exception as e:
         logger.error(f"Error getting integration status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -200,32 +200,32 @@ async def uninstall_integration(
             .select('agent_id, trigger_type')\
             .eq('trigger_id', trigger_id)\
             .execute()
-        
+
         if not trigger_result.data:
             raise HTTPException(status_code=404, detail="Integration not found")
-        
+
         agent_id = trigger_result.data[0]['agent_id']
         provider_type = trigger_result.data[0]['trigger_type']
-        
+
         await verify_agent_access(agent_id, user_id)
-        
+
         from .core import TriggerManager
         trigger_manager = TriggerManager(db)
         success = await trigger_manager.delete_trigger(trigger_id)
-        
+
         if success:
             await client.table('oauth_installations')\
                 .delete()\
                 .eq('trigger_id', trigger_id)\
                 .execute()
-            
+
             return {
-                "success": True, 
+                "success": True,
                 "message": f"{provider_type.title()} integration uninstalled successfully"
             }
         else:
             raise HTTPException(status_code=500, detail="Failed to uninstall integration")
-            
+
     except Exception as e:
         logger.error(f"Error uninstalling integration: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -234,10 +234,10 @@ async def verify_agent_access(agent_id: str, user_id: str):
     """Verify that the user has access to the agent."""
     client = await db.client
     result = await client.table('agents').select('account_id').eq('agent_id', agent_id).execute()
-    
+
     if not result.data:
         raise HTTPException(status_code=404, detail="Agent not found")
-    
+
     agent = result.data[0]
     if agent['account_id'] != user_id:
-        raise HTTPException(status_code=403, detail="Access denied") 
+        raise HTTPException(status_code=403, detail="Access denied")

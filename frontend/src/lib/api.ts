@@ -578,7 +578,7 @@ export const getMessages = async (threadId: string): Promise<Message[]> => {
   const supabase = createClient();
 
   let allMessages: Message[] = [];
-  let from = 0;
+  const from = 0;
   const batchSize = 1000;
   let hasMore = true;
 

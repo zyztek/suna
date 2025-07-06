@@ -4,9 +4,9 @@ from .registry import TriggerRegistry
 
 __all__ = [
     'TriggerManager',
-    'TriggerProvider', 
+    'TriggerProvider',
     'TriggerEvent',
     'TriggerResult',
     'TelegramTriggerProvider',
     'TriggerRegistry'
-] 
+]

@@ -33,7 +33,7 @@ class TriggerEvent(BaseModel):
     raw_data: Dict[str, Any]
     processed_data: Optional[Dict[str, Any]] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
-    
+
     class Config:
         use_enum_values = True
 
@@ -58,7 +58,7 @@ class TriggerConfig(BaseModel):
     config: Dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    
+
     class Config:
         use_enum_values = True
 
@@ -72,38 +72,38 @@ class ProviderDefinition(BaseModel):
     config_schema: Dict[str, Any] = Field(default_factory=dict)
     webhook_enabled: bool = False
     setup_required: bool = True
-    
+
     webhook_config: Optional[Dict[str, Any]] = None
     response_template: Optional[Dict[str, Any]] = None
     field_mappings: Optional[Dict[str, str]] = None
 
 class TriggerProvider(abc.ABC):
     """Abstract base class for trigger providers."""
-    
+
     def __init__(self, trigger_type: TriggerType, provider_definition: Optional[ProviderDefinition] = None):
         self.trigger_type = trigger_type
         self.provider_definition = provider_definition
-    
+
     @abc.abstractmethod
     async def validate_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
         pass
-    
+
     @abc.abstractmethod
     async def setup_trigger(self, trigger_config: TriggerConfig) -> bool:
         pass
-    
+
     @abc.abstractmethod
     async def teardown_trigger(self, trigger_config: TriggerConfig) -> bool:
         pass
-    
+
     @abc.abstractmethod
     async def process_event(self, event: TriggerEvent) -> TriggerResult:
         pass
-    
+
     @abc.abstractmethod
     async def health_check(self, trigger_config: TriggerConfig) -> bool:
         pass
-    
+
     def get_config_schema(self) -> Dict[str, Any]:
         if self.provider_definition and self.provider_definition.config_schema:
             return self.provider_definition.config_schema
@@ -112,27 +112,27 @@ class TriggerProvider(abc.ABC):
             "properties": {},
             "required": []
         }
-    
+
     def get_webhook_url(self, trigger_id: str, base_url: str) -> Optional[str]:
         return f"{base_url}/api/triggers/{trigger_id}/webhook"
 
 class GenericWebhookProvider(TriggerProvider):
     def __init__(self, provider_definition: ProviderDefinition):
         super().__init__(TriggerType.WEBHOOK, provider_definition)
-    
+
     async def validate_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
         required_fields = self.provider_definition.config_schema.get("required", [])
         for field in required_fields:
             if field not in config:
                 raise ValueError(f"Required field '{field}' missing from config")
         return config
-    
+
     async def setup_trigger(self, trigger_config: TriggerConfig) -> bool:
         return True
-    
+
     async def teardown_trigger(self, trigger_config: TriggerConfig) -> bool:
         return True
-    
+
     async def process_event(self, event: TriggerEvent) -> TriggerResult:
         try:
             execution_variables = {}
@@ -141,25 +141,25 @@ class GenericWebhookProvider(TriggerProvider):
                     value = self._extract_field(event.raw_data, input_path)
                     if value is not None:
                         execution_variables[output_field] = value
-            
+
             agent_prompt = self._create_agent_prompt(event.raw_data, execution_variables)
-            
+
             return TriggerResult(
                 success=True,
                 should_execute_agent=True,
                 agent_prompt=agent_prompt,
                 execution_variables=execution_variables
             )
-            
+
         except Exception as e:
             return TriggerResult(
                 success=False,
                 error_message=f"Error processing webhook event: {str(e)}"
             )
-    
+
     async def health_check(self, trigger_config: TriggerConfig) -> bool:
         return True
-    
+
     def _extract_field(self, data: Dict[str, Any], path: str) -> Any:
         """Extract field from nested dict using dot notation."""
         keys = path.split('.')
@@ -170,7 +170,7 @@ class GenericWebhookProvider(TriggerProvider):
             else:
                 return None
         return current
-    
+
     def _create_agent_prompt(self, raw_data: Dict[str, Any], variables: Dict[str, Any]) -> str:
         """Create agent prompt using template or default."""
         if self.provider_definition.response_template:
@@ -178,7 +178,7 @@ class GenericWebhookProvider(TriggerProvider):
             for key, value in variables.items():
                 template = template.replace(f"{{{key}}}", str(value))
             return template
-        
+
         return f"You received a webhook event from {self.provider_definition.name}: {raw_data}"
 
 class ProviderFactory:
@@ -192,10 +192,10 @@ class ProviderFactory:
                 return provider_class(provider_definition)
             except (ImportError, AttributeError) as e:
                 raise ValueError(f"Failed to load provider class {provider_definition.provider_class}: {e}")
-        
+
         if provider_definition.webhook_enabled:
             return GenericWebhookProvider(provider_definition)
-        
+
         raise ValueError(f"Provider {provider_definition.provider_id} has no implementation")
 
 class TriggerManager:
@@ -204,14 +204,14 @@ class TriggerManager:
         self.providers: Dict[str, TriggerProvider] = {}
         self.provider_definitions: Dict[str, ProviderDefinition] = {}
         self.active_triggers: Dict[str, TriggerConfig] = {}
-    
+
     async def load_provider_definitions(self):
         from utils.logger import logger
         logger.info("Loading provider definitions...")
         await self._load_builtin_providers()
         await self._load_custom_providers()
         logger.info(f"Loaded {len(self.provider_definitions)} provider definitions: {list(self.provider_definitions.keys())}")
-    
+
     async def _load_builtin_providers(self):
         builtin_providers = [
             ProviderDefinition(
@@ -303,12 +303,12 @@ class TriggerManager:
                     "type": "object",
                     "properties": {
                         "cron_expression": {
-                            "type": "string", 
+                            "type": "string",
                             "description": "Cron expression for scheduling",
                             "pattern": r"^(\*|([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])|\*\/([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])) (\*|([0-9]|1[0-9]|2[0-3])|\*\/([0-9]|1[0-9]|2[0-3])) (\*|([1-9]|1[0-9]|2[0-9]|3[0-1])|\*\/([1-9]|1[0-9]|2[0-9]|3[0-1])) (\*|([1-9]|1[0-2])|\*\/([1-9]|1[0-2])) (\*|([0-6])|\*\/([0-6]))$"
                         },
                         "agent_prompt": {
-                            "type": "string", 
+                            "type": "string",
                             "description": "The prompt to run the agent with when triggered"
                         },
                         "timezone": {
@@ -321,15 +321,15 @@ class TriggerManager:
                 }
             )
         ]
-        
+
         for definition in builtin_providers:
             self.provider_definitions[definition.provider_id] = definition
-    
+
     async def _load_custom_providers(self):
         try:
             client = await self.db.client
             result = await client.table('custom_trigger_providers').select('*').eq('is_active', True).execute()
-            
+
             for row in result.data:
                 definition = ProviderDefinition(
                     provider_id=row['provider_id'],
@@ -344,25 +344,25 @@ class TriggerManager:
                     field_mappings=row.get('field_mappings')
                 )
                 self.provider_definitions[definition.provider_id] = definition
-                
+
         except Exception as e:
             pass
-    
+
     async def get_or_create_provider(self, provider_id: str) -> Optional[TriggerProvider]:
         from utils.logger import logger
         logger.info(f"Looking for provider: {provider_id}")
         logger.info(f"Available providers: {list(self.providers.keys())}")
         logger.info(f"Available provider definitions: {list(self.provider_definitions.keys())}")
-        
+
         if provider_id in self.providers:
             logger.info(f"Found existing provider: {provider_id}")
             return self.providers[provider_id]
-        
+
         definition = self.provider_definitions.get(provider_id)
         if not definition:
             logger.error(f"No provider definition found for: {provider_id}")
             return None
-        
+
         try:
             logger.info(f"Creating provider for: {provider_id}")
             provider = await ProviderFactory.create_provider(definition)
@@ -374,17 +374,17 @@ class TriggerManager:
             import traceback
             logger.error(f"Traceback: {traceback.format_exc()}")
             return None
-    
+
     def register_provider(self, provider: TriggerProvider):
         provider_id = provider.provider_definition.provider_id if provider.provider_definition else (provider.trigger_type.value if hasattr(provider.trigger_type, 'value') else str(provider.trigger_type))
         self.providers[provider_id] = provider
-    
+
     def get_provider(self, trigger_type: TriggerType) -> Optional[TriggerProvider]:
         for provider in self.providers.values():
             if provider.trigger_type == trigger_type:
                 return provider
         return None
-    
+
     async def create_trigger(
         self,
         agent_id: str,
@@ -397,9 +397,9 @@ class TriggerManager:
         provider = await self.get_or_create_provider(provider_id)
         if not provider:
             raise ValueError(f"Unsupported provider: {provider_id}")
-        
+
         validated_config = await provider.validate_config(config)
-        
+
         trigger_config = TriggerConfig(
             trigger_id=str(uuid.uuid4()),
             agent_id=agent_id,
@@ -408,21 +408,21 @@ class TriggerManager:
             description=description,
             config={**validated_config, "provider_id": provider_id}
         )
-        
+
         setup_success = await provider.setup_trigger(trigger_config)
         if not setup_success:
             raise ValueError(f"Failed to setup trigger: {name}")
-        
+
         await self._store_trigger(trigger_config)
-        
+
         self.active_triggers[trigger_config.trigger_id] = trigger_config
-        
+
         return trigger_config
-    
+
     async def get_available_providers(self) -> List[ProviderDefinition]:
         """Get list of available trigger providers."""
         return list(self.provider_definitions.values())
-    
+
     async def update_trigger(
         self,
         trigger_id: str,
@@ -434,14 +434,14 @@ class TriggerManager:
         trigger_config = await self.get_trigger(trigger_id)
         if not trigger_config:
             raise ValueError(f"Trigger not found: {trigger_id}")
-        
+
         # Handle both enum and string trigger_type
         trigger_type_str = trigger_config.trigger_type.value if hasattr(trigger_config.trigger_type, 'value') else str(trigger_config.trigger_type)
         provider_id = trigger_config.config.get("provider_id", trigger_type_str)
         provider = await self.get_or_create_provider(provider_id)
         if not provider:
             raise ValueError(f"Provider not found: {provider_id}")
-        
+
         if config is not None:
             validated_config = await provider.validate_config(config)
             trigger_config.config = {**validated_config, "provider_id": provider_id}
@@ -451,7 +451,7 @@ class TriggerManager:
             trigger_config.description = description
         if is_active is not None:
             trigger_config.is_active = is_active
-        
+
         trigger_config.updated_at = datetime.now(timezone.utc)
 
         await provider.teardown_trigger(trigger_config)
@@ -459,18 +459,18 @@ class TriggerManager:
             setup_success = await provider.setup_trigger(trigger_config)
             if not setup_success:
                 raise ValueError(f"Failed to update trigger setup: {trigger_id}")
-        
+
         await self._update_trigger(trigger_config)
         self.active_triggers[trigger_id] = trigger_config
-        
+
         return trigger_config
-    
+
     async def delete_trigger(self, trigger_id: str) -> bool:
         """Delete a trigger."""
         trigger_config = await self.get_trigger(trigger_id)
         if not trigger_config:
             return False
-        
+
         # Handle both enum and string trigger_type
         trigger_type_str = trigger_config.trigger_type.value if hasattr(trigger_config.trigger_type, 'value') else str(trigger_config.trigger_type)
         provider_id = trigger_config.config.get("provider_id", trigger_type_str)
@@ -480,13 +480,13 @@ class TriggerManager:
 
         await self._delete_trigger(trigger_id)
         self.active_triggers.pop(trigger_id, None)
-        
+
         return True
-    
+
     async def get_trigger(self, trigger_id: str) -> Optional[TriggerConfig]:
         if trigger_id in self.active_triggers:
             return self.active_triggers[trigger_id]
-        
+
         trigger_data = await self._load_trigger(trigger_id)
         if trigger_data:
             if isinstance(trigger_data.get('trigger_type'), str):
@@ -494,9 +494,9 @@ class TriggerManager:
             trigger_config = TriggerConfig(**trigger_data)
             self.active_triggers[trigger_id] = trigger_config
             return trigger_config
-        
+
         return None
-    
+
     async def get_agent_triggers(self, agent_id: str) -> List[TriggerConfig]:
         triggers_data = await self._load_agent_triggers(agent_id)
         triggers = []
@@ -507,12 +507,12 @@ class TriggerManager:
             self.active_triggers[trigger_config.trigger_id] = trigger_config
             triggers.append(trigger_config)
         return triggers
-    
+
     async def process_trigger_event(self, trigger_id: str, raw_data: Dict[str, Any]) -> TriggerResult:
         from utils.logger import logger
         logger.info(f"Processing trigger event for {trigger_id}")
         await self.load_provider_definitions()
-        
+
         trigger_config = await self.get_trigger(trigger_id)
         if not trigger_config:
             logger.error(f"Trigger not found: {trigger_id}")
@@ -520,7 +520,7 @@ class TriggerManager:
                 success=False,
                 error_message=f"Trigger not found: {trigger_id}"
             )
-        
+
         if not trigger_config.is_active:
             logger.warning(f"Trigger is inactive: {trigger_id}")
             return TriggerResult(
@@ -538,7 +538,7 @@ class TriggerManager:
                 success=False,
                 error_message=f"Provider not found: {provider_id}"
             )
-        
+
         event = TriggerEvent(
             trigger_id=trigger_id,
             agent_id=trigger_config.agent_id,
@@ -550,9 +550,9 @@ class TriggerManager:
             logger.info(f"Calling provider.process_event for {provider_id}")
             result = await provider.process_event(event)
             logger.info(f"Provider returned: success={result.success}, should_execute={result.should_execute_agent}")
-            
+
             await self._log_trigger_event(event, result)
-            
+
             return result
         except Exception as e:
             logger.error(f"Error in provider.process_event: {e}")
@@ -564,14 +564,14 @@ class TriggerManager:
             )
             await self._log_trigger_event(event, error_result)
             return error_result
-    
+
     async def health_check_triggers(self, agent_id: Optional[str] = None) -> Dict[str, bool]:
         """Run health checks on triggers."""
         if agent_id:
             triggers = await self.get_agent_triggers(agent_id)
         else:
             triggers = list(self.active_triggers.values())
-        
+
         results = {}
         for trigger in triggers:
             # Handle both enum and string trigger_type
@@ -585,9 +585,9 @@ class TriggerManager:
                     results[trigger.trigger_id] = False
             else:
                 results[trigger.trigger_id] = False
-        
+
         return results
-    
+
     async def _store_trigger(self, trigger_config: TriggerConfig):
         client = await self.db.client
         await client.table('agent_triggers').insert({
@@ -601,7 +601,7 @@ class TriggerManager:
             'created_at': trigger_config.created_at.isoformat(),
             'updated_at': trigger_config.updated_at.isoformat()
         }).execute()
-    
+
     async def _update_trigger(self, trigger_config: TriggerConfig):
         client = await self.db.client
         await client.table('agent_triggers').update({
@@ -611,21 +611,21 @@ class TriggerManager:
             'config': trigger_config.config,
             'updated_at': trigger_config.updated_at.isoformat()
         }).eq('trigger_id', trigger_config.trigger_id).execute()
-    
+
     async def _delete_trigger(self, trigger_id: str):
         client = await self.db.client
         await client.table('agent_triggers').delete().eq('trigger_id', trigger_id).execute()
-    
+
     async def _load_trigger(self, trigger_id: str) -> Optional[Dict[str, Any]]:
         client = await self.db.client
         result = await client.table('agent_triggers').select('*').eq('trigger_id', trigger_id).execute()
         return result.data[0] if result.data else None
-    
+
     async def _load_agent_triggers(self, agent_id: str) -> List[Dict[str, Any]]:
         client = await self.db.client
         result = await client.table('agent_triggers').select('*').eq('agent_id', agent_id).execute()
         return result.data
-    
+
     async def _log_trigger_event(self, event: TriggerEvent, result: TriggerResult):
         client = await self.db.client
         await client.table('trigger_events').insert({
@@ -641,4 +641,4 @@ class TriggerManager:
                 'event_metadata': event.metadata,
                 'result_metadata': result.metadata
             }
-        }).execute() 
+        }).execute()

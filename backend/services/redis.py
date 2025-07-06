@@ -15,7 +15,6 @@ _init_lock = asyncio.Lock()
 # Constants
 REDIS_KEY_TTL = 3600 * 24  # 24 hour TTL as safety mechanism
 
-
 def initialize():
     """Initialize Redis connection pool and client using environment variables."""
     global client, pool
@@ -27,7 +26,7 @@ def initialize():
     redis_host = os.getenv("REDIS_HOST", "redis")
     redis_port = int(os.getenv("REDIS_PORT", 6379))
     redis_password = os.getenv("REDIS_PASSWORD", "")
-    
+
     # Connection pool configuration
     max_connections = int(os.getenv("REDIS_MAX_CONNECTIONS", 1024))
     retry_on_timeout = not (os.getenv("REDIS_RETRY_ON_TIMEOUT", "True").lower() != "true")
@@ -52,7 +51,6 @@ def initialize():
 
     return client
 
-
 async def initialize_async():
     """Initialize Redis connection asynchronously."""
     global client, _initialized
@@ -74,7 +72,6 @@ async def initialize_async():
 
     return client
 
-
 async def close():
     """Close Redis connection and connection pool."""
     global client, pool, _initialized
@@ -82,15 +79,14 @@ async def close():
         logger.info("Closing Redis connection")
         await client.aclose()
         client = None
-    
+
     if pool:
         logger.info("Closing Redis connection pool")
         await pool.aclose()
         pool = None
-    
+
     _initialized = False
     logger.info("Redis connection and pool closed")
-
 
 async def get_client():
     """Get the Redis client, initializing if necessary."""
@@ -99,13 +95,11 @@ async def get_client():
         await retry(lambda: initialize_async())
     return client
 
-
 # Basic Redis operations
 async def set(key: str, value: str, ex: int = None, nx: bool = False):
     """Set a Redis key."""
     redis_client = await get_client()
     return await redis_client.set(key, value, ex=ex, nx=nx)
-
 
 async def get(key: str, default: str = None):
     """Get a Redis key."""
@@ -113,24 +107,20 @@ async def get(key: str, default: str = None):
     result = await redis_client.get(key)
     return result if result is not None else default
 
-
 async def delete(key: str):
     """Delete a Redis key."""
     redis_client = await get_client()
     return await redis_client.delete(key)
-
 
 async def publish(channel: str, message: str):
     """Publish a message to a Redis channel."""
     redis_client = await get_client()
     return await redis_client.publish(channel, message)
 
-
 async def create_pubsub():
     """Create a Redis pubsub object."""
     redis_client = await get_client()
     return redis_client.pubsub()
-
 
 # List operations
 async def rpush(key: str, *values: Any):
@@ -138,25 +128,21 @@ async def rpush(key: str, *values: Any):
     redis_client = await get_client()
     return await redis_client.rpush(key, *values)
 
-
 async def lrange(key: str, start: int, end: int) -> List[str]:
     """Get a range of elements from a list."""
     redis_client = await get_client()
     return await redis_client.lrange(key, start, end)
-
 
 async def llen(key: str) -> int:
     """Get the length of a list."""
     redis_client = await get_client()
     return await redis_client.llen(key)
 
-
 # Key management
 async def expire(key: str, time: int):
     """Set a key's time to live in seconds."""
     redis_client = await get_client()
     return await redis_client.expire(key, time)
-
 
 async def keys(pattern: str) -> List[str]:
     """Get keys matching a pattern."""

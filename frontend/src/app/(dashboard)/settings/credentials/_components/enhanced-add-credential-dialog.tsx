@@ -34,8 +34,7 @@ const MCPServerCard: React.FC<MCPServerCardProps> = ({ server, onClick }) => {
     >
       <div className="flex items-start gap-3">
         {iconUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img 
+                    <img 
             src={iconUrl} 
             alt={`${displayName} logo`}
             className="w-8 h-8 rounded-md object-cover flex-shrink-0"

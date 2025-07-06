@@ -6,7 +6,7 @@ from agentpress.thread_manager import ThreadManager
 
 class UpdateAgentTool(Tool):
     """Tool for updating agent configuration.
-    
+
     This tool is used by the agent builder to update agent properties
     based on user requirements.
     """
@@ -116,7 +116,7 @@ class UpdateAgentTool(Tool):
         avatar_color: Optional[str] = None
     ) -> ToolResult:
         """Update agent configuration with provided fields.
-        
+
         Args:
             name: Agent name
             description: Agent description
@@ -125,13 +125,13 @@ class UpdateAgentTool(Tool):
             configured_mcps: MCP servers configuration
             avatar: Emoji avatar
             avatar_color: Avatar background color
-            
+
         Returns:
             ToolResult with updated agent data or error
         """
         try:
             client = await self.db.client
-            
+
             update_data = {}
             if name is not None:
                 update_data["name"] = name
@@ -156,12 +156,12 @@ class UpdateAgentTool(Tool):
                 update_data["avatar"] = avatar
             if avatar_color is not None:
                 update_data["avatar_color"] = avatar_color
-                
+
             if not update_data:
                 return self.fail_response("No fields provided to update")
-                
+
             result = await client.table('agents').update(update_data).eq('agent_id', self.agent_id).execute()
-            
+
             if not result.data:
                 return self.fail_response("Failed to update agent")
 
@@ -170,7 +170,7 @@ class UpdateAgentTool(Tool):
                 "updated_fields": list(update_data.keys()),
                 "agent": result.data[0]
             })
-            
+
         except Exception as e:
             return self.fail_response(f"Error updating agent: {str(e)}")
 
@@ -198,20 +198,20 @@ class UpdateAgentTool(Tool):
     )
     async def get_current_agent_config(self) -> ToolResult:
         """Get the current agent configuration.
-        
+
         Returns:
             ToolResult with current agent configuration
         """
         try:
             client = await self.db.client
-            
+
             result = await client.table('agents').select('*').eq('agent_id', self.agent_id).execute()
-            
+
             if not result.data:
                 return self.fail_response("Agent not found")
-                
+
             agent = result.data[0]
-            
+
             config_summary = {
                 "agent_id": agent["agent_id"],
                 "name": agent.get("name", "Untitled Agent"),
@@ -224,15 +224,15 @@ class UpdateAgentTool(Tool):
                 "created_at": agent.get("created_at"),
                 "updated_at": agent.get("updated_at")
             }
-            
+
             tools_count = len([t for t, cfg in config_summary["agentpress_tools"].items() if cfg.get("enabled")])
             mcps_count = len(config_summary["configured_mcps"])
-            
+
             return self.success_response({
                 "summary": f"Agent '{config_summary['name']}' has {tools_count} tools enabled and {mcps_count} MCP servers configured.",
                 "configuration": config_summary
             })
-            
+
         except Exception as e:
             return self.fail_response(f"Error getting agent configuration: {str(e)}")
 
@@ -286,12 +286,12 @@ class UpdateAgentTool(Tool):
         limit: int = 10
     ) -> ToolResult:
         """Search for MCP servers based on user requirements.
-        
+
         Args:
             query: Search query for finding relevant MCP servers
             category: Optional category filter
             limit: Maximum number of servers to return
-            
+
         Returns:
             ToolResult with matching MCP servers
         """
@@ -301,27 +301,27 @@ class UpdateAgentTool(Tool):
                     "Accept": "application/json",
                     "User-Agent": "Suna-MCP-Integration/1.0"
                 }
-                
+
                 if self.smithery_api_key:
                     headers["Authorization"] = f"Bearer {self.smithery_api_key}"
-                
+
                 params = {
                     "q": query,
                     "page": 1,
                     "pageSize": min(limit * 2, 50)  # Get more results to filter
                 }
-                
+
                 response = await client.get(
                     f"{self.smithery_api_base_url}/servers",
                     headers=headers,
                     params=params,
                     timeout=30.0
                 )
-                
+
                 response.raise_for_status()
                 data = response.json()
                 servers = data.get("servers", [])
-                
+
                 # Filter by category if specified
                 if category:
                     filtered_servers = []
@@ -330,10 +330,10 @@ class UpdateAgentTool(Tool):
                         if server_category == category:
                             filtered_servers.append(server)
                     servers = filtered_servers
-                
+
                 # Sort by useCount and limit results
                 servers = sorted(servers, key=lambda x: x.get("useCount", 0), reverse=True)[:limit]
-                
+
                 # Format results for user-friendly display
                 formatted_servers = []
                 for server in servers:
@@ -346,18 +346,18 @@ class UpdateAgentTool(Tool):
                         "homepage": server.get("homepage", ""),
                         "isDeployed": server.get("isDeployed", False)
                     })
-                
+
                 if not formatted_servers:
                     return ToolResult(
                         success=False,
                         output=json.dumps([], ensure_ascii=False)
                     )
-                
+
                 return ToolResult(
                     success=True,
                     output=json.dumps(formatted_servers, ensure_ascii=False)
                 )
-                
+
         except Exception as e:
             return self.fail_response(f"Error searching MCP servers: {str(e)}")
 
@@ -393,10 +393,10 @@ class UpdateAgentTool(Tool):
     )
     async def get_mcp_server_tools(self, qualified_name: str) -> ToolResult:
         """Get detailed information about a specific MCP server and its tools.
-        
+
         Args:
             qualified_name: The qualified name of the MCP server
-            
+
         Returns:
             ToolResult with server details and available tools
         """
@@ -407,28 +407,28 @@ class UpdateAgentTool(Tool):
                     "Accept": "application/json",
                     "User-Agent": "Suna-MCP-Integration/1.0"
                 }
-                
+
                 if self.smithery_api_key:
                     headers["Authorization"] = f"Bearer {self.smithery_api_key}"
-                
+
                 # URL encode the qualified name if it contains special characters
                 from urllib.parse import quote
                 if '@' in qualified_name or '/' in qualified_name:
                     encoded_name = quote(qualified_name, safe='')
                 else:
                     encoded_name = qualified_name
-                
+
                 url = f"{self.smithery_api_base_url}/servers/{encoded_name}"
-                
+
                 response = await client.get(
                     url,
                     headers=headers,
                     timeout=30.0
                 )
-                
+
                 response.raise_for_status()
                 server_data = response.json()
-            
+
             # Now connect to the MCP server to get actual tools using ClientSession
             try:
                 # Import MCP components
@@ -436,27 +436,27 @@ class UpdateAgentTool(Tool):
                 from mcp.client.streamable_http import streamablehttp_client
                 import base64
                 import os
-                
+
                 # Check if Smithery API key is available
                 smithery_api_key = os.getenv("SMITHERY_API_KEY")
                 if not smithery_api_key:
                     raise ValueError("SMITHERY_API_KEY environment variable is not set")
-                
+
                 # Create server URL with empty config for testing
                 config_json = json.dumps({})
                 config_b64 = base64.b64encode(config_json.encode()).decode()
                 server_url = f"https://server.smithery.ai/{qualified_name}/mcp?config={config_b64}&api_key={smithery_api_key}"
-                
+
                 # Connect and get tools
                 async with streamablehttp_client(server_url) as (read_stream, write_stream, _):
                     async with ClientSession(read_stream, write_stream) as session:
                         # Initialize the connection
                         await session.initialize()
-                        
+
                         # List available tools
                         tools_result = await session.list_tools()
                         tools = tools_result.tools if hasattr(tools_result, 'tools') else tools_result
-                
+
                 # Format tools for user-friendly display
                 formatted_tools = []
                 for tool in tools:
@@ -464,7 +464,7 @@ class UpdateAgentTool(Tool):
                         "name": tool.name,
                         "description": getattr(tool, 'description', 'No description available'),
                     }
-                    
+
                     # Extract parameters from inputSchema if available
                     if hasattr(tool, 'inputSchema') and tool.inputSchema:
                         schema = tool.inputSchema
@@ -477,9 +477,9 @@ class UpdateAgentTool(Tool):
                     else:
                         tool_info["parameters"] = {}
                         tool_info["required_params"] = []
-                    
+
                     formatted_tools.append(tool_info)
-                
+
                 # Extract configuration requirements from server metadata
                 config_requirements = []
                 security = server_data.get("security", {})
@@ -492,7 +492,7 @@ class UpdateAgentTool(Tool):
                                 "required": value.get("required", False),
                                 "type": value.get("type", "string")
                             })
-                
+
                 server_info = {
                     "name": server_data.get("displayName", qualified_name),
                     "qualifiedName": qualified_name,
@@ -504,12 +504,12 @@ class UpdateAgentTool(Tool):
                     "config_requirements": config_requirements,
                     "total_tools": len(formatted_tools)
                 }
-                
+
                 return self.success_response({
                     "message": f"Found {len(formatted_tools)} tools for {server_info['name']}",
                     "server": server_info
                 })
-                
+
             except Exception as mcp_error:
                 # If MCP connection fails, fall back to registry data
                 tools = server_data.get("tools", [])
@@ -521,7 +521,7 @@ class UpdateAgentTool(Tool):
                         "parameters": tool.get("inputSchema", {}).get("properties", {}),
                         "required_params": tool.get("inputSchema", {}).get("required", [])
                     })
-                
+
                 config_requirements = []
                 security = server_data.get("security", {})
                 if security:
@@ -533,7 +533,7 @@ class UpdateAgentTool(Tool):
                                 "required": value.get("required", False),
                                 "type": value.get("type", "string")
                             })
-                
+
                 server_info = {
                     "name": server_data.get("displayName", qualified_name),
                     "qualifiedName": qualified_name,
@@ -546,12 +546,12 @@ class UpdateAgentTool(Tool):
                     "total_tools": len(formatted_tools),
                     "note": "Tools listed from registry metadata (MCP connection failed - may need configuration)"
                 }
-                
+
                 return self.success_response({
                     "message": f"Found {len(formatted_tools)} tools for {server_info['name']} (from registry)",
                     "server": server_info
                 })
-                
+
         except Exception as e:
             return self.fail_response(f"Error getting MCP server tools: {str(e)}")
 
@@ -613,34 +613,34 @@ class UpdateAgentTool(Tool):
         config: Optional[Dict[str, Any]] = None
     ) -> ToolResult:
         """Configure and add an MCP server to the agent.
-        
+
         Args:
             qualified_name: The qualified name of the MCP server
             display_name: Display name for the server
             enabled_tools: List of tool names to enable
             config: Configuration object with API keys and settings
-            
+
         Returns:
             ToolResult with configuration status
         """
         try:
             client = await self.db.client
-            
+
             # Get current agent configuration
             result = await client.table('agents').select('configured_mcps').eq('agent_id', self.agent_id).execute()
-            
+
             if not result.data:
                 return self.fail_response("Agent not found")
-            
+
             current_mcps = result.data[0].get('configured_mcps', [])
-            
+
             # Check if server is already configured
             existing_server_index = None
             for i, mcp in enumerate(current_mcps):
                 if mcp.get('qualifiedName') == qualified_name:
                     existing_server_index = i
                     break
-            
+
             # Create new MCP configuration
             new_mcp_config = {
                 "name": display_name,
@@ -648,7 +648,7 @@ class UpdateAgentTool(Tool):
                 "config": config or {},
                 "enabledTools": enabled_tools
             }
-            
+
             # Update or add the configuration
             if existing_server_index is not None:
                 current_mcps[existing_server_index] = new_mcp_config
@@ -656,22 +656,22 @@ class UpdateAgentTool(Tool):
             else:
                 current_mcps.append(new_mcp_config)
                 action = "added"
-            
+
             # Save to database
             update_result = await client.table('agents').update({
                 'configured_mcps': current_mcps
             }).eq('agent_id', self.agent_id).execute()
-            
+
             if not update_result.data:
                 return self.fail_response("Failed to save MCP configuration")
-            
+
             return self.success_response({
                 "message": f"Successfully {action} MCP server '{display_name}' with {len(enabled_tools)} tools",
                 "server": new_mcp_config,
                 "total_mcp_servers": len(current_mcps),
                 "action": action
             })
-            
+
         except Exception as e:
             return self.fail_response(f"Error configuring MCP server: {str(e)}")
 
@@ -708,10 +708,10 @@ class UpdateAgentTool(Tool):
     )
     async def get_popular_mcp_servers(self, category: Optional[str] = None) -> ToolResult:
         """Get popular MCP servers organized by category.
-        
+
         Args:
             category: Optional category filter
-            
+
         Returns:
             ToolResult with popular MCP servers
         """
@@ -721,31 +721,31 @@ class UpdateAgentTool(Tool):
                     "Accept": "application/json",
                     "User-Agent": "Suna-MCP-Integration/1.0"
                 }
-                
+
                 if self.smithery_api_key:
                     headers["Authorization"] = f"Bearer {self.smithery_api_key}"
-                
+
                 response = await client.get(
                     f"{self.smithery_api_base_url}/servers",
                     headers=headers,
                     params={"page": 1, "pageSize": 50},
                     timeout=30.0
                 )
-                
+
                 response.raise_for_status()
                 data = response.json()
                 servers = data.get("servers", [])
-                
+
                 # Categorize servers
                 categorized = {}
                 for server in servers:
                     server_category = self._categorize_server(server)
                     if category and server_category != category:
                         continue
-                        
+
                     if server_category not in categorized:
                         categorized[server_category] = []
-                    
+
                     categorized[server_category].append({
                         "name": server.get("displayName", server.get("qualifiedName", "Unknown")),
                         "qualifiedName": server.get("qualifiedName"),
@@ -754,17 +754,17 @@ class UpdateAgentTool(Tool):
                         "homepage": server.get("homepage", ""),
                         "isDeployed": server.get("isDeployed", False)
                     })
-                
+
                 # Sort categories and servers within each category
                 for cat in categorized:
                     categorized[cat] = sorted(categorized[cat], key=lambda x: x["useCount"], reverse=True)[:5]
-                
+
                 return self.success_response({
                     "message": f"Found popular MCP servers" + (f" in category '{category}'" if category else ""),
                     "categorized_servers": categorized,
                     "total_categories": len(categorized)
                 })
-                
+
         except Exception as e:
             return self.fail_response(f"Error getting popular MCP servers: {str(e)}")
 
@@ -772,7 +772,7 @@ class UpdateAgentTool(Tool):
         """Categorize a server based on its qualified name and description."""
         qualified_name = server.get("qualifiedName", "").lower()
         description = server.get("description", "").lower()
-        
+
         # Category mappings
         category_mappings = {
             "AI & Search": ["exa", "perplexity", "openai", "anthropic", "duckduckgo", "brave", "google", "search"],
@@ -788,13 +788,13 @@ class UpdateAgentTool(Tool):
             "Automation & Productivity": ["playwright", "puppeteer", "selenium", "desktop-commander", "sequential-thinking", "automation"],
             "Utilities": ["filesystem", "memory", "fetch", "time", "weather", "currency", "file"]
         }
-        
+
         # Check qualified name and description for category keywords
         for category, keywords in category_mappings.items():
             for keyword in keywords:
                 if keyword in qualified_name or keyword in description:
                     return category
-        
+
         return "Other"
 
     @openapi_schema({
@@ -840,11 +840,11 @@ class UpdateAgentTool(Tool):
         config: Optional[Dict[str, Any]] = None
     ) -> ToolResult:
         """Test connectivity to an MCP server with provided configuration.
-        
+
         Args:
             qualified_name: The qualified name of the MCP server
             config: Configuration object with API keys and settings
-            
+
         Returns:
             ToolResult with connection test results
         """
@@ -854,29 +854,29 @@ class UpdateAgentTool(Tool):
             from mcp.client.streamable_http import streamablehttp_client
             import base64
             import os
-            
+
             # Check if Smithery API key is available
             smithery_api_key = os.getenv("SMITHERY_API_KEY")
             if not smithery_api_key:
                 return self.fail_response("SMITHERY_API_KEY environment variable is not set")
-            
+
             # Create server URL with provided config
             config_json = json.dumps(config or {})
             config_b64 = base64.b64encode(config_json.encode()).decode()
             server_url = f"https://server.smithery.ai/{qualified_name}/mcp?config={config_b64}&api_key={smithery_api_key}"
-            
+
             # Test connection
             async with streamablehttp_client(server_url) as (read_stream, write_stream, _):
                 async with ClientSession(read_stream, write_stream) as session:
                     # Initialize the connection
                     await session.initialize()
-                    
+
                     # List available tools to verify connection
                     tools_result = await session.list_tools()
                     tools = tools_result.tools if hasattr(tools_result, 'tools') else tools_result
-                    
+
                     tool_names = [tool.name for tool in tools]
-                    
+
                     return self.success_response({
                         "message": f"Successfully connected to {qualified_name}",
                         "qualified_name": qualified_name,
@@ -884,6 +884,6 @@ class UpdateAgentTool(Tool):
                         "available_tools": tool_names,
                         "total_tools": len(tool_names)
                     })
-            
+
         except Exception as e:
-            return self.fail_response(f"Failed to connect to {qualified_name}: {str(e)}") 
+            return self.fail_response(f"Failed to connect to {qualified_name}: {str(e)}")

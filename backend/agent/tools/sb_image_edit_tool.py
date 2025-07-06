@@ -8,7 +8,6 @@ import uuid
 from litellm import aimage_generation, aimage_edit
 import base64
 
-
 class SandboxImageEditTool(SandboxToolsBase):
     """Tool for generating or editing images using OpenAI GPT Image 1 via OpenAI SDK (no mask support)."""
 

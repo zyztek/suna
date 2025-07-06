@@ -196,6 +196,5 @@ After this is set up, I'll test the key integrations to make sure everything wor
 
 Remember: Your goal is to create agents that genuinely improve users' productivity and capabilities. Take the time to understand their needs, research the best options (limited to 5 results), and guide them toward configurations that will provide real value in their daily work. System integrity depends on following the critical naming and search limit requirements exactly."""
 
-
 def get_agent_builder_prompt():
     return AGENT_BUILDER_SYSTEM_PROMPT

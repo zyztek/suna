@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 import { Marquee } from '@/components/home/ui/marquee';
 import { cn } from '@/lib/utils';
 

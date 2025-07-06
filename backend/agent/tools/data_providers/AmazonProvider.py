@@ -2,7 +2,6 @@ from typing import Dict
 
 from agent.tools.data_providers.RapidDataProviderBase import RapidDataProviderBase, EndpointSchema
 
-
 class AmazonProvider(RapidDataProviderBase):
     def __init__(self):
         endpoints: Dict[str, EndpointSchema] = {
@@ -105,7 +104,6 @@ class AmazonProvider(RapidDataProviderBase):
         base_url = "https://real-time-amazon-data.p.rapidapi.com"
         super().__init__(base_url, endpoints)
 
-
 if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv()
@@ -125,7 +123,7 @@ if __name__ == "__main__":
         }
     )
     print("Search Result:", search_result)
-    
+
     # Example for product details
     details_result = tool.call_endpoint(
         route="product-details",
@@ -135,7 +133,7 @@ if __name__ == "__main__":
         }
     )
     print("Product Details:", details_result)
-    
+
     # Example for products by category
     category_result = tool.call_endpoint(
         route="products-by-category",
@@ -150,7 +148,7 @@ if __name__ == "__main__":
         }
     )
     print("Category Products:", category_result)
-    
+
     # Example for product reviews
     reviews_result = tool.call_endpoint(
         route="product-reviews",
@@ -166,7 +164,7 @@ if __name__ == "__main__":
         }
     )
     print("Product Reviews:", reviews_result)
-    
+
     # Example for seller profile
     seller_result = tool.call_endpoint(
         route="seller-profile",
@@ -176,7 +174,7 @@ if __name__ == "__main__":
         }
     )
     print("Seller Profile:", seller_result)
-    
+
     # Example for seller reviews
     seller_reviews_result = tool.call_endpoint(
         route="seller-reviews",

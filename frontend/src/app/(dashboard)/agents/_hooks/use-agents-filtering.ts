@@ -46,7 +46,7 @@ export function useAgentsFiltering(agents: Agent[]) {
   }, [agents]);
 
   const filteredAndSortedAgents = useMemo(() => {
-    let filtered = agents.filter(agent => {
+    const filtered = agents.filter(agent => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesName = agent.name.toLowerCase().includes(query);
@@ -113,7 +113,7 @@ export function useAgentsFiltering(agents: Agent[]) {
   }, [agents, searchQuery, sortBy, sortOrder, filters]);
 
   const activeFiltersCount = useMemo(() => {
-    let count = 0;
+    const count = 0;
     if (filters.hasDefaultAgent) count++;
     if (filters.hasMcpTools) count++;
     if (filters.hasAgentpressTools) count++;

@@ -8,7 +8,6 @@ import asyncio
 from utils.retry import retry
 import uuid
 
-
 async def main():
     await retry(lambda: redis.initialize_async())
     key = uuid.uuid4().hex
@@ -29,7 +28,6 @@ async def main():
         await redis.delete(key)
         await redis.close()
         exit(0)
-
 
 if __name__ == "__main__":
     asyncio.run(main())

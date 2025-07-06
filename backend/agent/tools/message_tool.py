@@ -69,11 +69,11 @@ This information will help me make sure the cake meets your expectations for the
         Returns:
             ToolResult indicating the question was successfully sent
         """
-        try:            
+        try:
             # Convert single attachment to list for consistent handling
             if attachments and isinstance(attachments, str):
                 attachments = [attachments]
-          
+
             return self.success_response({"status": "Awaiting user response..."})
         except Exception as e:
             return self.fail_response(f"Error asking user: {str(e)}")
@@ -245,7 +245,6 @@ If you encounter any issues or need to take additional steps, please let me know
             return self.success_response({"status": "complete"})
         except Exception as e:
             return self.fail_response(f"Error entering complete state: {str(e)}")
-
 
 if __name__ == "__main__":
     import asyncio
