@@ -1,28 +1,30 @@
-from typing import Optional
+from typing import Optional, Literal
 from agentpress.tool import ToolResult, openapi_schema, xml_schema
 from sandbox.tool_base import SandboxToolsBase
 from agentpress.thread_manager import ThreadManager
 import httpx
 from io import BytesIO
 import uuid
-from litellm import aimage_generation, aimage_edit
+from openai import AsyncOpenAI
 import base64
+import struct
 
 
 class SandboxImageEditTool(SandboxToolsBase):
-    """Tool for generating or editing images using OpenAI GPT Image 1 via OpenAI SDK (no mask support)."""
+    """Tool for generating or editing images using OpenAI GPT Image 1 via OpenAI SDK."""
 
     def __init__(self, project_id: str, thread_id: str, thread_manager: ThreadManager):
         super().__init__(project_id, thread_manager)
         self.thread_id = thread_id
         self.thread_manager = thread_manager
+        self.client = AsyncOpenAI()
 
     @openapi_schema(
         {
             "type": "function",
             "function": {
                 "name": "image_edit_or_generate",
-                "description": "Generate a new image from a prompt, or edit an existing image (no mask support) using OpenAI GPT Image 1 via OpenAI SDK. Stores the result in the thread context.",
+                "description": "Generate a new image from a prompt, or edit an existing image using OpenAI GPT Image 1 via OpenAI SDK. Stores the result in the thread context.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -39,11 +41,6 @@ class SandboxImageEditTool(SandboxToolsBase):
                             "type": "string",
                             "description": "(edit mode only) Path to the image file to edit, relative to /workspace. Required for 'edit'.",
                         },
-                        "size": {
-                            "type": "string",
-                            "enum": ["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"],
-                            "description": "Size of the generated image. Defaults to '1024x1024'.",
-                        },
                     },
                     "required": ["mode", "prompt"],
                 },
@@ -56,14 +53,12 @@ class SandboxImageEditTool(SandboxToolsBase):
             {"param_name": "mode", "node_type": "attribute", "path": "."},
             {"param_name": "prompt", "node_type": "attribute", "path": "."},
             {"param_name": "image_path", "node_type": "attribute", "path": "."},
-            {"param_name": "size", "node_type": "attribute", "path": "."},
         ],
         example="""
         <function_calls>
         <invoke name="image_edit_or_generate">
         <parameter name="mode">generate</parameter>
         <parameter name="prompt">A futuristic cityscape at sunset</parameter>
-        <parameter name="size">1024x1024</parameter>
         </invoke>
         </function_calls>
         """,
@@ -73,18 +68,18 @@ class SandboxImageEditTool(SandboxToolsBase):
         mode: str,
         prompt: str,
         image_path: Optional[str] = None,
-        size: str = "1024x1024",
     ) -> ToolResult:
-        """Generate or edit images using OpenAI GPT Image 1 via OpenAI SDK (no mask support)."""
+        """Generate or edit images using OpenAI GPT Image 1 via OpenAI SDK."""
         try:
             await self._ensure_sandbox()
 
             if mode == "generate":
-                response = await aimage_generation(
+                response = await self.client.images.generate(
                     model="gpt-image-1",
                     prompt=prompt,
                     n=1,
-                    size=size,
+                    size="auto",  # type: ignore
+                    quality="auto",  # type: ignore
                 )
             elif mode == "edit":
                 if not image_path:
@@ -94,29 +89,52 @@ class SandboxImageEditTool(SandboxToolsBase):
                 if isinstance(image_bytes, ToolResult):  # Error occurred
                     return image_bytes
 
-                # Create BytesIO object with proper filename to set MIME type
-                image_io = BytesIO(image_bytes)
-                image_io.name = (
-                    "image.png"  # Set filename to ensure proper MIME type detection
-                )
+                # Validate image bytes
+                if not image_bytes or len(image_bytes) == 0:
+                    return self.fail_response("Image file is empty or could not be read.")
 
-                response = await aimage_edit(
-                    image=image_io,  # Fixed: Pass BytesIO directly instead of list
-                    prompt=prompt,
+                # Check if it's a valid PNG file (basic check)
+                if not image_bytes.startswith(b'\x89PNG\r\n\x1a\n'):
+                    return self.fail_response("Image file must be a valid PNG file. Please ensure the image is in PNG format.")
+                
+                # Check image size constraints (OpenAI requires square images and < 4MB)
+                if len(image_bytes) > 4 * 1024 * 1024:  # 4MB limit
+                    return self.fail_response("Image file must be less than 4MB in size.")
+                
+                # Check if image is square (required by OpenAI for editing)
+                try:
+                    # Read PNG header to get dimensions
+                    if len(image_bytes) >= 24:
+                        width, height = struct.unpack('>II', image_bytes[16:24])
+                        if width != height:
+                            return self.fail_response(f"Image must be square for editing. Current dimensions: {width}x{height}. Please resize the image to be square.")
+                except:
+                    return self.fail_response("Could not read image dimensions. Please ensure the image is a valid PNG file.")
+
+                # Create BytesIO object for OpenAI SDK
+                image_io = BytesIO(image_bytes)
+                image_io.seek(0)
+                # Set name attribute for proper file handling
+                image_io.name = "image.png"
+
+                response = await self.client.images.edit(
                     model="gpt-image-1",
+                    image=image_io,
+                    prompt=prompt,
                     n=1,
-                    size=size,
+                    size="auto",  # type: ignore
+                    quality="auto",  # type: ignore
                 )
             else:
                 return self.fail_response("Invalid mode. Use 'generate' or 'edit'.")
 
-            # Download and save the generated image to sandbox
+            # Process and save the generated image to sandbox
             image_filename = await self._process_image_response(response)
             if isinstance(image_filename, ToolResult):  # Error occurred
                 return image_filename
 
             return self.success_response(
-                f"Successfully generated image using mode '{mode}' with size '{size}'. Image saved as: {image_filename}. You can use the ask tool to display the image."
+                f"Successfully generated image using mode '{mode}'. Image saved as: {image_filename}. You can use the ask tool to display the image. You can switch to 'edit' mode to edit this same image."
             )
 
         except Exception as e:
@@ -162,11 +180,22 @@ class SandboxImageEditTool(SandboxToolsBase):
             )
 
     async def _process_image_response(self, response) -> str | ToolResult:
-        """Download generated image and save to sandbox with random name."""
+        """Process OpenAI image response and save to sandbox with random name."""
         try:
-            original_b64_str = response.data[0].b64_json
-            # Decode base64 image data
-            image_data = base64.b64decode(original_b64_str)
+            # OpenAI SDK response handling
+            # The response contains either b64_json or url in data[0]
+            if hasattr(response.data[0], 'b64_json') and response.data[0].b64_json:
+                # Base64 response
+                image_base64 = response.data[0].b64_json
+                image_data = base64.b64decode(image_base64)
+            elif hasattr(response.data[0], 'url') and response.data[0].url:
+                # URL response - download the image
+                async with httpx.AsyncClient() as client:
+                    img_response = await client.get(response.data[0].url)
+                    img_response.raise_for_status()
+                    image_data = img_response.content
+            else:
+                return self.fail_response("No valid image data found in response")
 
             # Generate random filename
             random_filename = f"generated_image_{uuid.uuid4().hex[:8]}.png"
@@ -177,4 +206,4 @@ class SandboxImageEditTool(SandboxToolsBase):
             return random_filename
 
         except Exception as e:
-            return self.fail_response(f"Failed to download and save image: {str(e)}")
+            return self.fail_response(f"Failed to process and save image: {str(e)}")

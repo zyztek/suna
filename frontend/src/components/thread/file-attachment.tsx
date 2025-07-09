@@ -257,7 +257,10 @@ export function FileAttachment({
         
         // Calculate dynamic height based on image dimensions and layout
         const imageHeight = (() => {
-            if (!isGridLayout) return baseImageHeight;
+            if (!isGridLayout) {
+                // For inline layout (like chat input), keep it compact
+                return baseImageHeight;
+            }
             
             // For grid layout, use dimensions to determine optimal height to show full image
             if (dimensions) {
@@ -303,7 +306,7 @@ export function FileAttachment({
                         "group relative min-h-[54px] min-w-fit rounded-xl cursor-pointer",
                         "border border-black/10 dark:border-white/10",
                         "bg-black/5 dark:bg-black/20",
-                        "p-1 overflow-hidden",
+                        isGridLayout ? "p-1 overflow-hidden" : "p-0 overflow-hidden",
                         "flex items-center justify-center",
                         isGridLayout ? "w-full" : "min-w-[54px]",
                         className
@@ -330,7 +333,7 @@ export function FileAttachment({
                         "group relative min-h-[54px] min-w-fit rounded-xl cursor-pointer",
                         "border border-black/10 dark:border-white/10",
                         "bg-black/5 dark:bg-black/20",
-                        "p-1 overflow-hidden",
+                        isGridLayout ? "p-1 overflow-hidden" : "p-0 overflow-hidden",
                         "flex flex-col items-center justify-center gap-1",
                         isGridLayout ? "w-full" : "inline-block",
                         className
@@ -349,9 +352,15 @@ export function FileAttachment({
             );
         }
 
-        // Always use contain to show the full image without cropping
-        const getObjectFit = (): 'contain' => {
-            return 'contain'; // Always show the full image
+        // Use different object-fit strategies based on layout
+        const getObjectFit = (): 'cover' | 'contain' => {
+            if (!isGridLayout) {
+                // For inline layout (like chat input), use cover to keep it compact and visually appealing
+                return 'cover';
+            }
+            
+            // For grid layout, use contain to show the full image
+            return 'contain';
         };
 
         return (
@@ -361,7 +370,7 @@ export function FileAttachment({
                     "group relative min-h-[54px] rounded-2xl cursor-pointer",
                     "border border-black/10 dark:border-white/10",
                     "bg-black/5 dark:bg-black/20",
-                    "p-1 overflow-hidden", // Small padding to prevent edge touching
+                    isGridLayout ? "p-1 overflow-hidden" : "p-0 overflow-hidden", // No padding for inline, small padding for grid
                     "flex items-center justify-center", // Center the image
                     isGridLayout ? "w-full" : "inline-block", // Full width in grid
                     className
@@ -378,15 +387,17 @@ export function FileAttachment({
                     src={sandboxId && session?.access_token ? imageUrl : fileUrl}
                     alt={filename}
                     className={cn(
-                        "max-w-full max-h-full", // Respect both width and height constraints
-                        "object-contain", // Always show full image
+                        // Different styling for inline vs grid
+                        isGridLayout ? "max-w-full max-h-full" : "max-h-full w-auto",
                         // Add transition for smooth loading
                         "transition-opacity duration-200",
                         dimensionsLoading ? "opacity-0" : "opacity-100"
                     )}
                     style={{
                         objectPosition: "center",
-                        objectFit: getObjectFit()
+                        objectFit: getObjectFit(),
+                        // For inline layout, maintain aspect ratio and fit within container
+                        ...(isGridLayout ? {} : { height: '54px' })
                     }}
                     onLoad={() => {
                         console.log("Image loaded successfully:", filename, dimensions ? `${dimensions.width}×${dimensions.height}` : 'dimensions unknown');
