@@ -39,6 +39,11 @@ class SandboxImageEditTool(SandboxToolsBase):
                             "type": "string",
                             "description": "(edit mode only) Path to the image file to edit, relative to /workspace. Required for 'edit'.",
                         },
+                        "size": {
+                            "type": "string",
+                            "enum": ["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"],
+                            "description": "Size of the generated image. Defaults to '1024x1024'.",
+                        },
                     },
                     "required": ["mode", "prompt"],
                 },
@@ -51,12 +56,14 @@ class SandboxImageEditTool(SandboxToolsBase):
             {"param_name": "mode", "node_type": "attribute", "path": "."},
             {"param_name": "prompt", "node_type": "attribute", "path": "."},
             {"param_name": "image_path", "node_type": "attribute", "path": "."},
+            {"param_name": "size", "node_type": "attribute", "path": "."},
         ],
         example="""
         <function_calls>
         <invoke name="image_edit_or_generate">
         <parameter name="mode">generate</parameter>
         <parameter name="prompt">A futuristic cityscape at sunset</parameter>
+        <parameter name="size">1024x1024</parameter>
         </invoke>
         </function_calls>
         """,
@@ -66,6 +73,7 @@ class SandboxImageEditTool(SandboxToolsBase):
         mode: str,
         prompt: str,
         image_path: Optional[str] = None,
+        size: str = "1024x1024",
     ) -> ToolResult:
         """Generate or edit images using OpenAI GPT Image 1 via OpenAI SDK (no mask support)."""
         try:
@@ -76,7 +84,7 @@ class SandboxImageEditTool(SandboxToolsBase):
                     model="gpt-image-1",
                     prompt=prompt,
                     n=1,
-                    size="1024x1024",
+                    size=size,
                 )
             elif mode == "edit":
                 if not image_path:
@@ -93,11 +101,11 @@ class SandboxImageEditTool(SandboxToolsBase):
                 )
 
                 response = await aimage_edit(
-                    image=[image_io],  # Type in the LiteLLM SDK is wrong
+                    image=image_io,  # Fixed: Pass BytesIO directly instead of list
                     prompt=prompt,
                     model="gpt-image-1",
                     n=1,
-                    size="1024x1024",
+                    size=size,
                 )
             else:
                 return self.fail_response("Invalid mode. Use 'generate' or 'edit'.")
@@ -108,7 +116,7 @@ class SandboxImageEditTool(SandboxToolsBase):
                 return image_filename
 
             return self.success_response(
-                f"Successfully generated image using mode '{mode}'. Image saved as: {image_filename}. You can use the ask tool to display the image."
+                f"Successfully generated image using mode '{mode}' with size '{size}'. Image saved as: {image_filename}. You can use the ask tool to display the image."
             )
 
         except Exception as e:

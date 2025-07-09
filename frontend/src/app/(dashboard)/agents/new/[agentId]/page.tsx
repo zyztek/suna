@@ -298,7 +298,7 @@ export default function AgentConfigurationPage() {
                     Beta
                   </Badge>
                 </TabsTrigger>
-                <TabsTrigger value="manual">Manual</TabsTrigger>
+                <TabsTrigger value="manual">Config</TabsTrigger>
               </TabsList>
             </div>
           </div>

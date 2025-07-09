@@ -13,6 +13,7 @@ import { CsvRenderer } from './preview-renderers/csv-renderer';
 import { useFileContent, useImageContent } from '@/hooks/react-query/files';
 import { useAuth } from '@/components/AuthProvider';
 import { Project } from '@/lib/api';
+import { useImageDimensions } from '@/hooks/use-image-dimensions';
 
 // Define basic file types
 export type FileType =
@@ -230,12 +231,68 @@ export function FileAttachment({
         }
     };
 
+    // Get image dimensions for better rendering
+    const { dimensions, isLoading: dimensionsLoading } = useImageDimensions(
+        isImage && showPreview ? (sandboxId && session?.access_token ? imageUrl : fileUrl) : undefined
+    );
+
+    // Log dimensions for debugging
+    React.useEffect(() => {
+        if (dimensions && isImage) {
+            console.log(`[IMAGE DIMENSIONS] ${filename}:`, {
+                width: dimensions.width,
+                height: dimensions.height,
+                aspectRatio: dimensions.aspectRatio.toFixed(2),
+                orientation: dimensions.orientation
+            });
+        }
+    }, [dimensions, filename, isImage]);
+
     // Images are displayed with their natural aspect ratio
     if (isImage && showPreview) {
         // Use custom height for images if provided through CSS variable
-        const imageHeight = isGridLayout
+        const baseImageHeight = isGridLayout
             ? customStyle['--attachment-height'] as string
             : '54px';
+        
+        // Calculate dynamic height based on image dimensions and layout
+        const imageHeight = (() => {
+            if (!isGridLayout) return baseImageHeight;
+            
+            // For grid layout, use dimensions to determine optimal height to show full image
+            if (dimensions) {
+                const { aspectRatio, orientation } = dimensions;
+                
+                // Parse the base height to get a numeric value
+                const baseHeight = parseInt(baseImageHeight) || 180;
+                const maxHeight = 400; // Maximum height for any image
+                const minHeight = 120; // Minimum height for any image
+                
+                // Calculate height based on aspect ratio to show full image
+                if (orientation === 'portrait') {
+                    // Portrait images need more height to show fully
+                    const calculatedHeight = Math.min(baseHeight * 1.8, maxHeight);
+                    return `${Math.max(calculatedHeight, minHeight)}px`;
+                } else if (orientation === 'landscape') {
+                    // Landscape images can be shorter since they're wider
+                    if (aspectRatio > 2.5) {
+                        // Very wide images (panoramic) need less height
+                        const calculatedHeight = Math.max(baseHeight * 0.6, minHeight);
+                        return `${calculatedHeight}px`;
+                    } else if (aspectRatio > 1.5) {
+                        // Moderately wide images
+                        const calculatedHeight = Math.max(baseHeight * 0.8, minHeight);
+                        return `${calculatedHeight}px`;
+                    }
+                    return `${baseHeight}px`;
+                } else {
+                    // Square images use base height
+                    return `${Math.max(baseHeight, minHeight)}px`;
+                }
+            }
+            
+            return baseImageHeight;
+        })();
 
         // Show loading state for images
         if (imageLoading && sandboxId) {
@@ -246,7 +303,7 @@ export function FileAttachment({
                         "group relative min-h-[54px] min-w-fit rounded-xl cursor-pointer",
                         "border border-black/10 dark:border-white/10",
                         "bg-black/5 dark:bg-black/20",
-                        "p-0 overflow-hidden",
+                        "p-1 overflow-hidden",
                         "flex items-center justify-center",
                         isGridLayout ? "w-full" : "min-w-[54px]",
                         className
@@ -254,6 +311,7 @@ export function FileAttachment({
                     style={{
                         maxWidth: "100%",
                         height: isGridLayout ? imageHeight : 'auto',
+                        minHeight: isGridLayout ? imageHeight : '54px',
                         ...customStyle
                     }}
                     title={filename}
@@ -272,7 +330,7 @@ export function FileAttachment({
                         "group relative min-h-[54px] min-w-fit rounded-xl cursor-pointer",
                         "border border-black/10 dark:border-white/10",
                         "bg-black/5 dark:bg-black/20",
-                        "p-0 overflow-hidden",
+                        "p-1 overflow-hidden",
                         "flex flex-col items-center justify-center gap-1",
                         isGridLayout ? "w-full" : "inline-block",
                         className
@@ -280,6 +338,7 @@ export function FileAttachment({
                     style={{
                         maxWidth: "100%",
                         height: isGridLayout ? imageHeight : 'auto',
+                        minHeight: isGridLayout ? imageHeight : '54px',
                         ...customStyle
                     }}
                     title={filename}
@@ -290,6 +349,11 @@ export function FileAttachment({
             );
         }
 
+        // Always use contain to show the full image without cropping
+        const getObjectFit = (): 'contain' => {
+            return 'contain'; // Always show the full image
+        };
+
         return (
             <button
                 onClick={handleClick}
@@ -297,7 +361,7 @@ export function FileAttachment({
                     "group relative min-h-[54px] rounded-2xl cursor-pointer",
                     "border border-black/10 dark:border-white/10",
                     "bg-black/5 dark:bg-black/20",
-                    "p-0 overflow-hidden", // No padding, content touches borders
+                    "p-1 overflow-hidden", // Small padding to prevent edge touching
                     "flex items-center justify-center", // Center the image
                     isGridLayout ? "w-full" : "inline-block", // Full width in grid
                     className
@@ -305,24 +369,27 @@ export function FileAttachment({
                 style={{
                     maxWidth: "100%", // Ensure doesn't exceed container width
                     height: isGridLayout ? imageHeight : 'auto',
+                    minHeight: isGridLayout ? imageHeight : '54px', // Ensure minimum height
                     ...customStyle
                 }}
-                title={filename}
+                title={`${filename}${dimensions ? ` (${dimensions.width}×${dimensions.height})` : ''}`}
             >
                 <img
                     src={sandboxId && session?.access_token ? imageUrl : fileUrl}
                     alt={filename}
                     className={cn(
-                        "max-h-full", // Respect parent height constraint
-                        isGridLayout ? "w-full h-full object-cover" : "w-auto" // Full width & height in grid with object-cover
+                        "max-w-full max-h-full", // Respect both width and height constraints
+                        "object-contain", // Always show full image
+                        // Add transition for smooth loading
+                        "transition-opacity duration-200",
+                        dimensionsLoading ? "opacity-0" : "opacity-100"
                     )}
                     style={{
-                        height: imageHeight,
                         objectPosition: "center",
-                        objectFit: isGridLayout ? "cover" : "contain"
+                        objectFit: getObjectFit()
                     }}
                     onLoad={() => {
-                        console.log("Image loaded successfully:", filename);
+                        console.log("Image loaded successfully:", filename, dimensions ? `${dimensions.width}×${dimensions.height}` : 'dimensions unknown');
                     }}
                     onError={(e) => {
                         // Avoid logging the error for all instances of the same image

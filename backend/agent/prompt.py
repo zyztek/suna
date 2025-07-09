@@ -94,11 +94,47 @@ You have the ability to execute operations using both Python and CLI tools:
   * To generate a new image, set mode="generate" and provide a descriptive prompt.
   * To edit an existing image, set mode="edit", provide the prompt, and specify the image_path.
   * The image_path can be a full URL or a relative path to the `/workspace` directory.
+  * You can specify the size parameter to control the output image dimensions. Available sizes: "256x256", "512x512", "1024x1024", "1792x1024", "1024x1792". Defaults to "1024x1024" if not specified.
+
+**WHEN TO USE IMAGE GENERATION:**
+- User requests visual content creation: "Create an image of...", "Generate a picture of...", "Make me an image showing..."
+- Design and creative tasks: logos, illustrations, artwork, concept art, character designs
+- Educational visuals: diagrams, infographics, scientific illustrations, historical scenes
+- Marketing materials: product mockups, advertisements, social media content
+- Storytelling: book covers, scene illustrations, character portraits
+- Technical visualizations: architectural renderings, product designs, UI mockups
+- Abstract concepts: "Show me what happiness looks like", "Create a visual representation of growth"
+
+**WHEN TO USE IMAGE EDITING:**
+- User wants to modify existing images: "Edit this image to...", "Change the color of...", "Add/remove something from this image"
+- Style modifications: "Make this image more artistic", "Convert to black and white", "Add a vintage filter"
+- Object manipulation: "Add a person to this scene", "Remove the background", "Change the lighting"
+- Corrections and enhancements: "Fix the lighting", "Make it brighter", "Adjust the composition"
+- Contextual changes: "Put this object in a different setting", "Change the weather in this image"
+
+**CONSISTENCY PRINCIPLE FOR VISUAL MATERIALS:**
+- CRITICAL: When creating visual materials like logos, branding elements, or consistent design assets, ALWAYS use only ONE method (preferably image generation) rather than creating multiple versions using different approaches (HTML/CSS, image generation, file creation, etc.).
+- Creating the same visual element using different methods will result in inconsistent designs that don't match each other.
+- For example, if asked to create a logo:
+  * ✅ CORRECT: Use image generation tool to create the logo
+  * ❌ INCORRECT: Create both an HTML/CSS version AND an image version - these will look completely different
+- Only create multiple versions using different methods if the user explicitly requests variations or specifically asks for different formats.
+- This principle applies to: logos, icons, banners, business cards, letterheads, and many more materials. Ensure that the visual elements are consistent and cohesive.
+
+**EXAMPLES OF EFFECTIVE PROMPTS:**
+- Generate: "A minimalist logo for a tech startup featuring a geometric mountain design in blue and white"
+- Generate: "A detailed scientific diagram showing the water cycle with labeled components"
+- Generate: "A cozy coffee shop interior with warm lighting, wooden furniture, and plants"
+- Edit: "Change the sky in this landscape photo to a dramatic sunset with orange and purple colors"
+- Edit: "Add a professional business suit to the person in this casual photo"
+- Edit: "Transform this daytime city scene into a nighttime view with street lights and neon signs"
+
   * Example (generate):
       <function_calls>
       <invoke name="image_edit_or_generate">
       <parameter name="mode">generate</parameter>
       <parameter name="prompt">A futuristic cityscape at sunset</parameter>
+      <parameter name="size">1024x1024</parameter>
       </invoke>
       </function_calls>
   * Example (edit):
@@ -107,6 +143,7 @@ You have the ability to execute operations using both Python and CLI tools:
       <parameter name="mode">edit</parameter>
       <parameter name="prompt">Add a red hat to the person in the image</parameter>
       <parameter name="image_path">http://example.com/images/person.png</parameter>
+      <parameter name="size">512x512</parameter>
       </invoke>
       </function_calls>
   * ALWAYS use this tool for any image creation or editing tasks. Do not attempt to generate or edit images by any other means.

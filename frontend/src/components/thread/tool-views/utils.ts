@@ -1249,6 +1249,10 @@ export function getToolComponent(toolName: string): string {
     case 'deploy':
       return 'DeployToolView';
 
+    // Image generation and editing
+    case 'image-edit-or-generate':
+      return 'ImageEditOrGenerateToolView';
+
     // Default
     default:
       return 'GenericToolView';
