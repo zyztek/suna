@@ -171,7 +171,7 @@ export function BrowserToolView({
     );
   }, [vncPreviewUrl]);
 
-  const [progress, setProgress] = React.useState(100);
+  const [_progress, setProgress] = React.useState(100);
 
   React.useEffect(() => {
     if (isRunning) {

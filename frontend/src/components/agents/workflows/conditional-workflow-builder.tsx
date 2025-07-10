@@ -1,6 +1,5 @@
 'use client';
-
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   Plus, 
   Trash2, 
@@ -10,13 +9,11 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
-
 export interface ConditionalStep {
   id: string;
   name: string;
@@ -32,7 +29,6 @@ export interface ConditionalStep {
   enabled?: boolean;
   hasIssues?: boolean;
 }
-
 interface ConditionalWorkflowBuilderProps {
   steps: ConditionalStep[];
   onStepsChange: (steps: ConditionalStep[]) => void;
@@ -42,7 +38,6 @@ interface ConditionalWorkflowBuilderProps {
   };
   isLoadingTools?: boolean;
 }
-
 const normalizeToolName = (toolName: string, toolType: 'agentpress' | 'mcp') => {
   if (toolType === 'agentpress') {
     const agentPressMapping: Record<string, string> = {
@@ -63,7 +58,6 @@ const normalizeToolName = (toolName: string, toolType: 'agentpress' | 'mcp') => 
       .join(' ');
   }
 };
-
 export function ConditionalWorkflowBuilder({ 
   steps, 
   onStepsChange, 
@@ -72,7 +66,6 @@ export function ConditionalWorkflowBuilder({
 }: ConditionalWorkflowBuilderProps) {
   const [toolSearchOpen, setToolSearchOpen] = useState<{[key: string]: boolean}>({});
   const [activeConditionTab, setActiveConditionTab] = useState<{[key: string]: string}>({});
-
   steps.forEach((step, index) => {
     console.log(`Step ${index}:`, {
       name: step.name,
@@ -82,9 +75,7 @@ export function ConditionalWorkflowBuilder({
       children: step.children?.map(child => ({ name: child.name, type: child.type }))
     });
   });
-
   const generateId = () => Math.random().toString(36).substr(2, 9);
-
   const addStep = useCallback((parentId?: string, afterStepId?: string) => {
     const newStep: ConditionalStep = {
       id: generateId(),
@@ -103,7 +94,6 @@ export function ConditionalWorkflowBuilder({
         }
         return [...items, newStep];
       }
-
       return items.map(step => {
         if (step.id === parentId) {
           return {
@@ -120,10 +110,8 @@ export function ConditionalWorkflowBuilder({
         return step;
       });
     };
-
     onStepsChange(updateSteps(steps));
   }, [steps, onStepsChange]);
-
   const addCondition = useCallback((afterStepId: string) => {
     const ifStep: ConditionalStep = {
       id: generateId(),
@@ -137,7 +125,6 @@ export function ConditionalWorkflowBuilder({
       enabled: true,
       hasIssues: true
     };
-
     const updateSteps = (items: ConditionalStep[]): ConditionalStep[] => {
       const index = items.findIndex(s => s.id === afterStepId);
       if (index !== -1) {
@@ -147,7 +134,6 @@ export function ConditionalWorkflowBuilder({
           ...items.slice(index + 1)
         ];
       }
-      
       return items.map(step => {
         if (step.children) {
           return {
@@ -158,10 +144,8 @@ export function ConditionalWorkflowBuilder({
         return step;
       });
     };
-
     onStepsChange(updateSteps(steps));
   }, [steps, onStepsChange]);
-
   const addElseCondition = useCallback((siblingId: string) => {
     const elseIfStep: ConditionalStep = {
       id: generateId(),
@@ -175,7 +159,6 @@ export function ConditionalWorkflowBuilder({
       enabled: true,
       hasIssues: true
     };
-
     const updateSteps = (items: ConditionalStep[]): ConditionalStep[] => {
       const index = items.findIndex(s => s.id === siblingId);
       if (index !== -1) {
@@ -185,7 +168,6 @@ export function ConditionalWorkflowBuilder({
           ...items.slice(index + 1)
         ];
       }
-      
       return items.map(step => {
         if (step.children) {
           return {
@@ -196,10 +178,8 @@ export function ConditionalWorkflowBuilder({
         return step;
       });
     };
-
     onStepsChange(updateSteps(steps));
   }, [steps, onStepsChange]);
-
   const addFinalElse = useCallback((siblingId: string) => {
     const elseStep: ConditionalStep = {
       id: generateId(),
@@ -213,7 +193,6 @@ export function ConditionalWorkflowBuilder({
       enabled: true,
       hasIssues: false
     };
-
     const updateSteps = (items: ConditionalStep[]): ConditionalStep[] => {
       const index = items.findIndex(s => s.id === siblingId);
       if (index !== -1) {
@@ -223,7 +202,6 @@ export function ConditionalWorkflowBuilder({
           ...items.slice(index + 1)
         ];
       }
-      
       return items.map(step => {
         if (step.children) {
           return {
@@ -234,10 +212,8 @@ export function ConditionalWorkflowBuilder({
         return step;
       });
     };
-
     onStepsChange(updateSteps(steps));
   }, [steps, onStepsChange]);
-
   const updateStep = useCallback((stepId: string, updates: Partial<ConditionalStep>) => {
     const updateSteps = (items: ConditionalStep[]): ConditionalStep[] => {
       return items.map(step => {
@@ -265,7 +241,6 @@ export function ConditionalWorkflowBuilder({
     };
     onStepsChange(updateSteps(steps));
   }, [steps, onStepsChange]);
-
   const removeStep = useCallback((stepId: string) => {
     const removeFromSteps = (items: ConditionalStep[]): ConditionalStep[] => {
       return items
@@ -280,10 +255,8 @@ export function ConditionalWorkflowBuilder({
           return step;
         });
     };
-
     onStepsChange(removeFromSteps(steps));
   }, [steps, onStepsChange]);
-
   const getStepNumber = useCallback((stepId: string, items: ConditionalStep[] = steps, counter = { value: 0 }): number => {
     for (const step of items) {
       counter.value++;
@@ -297,16 +270,13 @@ export function ConditionalWorkflowBuilder({
     }
     return 0;
   }, [steps]);
-
   const getConditionLetter = (index: number) => {
     return String.fromCharCode(65 + index);
   };
-
   const renderConditionTabs = (conditionSteps: ConditionalStep[], groupKey: string) => {
     const activeTabId = activeConditionTab[groupKey] || conditionSteps[0]?.id;
     const activeStep = conditionSteps.find(s => s.id === activeTabId) || conditionSteps[0];
     const hasElse = conditionSteps.some(step => step.conditions?.type === 'else');
-
     const handleKeyDown = (e: React.KeyboardEvent, step: ConditionalStep) => {
       if (e.key === 'Backspace' || e.key === 'Delete') {
         e.preventDefault();
@@ -319,7 +289,6 @@ export function ConditionalWorkflowBuilder({
         }
       }
     };
-
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2">
@@ -419,15 +388,12 @@ export function ConditionalWorkflowBuilder({
       </div>
     );
   };
-
   const renderStep = (step: ConditionalStep, stepNumber: number, isNested: boolean = false, parentId?: string) => {
     const isCondition = step.type === 'condition';
     const isSequence = step.type === 'sequence';
-
     if (isCondition) {
       return null;
     }
-
     return (
       <div key={step.id} className="group">
         <div className="bg-card rounded-lg border shadow-sm p-4 transition-shadow">
@@ -440,7 +406,6 @@ export function ConditionalWorkflowBuilder({
                 {stepNumber}
               </div>
             </div>
-
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-3">
                 {isSequence ? (
@@ -608,12 +573,10 @@ export function ConditionalWorkflowBuilder({
       </div>
     );
   };
-
   const renderSteps = () => {
     const result: React.ReactNode[] = [];
     let stepCounter = 0;
     let i = 0;
-
     while (i < steps.length) {
       const step = steps[i];
       if (step.type === 'condition') {
@@ -644,10 +607,8 @@ export function ConditionalWorkflowBuilder({
         i++;
       }
     }
-
     return result;
   };
-
   return (
     <div className="space-y-6 max-w-4xl">
       {steps.length === 0 ? (
@@ -679,7 +640,6 @@ export function ConditionalWorkflowBuilder({
                 <Plus className="h-4 w-4" />
                 Add step
               </Button>
-              
               <Button 
                 variant="outline"
                 onClick={() => addCondition(steps[steps.length - 1]?.id || '')}

@@ -25,9 +25,9 @@ interface AgentBuilderChatProps {
 
 export const AgentBuilderChat = React.memo(function AgentBuilderChat({
   agentId,
-  formData,
-  handleFieldChange,
-  handleStyleChange,
+  _formData,
+  _handleFieldChange,
+  _handleStyleChange,
   currentStyle
 }: AgentBuilderChatProps) {
   const [threadId, setThreadId] = useState<string | null>(null);
@@ -35,9 +35,9 @@ export const AgentBuilderChat = React.memo(function AgentBuilderChat({
   const [messages, setMessages] = useState<UnifiedMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [agentStatus, setAgentStatus] = useState<'idle' | 'running' | 'connecting' | 'error'>('idle');
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [_saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasStartedConversation, setHasStartedConversation] = useState(false);
+  const [_hasStartedConversation, setHasStartedConversation] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<ChatInputHandles>(null);
@@ -186,7 +186,7 @@ export const AgentBuilderChat = React.memo(function AgentBuilderChat({
     status: streamHookStatus,
     textContent: streamingTextContent,
     toolCall: streamingToolCall,
-    error: streamError,
+    error: _streamError,
     agentRunId: currentHookRunId,
     startStreaming,
     stopStreaming,

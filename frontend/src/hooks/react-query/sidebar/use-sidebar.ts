@@ -60,7 +60,7 @@ export const useDeleteMultipleThreads = createMutationHook(
       threadIds.map(async (threadId) => {
         try {
           const sandboxId = threadSandboxMap?.[threadId];
-          const result = await deleteThread(threadId, sandboxId);
+
           completedCount++;
           onProgress?.(completedCount, threadIds.length);
           return { success: true, threadId };

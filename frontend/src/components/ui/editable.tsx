@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { Textarea } from "./textarea";
 import { Input } from "./input";
-import { Button } from "../home/ui/button";
 import { cn } from "@/lib/utils";
 import { Edit2 } from "lucide-react";
-
 interface EditableTextProps {
     value: string;
     onSave: (value: string) => void;
@@ -13,7 +11,6 @@ interface EditableTextProps {
     multiline?: boolean;
     minHeight?: string;
   }
-  
 export const EditableText: React.FC<EditableTextProps> = ({ 
     value, 
     onSave, 
@@ -24,21 +21,17 @@ export const EditableText: React.FC<EditableTextProps> = ({
   }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(value);
-  
     useEffect(() => {
       setEditValue(value);
     }, [value]);
-  
     const handleSave = () => {
       onSave(editValue);
       setIsEditing(false);
     };
-  
     const handleCancel = () => {
       setEditValue(value);
       setIsEditing(false);
     };
-  
     const handleKeyDown = (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' && !multiline) {
         handleSave();
@@ -48,7 +41,6 @@ export const EditableText: React.FC<EditableTextProps> = ({
         handleSave();
       }
     };
-  
     if (isEditing) {
       const InputComponent = multiline ? Textarea : Input;
       return (
@@ -75,7 +67,6 @@ export const EditableText: React.FC<EditableTextProps> = ({
         </div>
       );
     }
-  
     return (
       <div 
         className={cn(

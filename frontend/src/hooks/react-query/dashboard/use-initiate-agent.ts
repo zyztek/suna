@@ -15,7 +15,7 @@ export const useInitiateAgentMutation = createMutationHook<
   initiateAgent,
   {
     errorContext: { operation: 'initiate agent', resource: 'AI assistant' },
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       handleApiSuccess("Agent initiated successfully", "Your AI assistant is ready to help");
     },
     onError: (error) => {
@@ -31,7 +31,7 @@ export const useInitiateAgentWithInvalidation = () => {
   const queryClient = useQueryClient();
   const { onOpen } = useModal();
   return useInitiateAgentMutation({
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       queryClient.invalidateQueries({ queryKey: projectKeys.all });
       queryClient.invalidateQueries({ queryKey: threadKeys.all });
       queryClient.invalidateQueries({ queryKey: dashboardKeys.agents });

@@ -1,5 +1,4 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import {
     Dialog,
@@ -17,25 +16,20 @@ import {
 } from '@/lib/api';
 import { useAuth } from '@/components/AuthProvider';
 import { Skeleton } from '@/components/ui/skeleton';
-import { X } from 'lucide-react';
-
 interface BillingModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     returnUrl?: string;
 }
-
 export function BillingModal({ open, onOpenChange, returnUrl = window?.location?.href || '/' }: BillingModalProps) {
     const { session, isLoading: authLoading } = useAuth();
     const [subscriptionData, setSubscriptionData] = useState<SubscriptionStatus | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isManaging, setIsManaging] = useState(false);
-
     useEffect(() => {
         async function fetchSubscription() {
             if (!open || authLoading || !session) return;
-
             try {
                 setIsLoading(true);
                 const data = await getSubscription();
@@ -48,10 +42,8 @@ export function BillingModal({ open, onOpenChange, returnUrl = window?.location?
                 setIsLoading(false);
             }
         }
-
         fetchSubscription();
     }, [open, session, authLoading]);
-
     const handleManageSubscription = async () => {
         try {
             setIsManaging(true);
@@ -64,7 +56,6 @@ export function BillingModal({ open, onOpenChange, returnUrl = window?.location?
             setIsManaging(false);
         }
     };
-
     // Local mode content
     if (isLocalMode()) {
         return (
@@ -85,14 +76,12 @@ export function BillingModal({ open, onOpenChange, returnUrl = window?.location?
             </Dialog>
         );
     }
-
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Upgrade Your Plan</DialogTitle>
                 </DialogHeader>
-
                 {isLoading || authLoading ? (
                     <div className="space-y-4">
                         <Skeleton className="h-20 w-full" />
@@ -120,9 +109,7 @@ export function BillingModal({ open, onOpenChange, returnUrl = window?.location?
                                 </div>
                             </div>
                         )}
-
                         <PricingSection returnUrl={returnUrl} showTitleAndTabs={false} />
-
                         {subscriptionData && (
                             <Button
                                 onClick={handleManageSubscription}

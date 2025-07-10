@@ -1,7 +1,5 @@
 'use client';
-
-import React, { useState, Suspense, useEffect, useRef } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Menu } from 'lucide-react';
 import {
@@ -22,7 +20,6 @@ import {
 import { useBillingError } from '@/hooks/useBillingError';
 import { BillingErrorAlert } from '@/components/billing/usage-limit-alert';
 import { useAccounts } from '@/hooks/use-accounts';
-import { config } from '@/lib/config';
 import { useInitiateAgentWithInvalidation } from '@/hooks/react-query/dashboard/use-initiate-agent';
 import { ModalProviders } from '@/providers/modal-providers';
 import { useAgents } from '@/hooks/react-query/agents/use-agents';
@@ -31,9 +28,7 @@ import { useModal } from '@/hooks/use-modal-store';
 import { Examples } from './examples';
 import { useThreadQuery } from '@/hooks/react-query/threads/use-threads';
 import { normalizeFilenameToNFC } from '@/lib/utils/unicode';
-
 const PENDING_PROMPT_KEY = 'pendingAgentPrompt';
-
 export function DashboardContent() {
   const [inputValue, setInputValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,23 +46,19 @@ export function DashboardContent() {
   const chatInputRef = useRef<ChatInputHandles>(null);
   const initiateAgentMutation = useInitiateAgentWithInvalidation();
   const { onOpen } = useModal();
-
   // Fetch agents to get the selected agent's name
   const { data: agentsResponse } = useAgents({
     limit: 100,
     sort_by: 'name',
     sort_order: 'asc'
   });
-
   const agents = agentsResponse?.agents || [];
   const selectedAgent = selectedAgentId
     ? agents.find(agent => agent.agent_id === selectedAgentId)
     : null;
   const displayName = selectedAgent?.name || 'Suna';
   const agentAvatar = selectedAgent?.avatar;
-
   const threadQuery = useThreadQuery(initiatedThreadId || '');
-
   useEffect(() => {
     const agentIdFromUrl = searchParams.get('agent_id');
     if (agentIdFromUrl && agentIdFromUrl !== selectedAgentId) {
@@ -77,7 +68,6 @@ export function DashboardContent() {
       router.replace(newUrl.pathname + newUrl.search, { scroll: false });
     }
   }, [searchParams, selectedAgentId, router]);
-
   useEffect(() => {
     if (threadQuery.data && initiatedThreadId) {
       const thread = threadQuery.data;
@@ -90,10 +80,8 @@ export function DashboardContent() {
       setInitiatedThreadId(null);
     }
   }, [threadQuery.data, initiatedThreadId, router]);
-
   const secondaryGradient =
     'bg-gradient-to-r from-blue-500 to-blue-500 bg-clip-text text-transparent';
-
   const handleSubmit = async (
     message: string,
     options?: {
@@ -109,37 +97,28 @@ export function DashboardContent() {
       isSubmitting
     )
       return;
-
     setIsSubmitting(true);
-
     try {
       const files = chatInputRef.current?.getPendingFiles() || [];
       localStorage.removeItem(PENDING_PROMPT_KEY);
-
       const formData = new FormData();
       formData.append('prompt', message);
-
       // Add selected agent if one is chosen
       if (selectedAgentId) {
         formData.append('agent_id', selectedAgentId);
       }
-
       files.forEach((file, index) => {
         const normalizedName = normalizeFilenameToNFC(file.name);
         formData.append('files', file, normalizedName);
       });
-
       if (options?.model_name) formData.append('model_name', options.model_name);
       formData.append('enable_thinking', String(options?.enable_thinking ?? false));
       formData.append('reasoning_effort', options?.reasoning_effort ?? 'low');
       formData.append('stream', String(options?.stream ?? true));
       formData.append('enable_context_manager', String(options?.enable_context_manager ?? false));
-
       console.log('FormData content:', Array.from(formData.entries()));
-
       const result = await initiateAgentMutation.mutateAsync(formData);
       console.log('Agent initiated:', result);
-
       if (result.thread_id) {
         setInitiatedThreadId(result.thread_id);
       } else {
@@ -156,31 +135,25 @@ export function DashboardContent() {
       setIsSubmitting(false);
     }
   };
-
   useEffect(() => {
     const timer = setTimeout(() => {
       const pendingPrompt = localStorage.getItem(PENDING_PROMPT_KEY);
-
       if (pendingPrompt) {
         setInputValue(pendingPrompt);
         setAutoSubmit(true);
       }
     }, 200);
-
     return () => clearTimeout(timer);
   }, []);
-
   useEffect(() => {
     if (autoSubmit && inputValue && !isSubmitting) {
       const timer = setTimeout(() => {
         handleSubmit(inputValue);
         setAutoSubmit(false);
       }, 500);
-
       return () => clearTimeout(timer);
     }
   }, [autoSubmit, inputValue, isSubmitting]);
-
   return (
     <>
       <ModalProviders />

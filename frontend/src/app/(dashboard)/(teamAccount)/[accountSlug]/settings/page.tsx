@@ -27,7 +27,7 @@ export default function TeamSettingsPage({
   // Use an effect to load team account data
   const [teamAccount, setTeamAccount] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
+  const [_error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     async function loadData() {

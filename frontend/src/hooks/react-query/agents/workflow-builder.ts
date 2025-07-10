@@ -8,7 +8,7 @@ import {
   StepType,
   Condition,
   CreateWorkflowRequest,
-  UpdateWorkflowRequest,
+  _UpdateWorkflowRequest,
   workflowToJSON,
   validateWorkflow
 } from './conditional-workflow-types';
@@ -223,7 +223,7 @@ export class WorkflowBuilder {
     this.steps.delete(id);
     
     // Clean up references to this step
-    for (const [stepId, step] of this.steps) {
+    for (const [_stepId, step] of this.steps) {
       if (step.next_step_id === id) {
         step.next_step_id = undefined;
       }

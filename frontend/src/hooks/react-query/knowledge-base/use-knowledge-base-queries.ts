@@ -9,7 +9,7 @@ import {
   UpdateKnowledgeBaseEntryRequest,
   FileUploadRequest,
   GitCloneRequest,
-  ProcessingJob,
+  _ProcessingJob,
   ProcessingJobsResponse,
   UploadResponse,
   CloneResponse
@@ -334,7 +334,7 @@ export function useUploadAgentFiles() {
       
       return await response.json();
     },
-    onSuccess: (data, { agentId }) => {
+    onSuccess: (_data, { agentId }) => {
       queryClient.invalidateQueries({ queryKey: knowledgeBaseKeys.agent(agentId) });
       queryClient.invalidateQueries({ queryKey: knowledgeBaseKeys.processingJobs(agentId) });
       toast.success('File uploaded successfully. Processing in background.');
@@ -365,7 +365,7 @@ export function useCloneGitRepository() {
       
       return await response.json();
     },
-    onSuccess: (data, { agentId }) => {
+    onSuccess: (_data, { agentId }) => {
       queryClient.invalidateQueries({ queryKey: knowledgeBaseKeys.agent(agentId) });
       queryClient.invalidateQueries({ queryKey: knowledgeBaseKeys.processingJobs(agentId) });
       toast.success('Repository cloning started. Processing in background.');

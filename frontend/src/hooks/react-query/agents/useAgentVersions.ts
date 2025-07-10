@@ -4,7 +4,7 @@ import {
   createAgentVersion, 
   activateAgentVersion,
   getAgentVersion,
-  AgentVersion,
+  _AgentVersion,
   AgentVersionCreateRequest
 } from './utils';
 import { toast } from 'sonner';

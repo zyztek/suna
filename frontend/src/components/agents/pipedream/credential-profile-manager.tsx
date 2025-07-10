@@ -1,7 +1,6 @@
 'use client';
-
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -55,15 +54,12 @@ import {
   useConnectPipedreamProfile,
 } from '@/hooks/react-query/pipedream/use-pipedream-profiles';
 import type { PipedreamProfile, CreateProfileRequest } from '@/components/agents/pipedream/pipedream-profiles';
-import { formatDistanceToNow } from 'date-fns';
-
 interface CredentialProfileManagerProps {
   appSlug?: string;
   appName?: string;
   onProfileSelect?: (profile: PipedreamProfile) => void;
   className?: string;
 }
-
 export const CredentialProfileManager: React.FC<CredentialProfileManagerProps> = ({
   appSlug,
   appName,
@@ -75,23 +71,19 @@ export const CredentialProfileManager: React.FC<CredentialProfileManagerProps> =
   const [deletingProfile, setDeletingProfile] = useState<PipedreamProfile | null>(null);
   const [newProfileName, setNewProfileName] = useState('');
   const [isDefault, setIsDefault] = useState(false);
-
   const { data: profiles, isLoading, refetch } = usePipedreamProfiles({ app_slug: appSlug });
   const createProfile = useCreatePipedreamProfile();
   const updateProfile = useUpdatePipedreamProfile();
   const deleteProfile = useDeletePipedreamProfile();
   const connectProfile = useConnectPipedreamProfile();
-
   const handleCreateProfile = async () => {
     if (!newProfileName.trim()) return;
-
     const request: CreateProfileRequest = {
       profile_name: newProfileName.trim(),
       app_slug: appSlug || '',
       app_name: appName || appSlug || '',
       is_default: isDefault,
     };
-
     try {
       await createProfile.mutateAsync(request);
       setShowCreateDialog(false);
@@ -101,7 +93,6 @@ export const CredentialProfileManager: React.FC<CredentialProfileManagerProps> =
       // Error is handled by the mutation hook
     }
   };
-
   const handleUpdateProfile = async (profile: PipedreamProfile, updates: any) => {
     try {
       await updateProfile.mutateAsync({
@@ -112,7 +103,6 @@ export const CredentialProfileManager: React.FC<CredentialProfileManagerProps> =
     } catch (error) {
     }
   };
-
   const handleDeleteProfile = async (profile: PipedreamProfile) => {
     try {
       await deleteProfile.mutateAsync(profile.profile_id);
@@ -120,7 +110,6 @@ export const CredentialProfileManager: React.FC<CredentialProfileManagerProps> =
     } catch (error) {
     }
   };
-
   const handleConnectProfile = async (profile: PipedreamProfile) => {
     try {
       await connectProfile.mutateAsync({
@@ -130,7 +119,6 @@ export const CredentialProfileManager: React.FC<CredentialProfileManagerProps> =
     } catch (error) {
     }
   };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -138,9 +126,7 @@ export const CredentialProfileManager: React.FC<CredentialProfileManagerProps> =
       </div>
     );
   }
-
   const profilesForApp = profiles?.filter(p => !appSlug || p.app_slug === appSlug) || [];
-
   return (
     <div className={className}>
       {profilesForApp.length === 0 ? (
@@ -266,7 +252,6 @@ export const CredentialProfileManager: React.FC<CredentialProfileManagerProps> =
               Create a new credential profile for {appName || 'your app'}.
             </DialogDescription>
           </DialogHeader>
-          
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="profile-name">Profile Name</Label>
@@ -277,7 +262,6 @@ export const CredentialProfileManager: React.FC<CredentialProfileManagerProps> =
                 onChange={(e) => setNewProfileName(e.target.value)}
               />
             </div>
-            
             <div className="flex items-center space-x-2">
               <Switch
                 id="is-default"
@@ -287,7 +271,6 @@ export const CredentialProfileManager: React.FC<CredentialProfileManagerProps> =
               <Label htmlFor="is-default">Set as default profile</Label>
             </div>
           </div>
-
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
               Cancel
@@ -317,7 +300,6 @@ export const CredentialProfileManager: React.FC<CredentialProfileManagerProps> =
                 Update the settings for {editingProfile.profile_name}.
               </DialogDescription>
             </DialogHeader>
-            
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-profile-name">Profile Name</Label>
@@ -330,7 +312,6 @@ export const CredentialProfileManager: React.FC<CredentialProfileManagerProps> =
                   }}
                 />
               </div>
-              
               <div className="flex items-center space-x-2">
                 <Switch
                   id="edit-is-active"
@@ -342,7 +323,6 @@ export const CredentialProfileManager: React.FC<CredentialProfileManagerProps> =
                 <Label htmlFor="edit-is-active">Active</Label>
               </div>
             </div>
-
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditingProfile(null)}>
                 Cancel
@@ -367,7 +347,6 @@ export const CredentialProfileManager: React.FC<CredentialProfileManagerProps> =
           </DialogContent>
         </Dialog>
       )}
-
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deletingProfile} onOpenChange={() => setDeletingProfile(null)}>
         <AlertDialogContent>

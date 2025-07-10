@@ -1,22 +1,16 @@
 import React from 'react';
-import { Search, Filter, SortAsc, SortDesc, X, Settings, Wrench, Grid3X3, List } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
-
 type AgentSortOption = 'name' | 'created_at' | 'updated_at' | 'tools_count';
 type SortOrder = 'asc' | 'desc';
 type ViewMode = 'grid' | 'list';
-
 interface FilterOptions {
   hasDefaultAgent: boolean;
   hasMcpTools: boolean;
   hasAgentpressTools: boolean;
   selectedTools: string[];
 }
-
 interface SearchAndFiltersProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -32,7 +26,6 @@ interface SearchAndFiltersProps {
   setViewMode: (mode: ViewMode) => void;
   allTools: string[];
 }
-
 export const SearchAndFilters = ({
   searchQuery,
   setSearchQuery,
@@ -70,7 +63,6 @@ export const SearchAndFilters = ({
             </Button>
           )}
         </div>
-
         {/* <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Sort by" />
@@ -82,7 +74,6 @@ export const SearchAndFilters = ({
             <SelectItem value="tools_count">Tools Count</SelectItem>
           </SelectContent>
         </Select>
-
         <Button
           variant="outline"
           size="sm"
@@ -92,7 +83,6 @@ export const SearchAndFilters = ({
           {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
         </Button> */}
       </div>
-
       <div className="flex items-center gap-2">
         {/* <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -138,7 +128,6 @@ export const SearchAndFilters = ({
             )}
           </DropdownMenuContent>
         </DropdownMenu> */}
-
         {/* <div className="flex border rounded-md">
           <Button
             variant={viewMode === 'grid' ? 'default' : 'ghost'}

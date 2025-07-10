@@ -1,6 +1,5 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -9,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
@@ -29,7 +27,6 @@ import {
 } from 'lucide-react';
 import { usePipedreamProfiles } from '@/hooks/react-query/pipedream/use-pipedream-profiles';
 import { CredentialProfileManager } from './credential-profile-manager';
-
 interface CredentialProfileSelectorProps {
   appSlug: string;
   appName: string;
@@ -38,7 +35,6 @@ interface CredentialProfileSelectorProps {
   className?: string;
   showCreateOption?: boolean;
 }
-
 export const CredentialProfileSelector: React.FC<CredentialProfileSelectorProps> = ({
   appSlug,
   appName,
@@ -49,10 +45,8 @@ export const CredentialProfileSelector: React.FC<CredentialProfileSelectorProps>
 }) => {
   const [showProfileManager, setShowProfileManager] = useState(false);
   const { data: profiles, isLoading } = usePipedreamProfiles({ app_slug: appSlug, is_active: true });
-
   const selectedProfile = profiles?.find(p => p.profile_id === selectedProfileId);
   const connectedProfiles = profiles?.filter(p => p.is_connected) || [];
-
   if (isLoading) {
     return (
       <div className={className}>
@@ -63,7 +57,6 @@ export const CredentialProfileSelector: React.FC<CredentialProfileSelectorProps>
       </div>
     );
   }
-
   if (!profiles || profiles.length === 0) {
     return (
       <div className={className}>
@@ -87,7 +80,6 @@ export const CredentialProfileSelector: React.FC<CredentialProfileSelectorProps>
             </div>
           </CardContent>
         </Card>
-
         {showProfileManager && (
           <Dialog open={showProfileManager} onOpenChange={setShowProfileManager}>
             <DialogContent className="max-w-3xl">
@@ -111,7 +103,6 @@ export const CredentialProfileSelector: React.FC<CredentialProfileSelectorProps>
       </div>
     );
   }
-
   if (connectedProfiles.length === 0) {
     return (
       <div className={className}>
@@ -134,7 +125,6 @@ export const CredentialProfileSelector: React.FC<CredentialProfileSelectorProps>
             </div>
           </CardContent>
         </Card>
-
         {showProfileManager && (
           <Dialog open={showProfileManager} onOpenChange={setShowProfileManager}>
             <DialogContent className="max-w-3xl">
@@ -158,7 +148,6 @@ export const CredentialProfileSelector: React.FC<CredentialProfileSelectorProps>
       </div>
     );
   }
-
   return (
     <div className={className}>
       <div className="space-y-2">
@@ -205,7 +194,6 @@ export const CredentialProfileSelector: React.FC<CredentialProfileSelectorProps>
             </Button>
           )}
         </div>
-        
         {selectedProfile && !selectedProfile.is_connected && (
           <p className="text-xs text-destructive flex items-center gap-1">
             <XCircle className="h-3 w-3" />
@@ -213,7 +201,6 @@ export const CredentialProfileSelector: React.FC<CredentialProfileSelectorProps>
           </p>
         )}
       </div>
-
       {showProfileManager && (
         <Dialog open={showProfileManager} onOpenChange={setShowProfileManager}>
           <DialogContent className="max-w-3xl">

@@ -4,16 +4,14 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/comp
 import { FileAttachment } from './file-attachment';
 import { cn } from '@/lib/utils';
 import { Project } from '@/lib/api';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle
 } from '@/components/ui/dialog';
-
 type LayoutStyle = 'inline' | 'grid';
-
 interface UploadedFile {
     name: string;
     path: string;
@@ -21,7 +19,6 @@ interface UploadedFile {
     type: string;
     localUrl?: string;
 }
-
 interface AttachmentGroupProps {
     // Support both path strings and full file objects
     files: (string | UploadedFile)[];
@@ -36,7 +33,6 @@ interface AttachmentGroupProps {
     collapsed?: boolean; // Add new collapsed prop
     project?: Project; // Add project prop
 }
-
 export function AttachmentGroup({
     files,
     sandboxId,
@@ -54,28 +50,22 @@ export function AttachmentGroup({
     const [isModalOpen, setIsModalOpen] = useState(false);
     // Responsive state - ALWAYS initialize this hook first before any conditionals
     const [isMobile, setIsMobile] = useState(false);
-
     // Constants for height calculation - each row is about 66px (54px height + 12px gap)
     const ROW_HEIGHT = 54; // Height of a single file
     const GAP = 12; // Gap between rows (gap-3 = 0.75rem = 12px)
     const TWO_ROWS_HEIGHT = (ROW_HEIGHT * 2) + GAP; // Height of 2 rows plus gap
-
     // Check for mobile on mount and window resize
     useEffect(() => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth < 640);
         };
-
         // Initial check
         checkMobile();
-
         // Add resize listener
         window.addEventListener('resize', checkMobile);
-
         // Clean up
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
-
     // Return early with empty content if no files, but after hook initialization
     if (!files || files.length === 0) {
         return (
@@ -87,17 +77,14 @@ export function AttachmentGroup({
             />
         );
     }
-
     // Deduplicate attachments if they are strings - do this before any conditional rendering
     const uniqueFiles = typeof files[0] === 'string'
         ? [...new Set(files)] as string[]
         : files;
-
     // Get filepath from either string or UploadedFile
     const getFilePath = (file: string | UploadedFile): string => {
         return typeof file === 'string' ? file : file.path;
     };
-
     // Ensure path has proper format when clicking
     const handleFileClick = (path: string) => {
         if (onFileClick) {
@@ -107,32 +94,27 @@ export function AttachmentGroup({
             onFileClick(path, filePathList);
         }
     };
-
     // Get local preview URL if available (for UploadedFile)
     const getLocalPreviewUrl = (file: string | UploadedFile): string | undefined => {
         if (typeof file === 'string') return undefined;
         return !sandboxId ? file.localUrl : undefined;
     };
-
     // Check if a file is HTML, Markdown, or CSV
     const isPreviewableFile = (file: string | UploadedFile): boolean => {
         const path = getFilePath(file);
         const ext = path.split('.').pop()?.toLowerCase() || '';
         return ext === 'html' || ext === 'htm' || ext === 'md' || ext === 'markdown' || ext === 'csv' || ext === 'tsv';
     };
-
     // Pre-compute any conditional values used in rendering
     // This ensures hooks aren't conditionally called
     const maxVisibleFiles = isMobile ? 2 : 5;
     let visibleCount = Math.min(maxVisibleFiles, uniqueFiles.length);
     let moreCount = uniqueFiles.length - visibleCount;
-
     // If there's just a single file more on desktop, show it
     if (!isMobile && moreCount === 1) {
         visibleCount = uniqueFiles.length;
         moreCount = 0;
     }
-
     // Pre-process files for rendering to avoid conditional logic in JSX
     const visibleFilesWithMeta = uniqueFiles.slice(0, visibleCount).map((file, index) => {
         const path = getFilePath(file);
@@ -145,7 +127,6 @@ export function AttachmentGroup({
             wrapperClassName: isMobile && !isImage ? "w-full" : ""
         };
     });
-
     // For grid layout, prepare sorted files
     const sortedFiles = [...uniqueFiles].sort((a, b) => {
         // Helper function to check if a file is an image
@@ -154,24 +135,18 @@ export function AttachmentGroup({
             const filename = path.split('/').pop() || '';
             return filename.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i) !== null;
         };
-
         // Helper to check for previewable files
         const isPreviewFile = (file: string | UploadedFile) => isPreviewableFile(file);
-
         // First sort criteria: images come first
         const aIsImage = isImage(a);
         const bIsImage = isImage(b);
-
         if (aIsImage && !bIsImage) return -1;
         if (!aIsImage && bIsImage) return 1;
-
         // Second sort criteria: uncollapsed previewable files at the end
         const aIsUncollapsedPreview = !collapsed && isPreviewFile(a);
         const bIsUncollapsedPreview = !collapsed && isPreviewFile(b);
-
         return aIsUncollapsedPreview === bIsUncollapsedPreview ? 0 : aIsUncollapsedPreview ? 1 : -1;
     });
-
     // Process files for grid layout with all metadata needed for rendering
     const sortedFilesWithMeta = sortedFiles.map((file, index) => {
         const path = getFilePath(file);
@@ -179,7 +154,6 @@ export function AttachmentGroup({
         const isImage = filename.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i) !== null;
         const isPreviewFile = isPreviewableFile(file);
         const shouldSpanFull = (sortedFiles.length % 2 === 1 && sortedFiles.length > 1 && index === sortedFiles.length - 1);
-
         return {
             file,
             path,
@@ -194,12 +168,10 @@ export function AttachmentGroup({
             wrapperStyle: (shouldSpanFull || (isPreviewFile && !collapsed)) ? { gridColumn: '1 / -1' } : undefined
         };
     });
-
     // Now continue with the fully conditional rendering but with pre-computed values
     const renderContent = () => {
         if (layout === 'grid') {
             const shouldLastItemSpanFull = sortedFiles.length % 2 === 1 && sortedFiles.length > 1;
-
             return (
                 <div className={cn(
                     "grid gap-3",
@@ -236,7 +208,6 @@ export function AttachmentGroup({
                                     } :
                                         (item.isPreviewFile && !collapsed) ? {
                                             gridColumn: '1 / -1', // Explicit grid styling for previewable files
-
                                         } :
                                             item.shouldSpanFull ? {
                                                 gridColumn: '1 / -1' // Explicit grid styling for last item if odd count
@@ -313,7 +284,6 @@ export function AttachmentGroup({
                             )}
                         </div>
                     ))}
-
                     {/* "More" button */}
                     {moreCount > 0 && (
                         <button
@@ -340,7 +310,6 @@ export function AttachmentGroup({
             );
         }
     };
-
     return (
         <>
             <AnimatePresence>
@@ -355,7 +324,6 @@ export function AttachmentGroup({
                     {renderContent()}
                 </motion.div>
             </AnimatePresence >
-
             {/* Modal dialog to show all files - conditionally rendered based on isModalOpen state */}
             < Dialog open={isModalOpen} onOpenChange={setIsModalOpen} >
                 <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
@@ -364,7 +332,6 @@ export function AttachmentGroup({
                             <span>All Files ({uniqueFiles.length})</span>
                         </DialogTitle>
                     </DialogHeader>
-
                     <div className={cn(
                         "grid gap-3 sm:justify-start justify-center sm:max-w-full max-w-[300px] mx-auto sm:mx-0",
                         uniqueFiles.length === 1 ? "grid-cols-1" :
@@ -382,23 +349,19 @@ export function AttachmentGroup({
                                         const filename = path.split('/').pop() || '';
                                         return filename.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i) !== null;
                                     };
-
                                     // Sort images first
                                     const aIsImage = isImage(a);
                                     const bIsImage = isImage(b);
-
                                     if (aIsImage && !bIsImage) return -1;
                                     if (!aIsImage && bIsImage) return 1;
                                     return 0;
                                 });
-
                                 // Create map of sorted indices to original indices
                                 const indexMap = sortedModalFiles.map(file =>
                                     uniqueFiles.findIndex(f =>
                                         getFilePath(f) === getFilePath(file)
                                     )
                                 );
-
                                 return sortedModalFiles.map((file, displayIndex) => {
                                     // Get the original index for removal
                                     const originalIndex = indexMap[displayIndex];
@@ -406,7 +369,6 @@ export function AttachmentGroup({
                                     const path = getFilePath(file);
                                     const filename = path.split('/').pop() || '';
                                     const isImage = filename.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i) !== null;
-
                                     return {
                                         file,
                                         path,
@@ -430,7 +392,6 @@ export function AttachmentGroup({
                                     };
                                 });
                             })();
-
                             return modalFilesWithMeta.map((item) => (
                                 <div
                                     key={item.originalIndex}

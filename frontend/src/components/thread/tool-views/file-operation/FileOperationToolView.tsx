@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import {
-  CheckCircle,
-  AlertTriangle,
+  _CheckCircle,
+  _AlertTriangle,
   ExternalLink,
   Loader2,
   Code,
   Eye,
-  File,
+  _File,
 } from 'lucide-react';
 import {
   extractFilePath,
@@ -14,7 +14,7 @@ import {
   extractStreamingFileContent,
   formatTimestamp,
   getToolTitle,
-  normalizeContentToString,
+  _normalizeContentToString,
   extractToolData,
 } from '../utils';
 import {
@@ -48,8 +48,8 @@ import {
   isFileType,
   hasLanguageHighlighting,
   splitContentIntoLines,
-  type FileOperation,
-  type OperationConfig,
+  type _FileOperation,
+  type _OperationConfig,
 } from './_utils';
 import { ToolViewProps } from '../types';
 import { GenericToolView } from '../GenericToolView';
@@ -66,7 +66,7 @@ export function FileOperationToolView({
   project,
 }: ToolViewProps) {
   const { resolvedTheme } = useTheme();
-  const isDarkTheme = resolvedTheme === 'dark';
+
 
   const operation = getOperationType(name, assistantContent);
   const configs = getOperationConfigs();

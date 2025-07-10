@@ -1,10 +1,7 @@
 'use client';
-
 import { AlertTriangle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
-
 interface BillingErrorAlertProps {
   message?: string;
   currentUsage?: number;
@@ -13,7 +10,6 @@ interface BillingErrorAlertProps {
   onDismiss: () => void;
   isOpen: boolean;
 }
-
 export function BillingErrorAlert({
   message,
   currentUsage,
@@ -23,9 +19,7 @@ export function BillingErrorAlert({
   isOpen,
 }: BillingErrorAlertProps) {
   const router = useRouter();
-
   if (!isOpen) return null;
-
   return (
     <div className="fixed bottom-4 right-4 z-[9999]">
       <div className="bg-destructive/15 backdrop-blur-sm border border-destructive/30 rounded-lg p-5 shadow-lg max-w-md">
@@ -48,7 +42,6 @@ export function BillingErrorAlert({
               </Button>
             </div>
             <p className="text-sm text-muted-foreground mb-3">{message}</p>
-
             <div className="flex gap-2">
               <Button
                 variant="outline"

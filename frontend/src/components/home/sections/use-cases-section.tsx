@@ -1,11 +1,7 @@
 'use client';
-
 import { SectionHeader } from '@/components/home/section-header';
 import { siteConfig } from '@/lib/home';
-import { cn } from '@/lib/utils';
-import { motion } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
-
 interface UseCase {
   id: string;
   title: string;
@@ -16,13 +12,11 @@ interface UseCase {
   image: string;
   url: string;
 }
-
 export function UseCasesSection() {
   // Get featured use cases from siteConfig and limit to 8
   const featuredUseCases: UseCase[] = (siteConfig.useCases || []).filter(
     (useCase: UseCase) => useCase.featured,
   );
-
   return (
     <section
       id="use-cases"
@@ -37,7 +31,6 @@ export function UseCasesSection() {
           autonomously
         </p>
       </SectionHeader>
-
       <div className="relative w-full h-full">
         <div className="grid min-[650px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1200px]:grid-cols-4 gap-4 w-full max-w-6xl mx-auto px-6">
           {featuredUseCases.map((useCase: UseCase) => (
@@ -67,10 +60,8 @@ export function UseCasesSection() {
                   {useCase.description}
                 </p>
               </div>
-
               <div className="mt-auto">
                 <hr className="border-border dark:border-white/20 m-0" />
-
                 <div className="w-full h-[160px] bg-accent/10">
                   <div className="relative w-full h-full overflow-hidden">
                     <img
@@ -98,7 +89,6 @@ export function UseCasesSection() {
             </div>
           ))}
         </div>
-
         {featuredUseCases.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <p className="text-muted-foreground">No use cases available yet.</p>

@@ -1,12 +1,10 @@
 'use client';
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { 
   Clock, 
   GitBranch, 
@@ -19,19 +17,14 @@ import { formatDistanceToNow } from 'date-fns';
 import { useAgentVersions, useActivateAgentVersion } from '@/hooks/react-query/agents/useAgentVersions';
 import { Agent } from '@/hooks/react-query/agents/utils';
 import { cn } from '@/lib/utils';
-
-
-
 interface AgentVersionManagerProps {
   agent: Agent;
   onCreateVersion?: () => void;
 }
-
 export function AgentVersionManager({ agent, onCreateVersion }: AgentVersionManagerProps) {
   const { data: versions, isLoading } = useAgentVersions(agent.agent_id);
   const activateVersion = useActivateAgentVersion();
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
-
   if (isLoading) {
     return (
       <Card>
@@ -43,17 +36,14 @@ export function AgentVersionManager({ agent, onCreateVersion }: AgentVersionMana
       </Card>
     );
   }
-
   const currentVersion = versions?.find(v => v.version_id === agent.current_version_id);
   const versionHistory = versions?.sort((a, b) => b.version_number - a.version_number) || [];
-
   const handleActivateVersion = (versionId: string) => {
     activateVersion.mutate({ 
       agentId: agent.agent_id, 
       versionId 
     });
   };
-
   return (
     <Card>
       <CardHeader>
@@ -81,7 +71,6 @@ export function AgentVersionManager({ agent, onCreateVersion }: AgentVersionMana
             <TabsTrigger value="current">Current Version</TabsTrigger>
             <TabsTrigger value="history">Version History</TabsTrigger>
           </TabsList>
-          
           <TabsContent value="current" className="space-y-4">
             {currentVersion ? (
               <div className="space-y-4">
@@ -96,7 +85,6 @@ export function AgentVersionManager({ agent, onCreateVersion }: AgentVersionMana
                   </div>
                   <CheckCircle2 className="h-5 w-5 text-green-500" />
                 </div>
-                
                 <div className="grid gap-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Created</span>
@@ -118,14 +106,12 @@ export function AgentVersionManager({ agent, onCreateVersion }: AgentVersionMana
               </div>
             )}
           </TabsContent>
-          
           <TabsContent value="history" className="space-y-4">
             <ScrollArea className="h-[400px] pr-4">
               <div className="space-y-3">
                 {versionHistory.map((version, index) => {
                   const isActive = version.version_id === agent.current_version_id;
                   const isSelected = version.version_id === selectedVersion;
-                  
                   return (
                     <div
                       key={version.version_id}
@@ -153,7 +139,6 @@ export function AgentVersionManager({ agent, onCreateVersion }: AgentVersionMana
                             Created {formatDistanceToNow(new Date(version.created_at), { addSuffix: true })}
                           </p>
                         </div>
-                        
                         {!isActive && (
                           <Button
                             size="sm"
@@ -169,7 +154,6 @@ export function AgentVersionManager({ agent, onCreateVersion }: AgentVersionMana
                           </Button>
                         )}
                       </div>
-                      
                       {isSelected && (
                         <div className="mt-3 pt-3 border-t space-y-2">
                           <div className="grid gap-1 text-sm">
@@ -187,7 +171,6 @@ export function AgentVersionManager({ agent, onCreateVersion }: AgentVersionMana
                     </div>
                   );
                 })}
-                
                 {versionHistory.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
                     <History className="h-12 w-12 mx-auto mb-3 opacity-50" />

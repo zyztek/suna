@@ -6,8 +6,8 @@ import {
   SelectTrigger,
   SelectValue,
   SelectContent,
-  SelectGroup,
-  SelectLabel,
+  _SelectGroup,
+  _SelectLabel,
   SelectItem,
 } from '@/components/ui/select';
 import { createInvitation } from '@/lib/actions/invitations';
@@ -74,7 +74,7 @@ export default function NewInvitationForm({ accountId }: Props) {
             </Select>
           </div>
           <SubmitButton
-            formAction={async (prevState: any, formData: FormData) =>
+            formAction={async (_prevState: any, formData: FormData) =>
               formAction(formData)
             }
             errorMessage={state?.message}

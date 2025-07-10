@@ -1,20 +1,14 @@
 'use client';
-
 import { useEffect, useState } from 'react';
-import { Loader2, Server, RefreshCw, AlertCircle, Clock, Wrench } from 'lucide-react';
+import { Loader2, RefreshCw, AlertCircle, Clock, Wrench } from 'lucide-react';
 import { useApiHealth } from '@/hooks/react-query';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { isLocalMode } from '@/lib/config';
-
 export function MaintenancePage() {
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
-  
   const { data: healthData, isLoading: isCheckingHealth, refetch } = useApiHealth();
-
   const checkHealth = async () => {
     try {
       const result = await refetch();
@@ -27,11 +21,9 @@ export function MaintenancePage() {
       setLastChecked(new Date());
     }
   };
-
   useEffect(() => {
     setLastChecked(new Date());
   }, []);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">

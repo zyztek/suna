@@ -1,26 +1,21 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, AlertCircle, CheckCircle2, Zap, Globe, Code, ChevronRight, Sparkles, Database, Wifi, Server } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2, Zap, ChevronRight, Sparkles, Wifi, Server } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
-import { CredentialProfile } from '@/hooks/react-query/mcp/use-credential-profiles';
-
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || '';
-
 interface CustomMCPDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (config: CustomMCPConfiguration) => void;
 }
-
 interface CustomMCPConfiguration {
   name: string;
   type: 'http' | 'sse';
@@ -28,13 +23,11 @@ interface CustomMCPConfiguration {
   enabledTools: string[];
   selectedProfileId?: string;
 }
-
 interface MCPTool {
   name: string;
   description: string;
   inputSchema?: any;
 }
-
 export const CustomMCPDialog: React.FC<CustomMCPDialogProps> = ({
   open,
   onOpenChange,
@@ -50,15 +43,12 @@ export const CustomMCPDialog: React.FC<CustomMCPDialogProps> = ({
   const [discoveredTools, setDiscoveredTools] = useState<MCPTool[]>([]);
   const [selectedTools, setSelectedTools] = useState<Set<string>>(new Set());
   const [processedConfig, setProcessedConfig] = useState<any>(null);
-
   const validateAndDiscoverTools = async () => {
     setIsValidating(true);
     setValidationError(null);
     setDiscoveredTools([]);
-    
     try {
       let parsedConfig: any;
-      
       if (serverType === 'sse' || serverType === 'http') {
         const url = configText.trim();
         if (!url) {
@@ -67,18 +57,14 @@ export const CustomMCPDialog: React.FC<CustomMCPDialogProps> = ({
         if (!manualServerName.trim()) {
           throw new Error('Please enter a name for this connection.');
         }
-        
         parsedConfig = { url };
         setServerName(manualServerName.trim());
       }
-
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
-
       if (!session) {
         throw new Error('You must be logged in to discover tools');
       }
-
       const response = await fetch(`${API_URL}/mcp/discover-custom-tools`, {
         method: 'POST',
         headers: {
@@ -90,37 +76,29 @@ export const CustomMCPDialog: React.FC<CustomMCPDialogProps> = ({
           config: parsedConfig
         })
       });
-
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to connect to the service. Please check your configuration.');
       }
-
       const data = await response.json();
-      
       if (!data.tools || data.tools.length === 0) {
         throw new Error('No tools found. Please check your configuration.');
       }
-
       if (data.serverName) {
         setServerName(data.serverName);
       }
-
       if (data.processedConfig) {
         setProcessedConfig(data.processedConfig);
       }
-
       setDiscoveredTools(data.tools);
       setSelectedTools(new Set(data.tools.map((tool: MCPTool) => tool.name)));
       setStep('tools');
-      
     } catch (error: any) {
       setValidationError(error.message);
     } finally {
       setIsValidating(false);
     }
   };
-
   const handleToolsNext = () => {
     if (selectedTools.size === 0) {
       setValidationError('Please select at least one tool to continue.');
@@ -130,21 +108,17 @@ export const CustomMCPDialog: React.FC<CustomMCPDialogProps> = ({
     // Custom MCPs don't need credentials, so save directly
     handleSave();
   };
-
   const handleSave = () => {
     if (discoveredTools.length === 0 || selectedTools.size === 0) {
       setValidationError('Please select at least one tool to continue.');
       return;
     }
-
     if (!serverName.trim()) {
       setValidationError('Please provide a name for this connection.');
       return;
     }
-
     try {
       let configToSave: any = { url: configText.trim() };
-      
       onSave({
         name: serverName,
         type: serverType,
@@ -153,14 +127,12 @@ export const CustomMCPDialog: React.FC<CustomMCPDialogProps> = ({
         // Custom MCPs don't need credential profiles since they're just URLs
         selectedProfileId: undefined
       });
-      
       setConfigText('');
       setManualServerName('');
       setDiscoveredTools([]);
       setSelectedTools(new Set());
       setServerName('');
       setProcessedConfig(null);
-
       setValidationError(null);
       setStep('setup');
       onOpenChange(false);
@@ -168,7 +140,6 @@ export const CustomMCPDialog: React.FC<CustomMCPDialogProps> = ({
       setValidationError('Invalid configuration format.');
     }
   };
-
   const handleToolToggle = (toolName: string) => {
     const newTools = new Set(selectedTools);
     if (newTools.has(toolName)) {
@@ -178,14 +149,12 @@ export const CustomMCPDialog: React.FC<CustomMCPDialogProps> = ({
     }
     setSelectedTools(newTools);
   };
-
   const handleBack = () => {
     if (step === 'tools') {
       setStep('setup');
     }
     setValidationError(null);
   };
-
   const handleReset = () => {
     setConfigText('');
     setManualServerName('');
@@ -193,16 +162,13 @@ export const CustomMCPDialog: React.FC<CustomMCPDialogProps> = ({
     setSelectedTools(new Set());
     setServerName('');
     setProcessedConfig(null);
-    
     setValidationError(null);
     setStep('setup');
   };
-
   const exampleConfigs = {
     http: `https://server.example.com/mcp`,
     sse: `https://mcp.composio.dev/partner/composio/gmail/sse?customerId=YOUR_CUSTOMER_ID`
   };
-
   return (
     <Dialog open={open} onOpenChange={(open) => {
       onOpenChange(open);
@@ -250,7 +216,6 @@ export const CustomMCPDialog: React.FC<CustomMCPDialogProps> = ({
             </div>
           </div>
         </DialogHeader>
-
         <div className="flex-1 overflow-hidden flex flex-col">
           {step === 'setup' ? (
             <div className="space-y-6 p-1 flex-1">
@@ -299,7 +264,6 @@ export const CustomMCPDialog: React.FC<CustomMCPDialogProps> = ({
                   </RadioGroup>
                 </div>
               </div>
-
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="serverName" className="text-base font-medium">
@@ -317,7 +281,6 @@ export const CustomMCPDialog: React.FC<CustomMCPDialogProps> = ({
                     Give this connection a memorable name
                   </p>
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="config" className="text-base font-medium">
                     Connection URL
@@ -335,7 +298,6 @@ export const CustomMCPDialog: React.FC<CustomMCPDialogProps> = ({
                   </p>
                 </div>
               </div>
-
               {validationError && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
@@ -356,7 +318,6 @@ export const CustomMCPDialog: React.FC<CustomMCPDialogProps> = ({
                   </p>
                 </div>
               </Alert>
-
               <div className="space-y-4 flex-1 flex flex-col">
                 <div className="flex items-center justify-between">
                   <div>
@@ -379,7 +340,6 @@ export const CustomMCPDialog: React.FC<CustomMCPDialogProps> = ({
                     {selectedTools.size === discoveredTools.length ? 'Deselect All' : 'Select All'}
                   </Button>
                 </div>
-
                 <div className="flex-1 min-h-0">
                   <ScrollArea className="h-[400px] border border-border rounded-lg">
                     <div className="space-y-3 p-4">
@@ -419,7 +379,6 @@ export const CustomMCPDialog: React.FC<CustomMCPDialogProps> = ({
                   </ScrollArea>
                 </div>
               </div>
-
               {validationError && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
@@ -429,7 +388,6 @@ export const CustomMCPDialog: React.FC<CustomMCPDialogProps> = ({
             </div>
           ) : null}
         </div>
-
         <DialogFooter className="flex-shrink-0 pt-4">
           {step === 'tools' ? (
             <>

@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   MessageCircleQuestion,
   CheckCircle,
   AlertTriangle,
   Loader2,
-  Clock,
+  _Clock,
   MessageSquare,
   Paperclip,
 } from 'lucide-react';
@@ -14,16 +14,14 @@ import {
   getToolTitle,
 } from '../utils';
 import { extractAskData } from './_utils';
-import { cn, truncateString } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileAttachment } from '../../file-attachment';
-
 interface AskToolViewProps extends ToolViewProps {
   onFileClick?: (filePath: string) => void;
 }
-
 export function AskToolView({
   name = 'ask',
   assistantContent,
@@ -35,7 +33,6 @@ export function AskToolView({
   onFileClick,
   project,
 }: AskToolViewProps) {
-
   const {
     text,
     attachments,
@@ -50,25 +47,20 @@ export function AskToolView({
     toolTimestamp,
     assistantTimestamp
   );
-
   const isImageFile = (filePath: string): boolean => {
     const filename = filePath.split('/').pop() || '';
     return filename.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i) !== null;
   };
-
   const isPreviewableFile = (filePath: string): boolean => {
     const ext = filePath.split('.').pop()?.toLowerCase() || '';
     return ext === 'html' || ext === 'htm' || ext === 'md' || ext === 'markdown' || ext === 'csv' || ext === 'tsv';
   };
-
   const toolTitle = getToolTitle(name) || 'Ask User';
-
   const handleFileClick = (filePath: string) => {
     if (onFileClick) {
       onFileClick(filePath);
     }
   };
-
   return (
     <Card className="gap-0 flex border shadow-none border-t border-b-0 border-x-0 p-0 rounded-none flex-col h-full overflow-hidden bg-card">
       <CardHeader className="h-14 bg-zinc-50/80 dark:bg-zinc-900/80 backdrop-blur-sm border-b p-2 px-4 space-y-2">
@@ -83,7 +75,6 @@ export function AskToolView({
               </CardTitle>
             </div>
           </div>
-
           {!isStreaming && (
             <Badge
               variant="secondary"
@@ -101,7 +92,6 @@ export function AskToolView({
               {actualIsSuccess ? 'Success' : 'Failed'}
             </Badge>
           )}
-
           {isStreaming && (
             <Badge className="bg-gradient-to-b from-blue-200 to-blue-100 text-blue-700 dark:from-blue-800/50 dark:to-blue-900/60 dark:text-blue-300">
               <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
@@ -110,7 +100,6 @@ export function AskToolView({
           )}
         </div>
       </CardHeader>
-
       <CardContent className="p-0 flex-1 overflow-hidden relative">
         <ScrollArea className="h-full w-full">
           <div className="p-4 space-y-6">
@@ -120,7 +109,6 @@ export function AskToolView({
                   <Paperclip className="h-4 w-4" />
                   Files ({attachments.length})
                 </div>
-
                 <div className={cn(
                   "grid gap-3",
                   attachments.length === 1 ? "grid-cols-1" :
@@ -133,7 +121,6 @@ export function AskToolView({
                       const bIsImage = isImageFile(b);
                       const aIsPreviewable = isPreviewableFile(a);
                       const bIsPreviewable = isPreviewableFile(b);
-
                       if (aIsImage && !bIsImage) return -1;
                       if (!aIsImage && bIsImage) return 1;
                       if (aIsPreviewable && !bIsPreviewable) return -1;
@@ -146,7 +133,6 @@ export function AskToolView({
                       const shouldSpanFull = (attachments!.length % 2 === 1 &&
                         attachments!.length > 1 &&
                         index === attachments!.length - 1);
-
                       return (
                         <div
                           key={index}
@@ -189,8 +175,6 @@ export function AskToolView({
                       );
                     })}
                 </div>
-
-
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -208,7 +192,6 @@ export function AskToolView({
           </div>
         </ScrollArea>
       </CardContent>
-
       <div className="px-4 py-2 h-10 bg-gradient-to-r from-zinc-50/90 to-zinc-100/90 dark:from-zinc-900/90 dark:to-zinc-800/90 backdrop-blur-sm border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center gap-4">
         <div className="h-full flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
           <Badge className="h-6 py-0.5" variant="outline">
@@ -216,7 +199,6 @@ export function AskToolView({
             User Interaction
           </Badge>
         </div>
-
         <div className="text-xs text-zinc-500 dark:text-zinc-400">
           {actualAssistantTimestamp ? formatTimestamp(actualAssistantTimestamp) : ''}
         </div>

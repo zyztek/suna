@@ -3,9 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, Loader2, ExternalLink, Zap, Filter, Grid, List, User, CheckCircle2, Plus, X, Settings, Star, Globe, Database, MessageSquare, Mail, Bot, FileText, Calculator, Calendar, Building, Workflow, Sparkles } from 'lucide-react';
+import { Search, Loader2, Grid, User, CheckCircle2, Plus, X, Settings, Star, Globe, Database, MessageSquare, Mail, Bot, FileText, Calculator, Calendar, Building, Workflow, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
 import { usePipedreamApps } from '@/hooks/react-query/pipedream/use-pipedream';
 import { usePipedreamProfiles } from '@/hooks/react-query/pipedream/use-pipedream-profiles';
 import { CredentialProfileSelector } from './credential-profile-selector';
@@ -16,7 +15,6 @@ import { cn } from '@/lib/utils';
 import type { PipedreamProfile } from '@/components/agents/pipedream/pipedream-profiles';
 import { useQueryClient } from '@tanstack/react-query';
 import { pipedreamKeys } from '@/hooks/react-query/pipedream/keys';
-
 interface PipedreamApp {
   id: string;
   name: string;
@@ -28,7 +26,6 @@ interface PipedreamApp {
   api_docs_url: string | null;
   status: number;
 }
-
 interface PipedreamRegistryProps {
   onProfileSelected?: (profile: PipedreamProfile) => void;
   onToolsSelected?: (profileId: string, selectedTools: string[], appName: string, appSlug: string) => void;
@@ -36,7 +33,6 @@ interface PipedreamRegistryProps {
   mode?: 'full' | 'simple';
   onClose?: () => void;
 }
-
 const getCategoryIcon = (category: string) => {
   const icons: Record<string, React.ReactNode> = {
     'All': <Globe className="h-4 w-4" />,
@@ -55,7 +51,6 @@ const getCategoryIcon = (category: string) => {
   };
   return icons[category] || <Grid className="h-4 w-4" />;
 };
-
 export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
   onProfileSelected,
   onToolsSelected,
@@ -70,13 +65,10 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
   const [selectedProfile, setSelectedProfile] = useState<PipedreamProfile | null>(null);
   const [showProfileManager, setShowProfileManager] = useState(false);
   const [selectedAppForProfile, setSelectedAppForProfile] = useState<{ app_slug: string; app_name: string } | null>(null);
-
   const queryClient = useQueryClient();
   const { data: appsData, isLoading, error, refetch } = usePipedreamApps(page, search, selectedCategory === 'All' ? '' : selectedCategory);
   const { data: profiles } = usePipedreamProfiles();
-  
   const { data: allAppsData } = usePipedreamApps(1, '', '');
-
   const categories = useMemo(() => {
     const dataToUse = allAppsData?.apps || appsData?.apps || [];
     const categorySet = new Set<string>();
@@ -86,11 +78,9 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
     const sortedCategories = Array.from(categorySet).sort();
     return ['All', ...sortedCategories];
   }, [allAppsData?.apps, appsData?.apps]);
-
   const connectedProfiles = useMemo(() => {
     return profiles?.filter(p => p.is_connected) || [];
   }, [profiles]);
-
   const popularApps = useMemo(() => {
     const dataToUse = allAppsData?.apps || appsData?.apps || [];
     return dataToUse
@@ -98,7 +88,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
       .sort((a: PipedreamApp, b: PipedreamApp) => b.featured_weight - a.featured_weight)
       .slice(0, 6);
   }, [allAppsData?.apps, appsData?.apps]);
-
   // Create apps from connected profiles for display
   const connectedApps = useMemo(() => {
     return connectedProfiles.map(profile => ({
@@ -113,33 +102,26 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
       status: 1,
     }));
   }, [connectedProfiles]);
-
   const handleSearch = (value: string) => {
     setSearch(value);
     setPage(1);
   };
-
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category);
     setPage(1);
   };
-
   const handleProfileSelect = async (profileId: string | null, app: PipedreamApp) => {
     if (!profileId) return;
-    
     const profile = profiles?.find(p => p.profile_id === profileId);
     if (!profile) return;
-
     if (!profile.is_connected) {
       toast.error('Please connect this profile first');
       return;
     }
-
     setSelectedProfile(profile);
     setShowToolSelector(true);
     onProfileSelected?.(profile);
   };
-
   const handleToolsSelected = (selectedTools: string[]) => {
     if (selectedProfile && onToolsSelected) {
       onToolsSelected(selectedProfile.profile_id, selectedTools, selectedProfile.app_name, selectedProfile.app_slug);
@@ -148,29 +130,22 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
       toast.success(`Added ${selectedTools.length} tools from ${selectedProfile.app_name}!`);
     }
   };
-
   const handleCreateProfile = (app: PipedreamApp) => {
     setSelectedAppForProfile({ app_slug: app.name_slug, app_name: app.name });
     setShowProfileManager(true);
   };
-
   const handleProfileManagerClose = () => {
     setShowProfileManager(false);
     setSelectedAppForProfile(null);
     queryClient.invalidateQueries({ queryKey: pipedreamKeys.profiles.all() });
   };
-
-
-
   const getAppProfiles = (appSlug: string) => {
     return profiles?.filter(p => p.app_slug === appSlug && p.is_active) || [];
   };
-
   const AppCard: React.FC<{ app: PipedreamApp; compact?: boolean }> = ({ app, compact = false }) => {
     const appProfiles = getAppProfiles(app.name_slug);
     const connectedProfiles = appProfiles.filter(p => p.is_connected);
     const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
-
     return (
       <Card className="group transition-all duration-200 hover:shadow-md border-border/50 hover:border-border/80 bg-card/50 hover:bg-card/80 w-full">
         <CardContent className={cn("p-4", compact && "p-3")}>
@@ -184,7 +159,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
                 {app.name.charAt(0).toUpperCase()}
               </div>
             </div>
-            
             {/* App Details */}
             <div className="flex-1 min-w-0 w-full">
               {/* Header */}
@@ -202,7 +176,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
                   </Badge>
                 )}
               </div>
-              
               {/* Description */}
               <p className={cn(
                 "text-muted-foreground line-clamp-2 mb-3 w-full",
@@ -210,7 +183,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
               )}>
                 {app.description}
               </p>
-
               {/* Categories */}
               {!compact && app.categories.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-3 w-full">
@@ -231,7 +203,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
                   )}
                 </div>
               )}
-
               {/* Actions */}
               <div className="w-full">
                 {mode === 'simple' ? (
@@ -279,7 +250,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
       </Card>
     );
   };
-
   const CategoryTabs = () => (
     <div className="w-full">
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -289,7 +259,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
             : (allAppsData?.apps || appsData?.apps || []).filter((app: PipedreamApp) => 
                 app.categories.includes(category)
               ).length;
-          
           return (
             <Button
               key={category}
@@ -316,7 +285,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
       </div>
     </div>
   );
-
   if (error) {
     return (
       <div className="text-center py-8">
@@ -327,7 +295,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
       </div>
     );
   }
-
   return (
     <div className="h-full flex flex-col max-w-full overflow-hidden">
       {/* Header */}
@@ -344,7 +311,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
           </Button>
         )}
       </div>
-
       {/* Search */}
       <div className="px-4 sm:px-6 pb-4 flex-shrink-0">
         <div className="relative max-w-md">
@@ -357,12 +323,10 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
           />
         </div>
       </div>
-
       {/* Categories */}
       <div className="px-4 sm:px-6 pb-4 flex-shrink-0">
         <CategoryTabs />
       </div>
-
       {/* Content */}
       <div className="flex-1 overflow-auto px-4 sm:px-6 pb-6">
         <div className="max-w-full">
@@ -379,7 +343,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
               <p className="text-sm text-muted-foreground mb-4">
                 Apps and services you've connected
               </p>
-              
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                 {connectedApps.map((app) => (
                   <AppCard key={app.id} app={app} />
@@ -387,7 +350,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
               </div>
             </div>
           )}
-
           {/* Popular/Recommended */}
           {popularApps.length > 0 && selectedCategory === 'All' && (
             <div className="mb-8">
@@ -401,7 +363,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
               <p className="text-sm text-muted-foreground mb-4">
                 Most commonly used integrations to get started quickly
               </p>
-              
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                 {popularApps.map((app: PipedreamApp) => (
                   <AppCard key={app.id} app={app} compact={true} />
@@ -409,7 +370,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
               </div>
             </div>
           )}
-
           {/* Current Category Results */}
           {selectedCategory !== 'All' && (
             <div className="mb-6">
@@ -435,7 +395,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
               </p>
             </div>
           )}
-
           {/* Apps Grid */}
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
@@ -451,7 +410,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
                   <AppCard key={app.id} app={app} />
                 ))}
               </div>
-
               {appsData.page_info && appsData.page_info.has_more && (
                 <div className="flex justify-center pt-8">
                   <Button
@@ -498,7 +456,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
           )}
         </div>
       </div>
-
       {/* Dialogs */}
       <Dialog open={showToolSelector} onOpenChange={setShowToolSelector}>
         <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto'>
@@ -512,7 +469,6 @@ export const PipedreamRegistry: React.FC<PipedreamRegistryProps> = ({
           />
         </DialogContent>
       </Dialog>
-
       <Dialog open={showProfileManager} onOpenChange={handleProfileManagerClose}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>

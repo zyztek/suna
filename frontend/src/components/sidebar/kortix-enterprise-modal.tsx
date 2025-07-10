@@ -13,7 +13,7 @@ import { useTheme } from 'next-themes';
 
 export function KortixProcessModal() {
   const [open, setOpen] = useState(false);
-  const isDesktop = useMediaQuery('(min-width: 768px)');
+
   const { resolvedTheme } = useTheme();
   const isDarkMode = resolvedTheme === 'dark';
 

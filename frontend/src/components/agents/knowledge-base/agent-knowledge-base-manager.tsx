@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   Plus, 
   Edit2, 
@@ -68,10 +67,9 @@ import {
   useAgentProcessingJobs,
 } from '@/hooks/react-query/knowledge-base/use-knowledge-base-queries';
 import { cn, truncateString } from '@/lib/utils';
-import { CreateKnowledgeBaseEntryRequest, KnowledgeBaseEntry, UpdateKnowledgeBaseEntryRequest, ProcessingJob } from '@/hooks/react-query/knowledge-base/types';
+import { CreateKnowledgeBaseEntryRequest, KnowledgeBaseEntry, UpdateKnowledgeBaseEntryRequest } from '@/hooks/react-query/knowledge-base/types';
 import { toast } from 'sonner';
 import JSZip from 'jszip';
-
 import { 
   SiJavascript, 
   SiTypescript, 
@@ -94,17 +92,14 @@ import {
   FaFileAlt,
   FaFile
 } from 'react-icons/fa';
-
 interface AgentKnowledgeBaseManagerProps {
   agentId: string;
   agentName: string;
 }
-
 interface EditDialogData {
   entry?: KnowledgeBaseEntry;
   isOpen: boolean;
 }
-
 interface UploadedFile {
   file: File;
   id: string;
@@ -114,7 +109,6 @@ interface UploadedFile {
   zipParentId?: string;
   originalPath?: string;
 }
-
 const USAGE_CONTEXT_OPTIONS = [
   { 
     value: 'always', 
@@ -123,7 +117,6 @@ const USAGE_CONTEXT_OPTIONS = [
     color: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
   },
 ] as const;
-
 const getFileTypeIcon = (filename: string, mimeType?: string) => {
   const extension = filename.split('.').pop()?.toLowerCase();
   switch (extension) {
@@ -182,10 +175,8 @@ const getFileTypeIcon = (filename: string, mimeType?: string) => {
       return FaFile;
   }
 };
-
 const getFileIconColor = (filename: string) => {
   const extension = filename.split('.').pop()?.toLowerCase();
-  
   switch (extension) {
     case 'js':
       return 'text-yellow-500';
@@ -236,7 +227,6 @@ const getFileIconColor = (filename: string) => {
       return 'text-gray-500';
   }
 };
-
 const getSourceIcon = (sourceType: string, filename?: string) => {
   switch (sourceType) {
     case 'file':
@@ -249,7 +239,6 @@ const getSourceIcon = (sourceType: string, filename?: string) => {
       return FileText;
   }
 };
-
 const AgentKnowledgeBaseSkeleton = () => (
   <div className="space-y-6">
     <div className="flex items-center justify-between">
@@ -258,7 +247,6 @@ const AgentKnowledgeBaseSkeleton = () => (
       </div>
       <Skeleton className="h-10 w-32 ml-4" />
     </div>
-
     <div className="space-y-3">
       {[1, 2, 3].map((i) => (
         <div key={i} className="border rounded-lg p-4">
@@ -289,7 +277,6 @@ const AgentKnowledgeBaseSkeleton = () => (
     </div>
   </div>
 );
-
 export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledgeBaseManagerProps) => {
   const [editDialog, setEditDialog] = useState<EditDialogData>({ isOpen: false });
   const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
@@ -299,14 +286,12 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
   const [dragActive, setDragActive] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
   const [formData, setFormData] = useState<CreateKnowledgeBaseEntryRequest>({
     name: '',
     description: '',
     content: '',
     usage_context: 'always',
   });
-
   const { data: knowledgeBase, isLoading, error } = useAgentKnowledgeBaseEntries(agentId);
   const { data: processingJobsData } = useAgentProcessingJobs(agentId);
   const createMutation = useCreateAgentKnowledgeBaseEntry();
@@ -314,7 +299,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
   const deleteMutation = useDeleteKnowledgeBaseEntry();
   const uploadMutation = useUploadAgentFiles();
   const cloneMutation = useCloneGitRepository();
-
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -324,17 +308,14 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
       setDragActive(false);
     }
   }, []);
-
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileUpload(e.dataTransfer.files);
     }
   }, []);
-
   const handleOpenAddDialog = (tab: 'manual' | 'files' | 'repo' = 'manual') => {
     setAddDialogTab(tab);
     setAddDialogOpen(true);
@@ -346,7 +327,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
     });
     setUploadedFiles([]);
   };
-
   const handleOpenEditDialog = (entry: KnowledgeBaseEntry) => {
     setFormData({
       name: entry.name,
@@ -356,7 +336,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
     });
     setEditDialog({ entry, isOpen: true });
   };
-
   const handleCloseDialog = () => {
     setEditDialog({ isOpen: false });
     setAddDialogOpen(false);
@@ -368,14 +347,11 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
     });
     setUploadedFiles([]);
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!formData.name.trim() || !formData.content.trim()) {
       return;
     }
-
     try {
       if (editDialog.entry) {
         const updateData: UpdateKnowledgeBaseEntryRequest = {
@@ -391,13 +367,11 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
       } else {
         await createMutation.mutateAsync({ agentId, data: formData });
       }
-      
       handleCloseDialog();
     } catch (error) {
       console.error('Error saving agent knowledge base entry:', error);
     }
   };
-
   const handleDelete = async (entryId: string) => {
     try {
       await deleteMutation.mutateAsync(entryId);
@@ -406,7 +380,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
       console.error('Error deleting agent knowledge base entry:', error);
     }
   };
-
   const handleToggleActive = async (entry: KnowledgeBaseEntry) => {
     try {
       await updateMutation.mutateAsync({
@@ -417,24 +390,20 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
       console.error('Error toggling entry status:', error);
     }
   };
-
   const extractZipFile = async (zipFile: File, zipId: string) => {
     try {
       setUploadedFiles(prev => prev.map(f => 
         f.id === zipId ? { ...f, status: 'extracting' } : f
       ));
-
       const zip = new JSZip();
       const zipContent = await zip.loadAsync(zipFile);
       const extractedFiles: UploadedFile[] = [];
-
       for (const [path, file] of Object.entries(zipContent.files)) {
         if (!file.dir && !path.startsWith('__MACOSX/') && !path.includes('/.')) {
           try {
             const blob = await file.async('blob');
             const fileName = path.split('/').pop() || path;
             const extractedFile = new File([blob], fileName);
-
             extractedFiles.push({
               file: extractedFile,
               id: Math.random().toString(36).substr(2, 9),
@@ -448,12 +417,10 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
           }
         }
       }
-
       setUploadedFiles(prev => [
         ...prev.map(f => f.id === zipId ? { ...f, status: 'success' as const } : f),
         ...extractedFiles
       ]);
-
       toast.success(`Extracted ${extractedFiles.length} files from ${zipFile.name}`);
     } catch (error) {
       console.error('Error extracting ZIP:', error);
@@ -467,12 +434,9 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
       toast.error('Failed to extract ZIP file');
     }
   };
-
   const handleFileUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    
     const newFiles: UploadedFile[] = [];
-    
     for (const file of Array.from(files)) {
       const fileId = Math.random().toString(36).substr(2, 9);
       const uploadedFile: UploadedFile = {
@@ -480,20 +444,17 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
         id: fileId,
         status: 'pending'
       };
-      
       newFiles.push(uploadedFile);
       if (file.name.toLowerCase().endsWith('.zip')) {
         setTimeout(() => extractZipFile(file, fileId), 100);
       }
     }
-    
     setUploadedFiles(prev => [...prev, ...newFiles]);
     if (!addDialogOpen) {
       setAddDialogTab('files');
       setAddDialogOpen(true);
     }
   };
-
   const uploadFiles = async () => {
     const filesToUpload = uploadedFiles.filter(f => 
       f.status === 'pending' && 
@@ -504,9 +465,7 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
         setUploadedFiles(prev => prev.map(f => 
           f.id === uploadedFile.id ? { ...f, status: 'uploading' as const } : f
         ));
-        
         await uploadMutation.mutateAsync({ agentId, file: uploadedFile.file });
-        
         setUploadedFiles(prev => prev.map(f => 
           f.id === uploadedFile.id ? { ...f, status: 'success' as const } : f
         ));
@@ -520,7 +479,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
         ));
       }
     }
-    
     setTimeout(() => {
       const nonZipFiles = uploadedFiles.filter(f => !f.file.name.toLowerCase().endsWith('.zip') || f.isFromZip);
       if (nonZipFiles.every(f => f.status === 'success')) {
@@ -528,15 +486,12 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
       }
     }, 1000);
   };
-
   const removeFile = (fileId: string) => {
     setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
   };
-
   const getUsageContextConfig = (context: string) => {
     return USAGE_CONTEXT_OPTIONS.find(option => option.value === context) || USAGE_CONTEXT_OPTIONS[0];
   };
-
   const getJobStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
@@ -549,7 +504,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
         return Clock;
     }
   };
-
   const getJobStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -562,11 +516,9 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
         return 'text-yellow-600';
     }
   };
-
   if (isLoading) {
     return <AgentKnowledgeBaseSkeleton />;
   }
-
   if (error) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -577,7 +529,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
       </div>
     );
   }
-
   const entries = knowledgeBase?.entries || [];
   const processingJobs = processingJobsData?.jobs || [];
   const filteredEntries = entries.filter(entry => 
@@ -585,7 +536,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
     entry.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (entry.description && entry.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
-
   return (
     <div 
       className="space-y-6"
@@ -643,7 +593,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
               const contextConfig = getUsageContextConfig(entry.usage_context);
               const ContextIcon = contextConfig.icon;
               const SourceIcon = getSourceIcon(entry.source_type || 'manual', entry.source_metadata?.filename);
-              
               return (
                 <Card
                   key={entry.entry_id}
@@ -750,7 +699,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
           )}
         </div>
       )}
-
       {/* Processing Jobs */}
       {processingJobs.length > 0 && (
         <Card>
@@ -764,7 +712,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
             {processingJobs.map((job) => {
               const StatusIcon = getJobStatusIcon(job.status);
               const statusColor = getJobStatusColor(job.status);
-              
               return (
                 <div key={job.job_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">
@@ -812,7 +759,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
               Add Knowledge to {agentName}
             </DialogTitle>
           </DialogHeader>
-          
           <div className="flex-1 overflow-y-auto">
             <Tabs value={addDialogTab} onValueChange={(value) => setAddDialogTab(value as any)} className="w-full">
               <TabsList className="grid w-80 grid-cols-2">
@@ -830,7 +776,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
                   )}
                 </TabsTrigger>
               </TabsList>
-
               <TabsContent value="manual" className="space-y-6 mt-6">
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-2">
@@ -843,7 +788,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
                       required
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="usage_context" className="text-sm font-medium">Usage Context</Label>
                     <Select
@@ -870,7 +814,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
                       </SelectContent>
                     </Select>
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="description" className="text-sm font-medium">Description</Label>
                     <Input
@@ -880,7 +823,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
                       placeholder="Brief description of this knowledge (optional)"
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="content" className="text-sm font-medium">Content *</Label>
                     <Textarea
@@ -895,7 +837,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
                       Approximately {Math.ceil(formData.content.length / 4).toLocaleString()} tokens
                     </div>
                   </div>
-
                   <div className="flex justify-end gap-3 pt-4 border-t">
                     <Button type="button" variant="outline" onClick={handleCloseDialog}>
                       Cancel
@@ -915,7 +856,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
                   </div>
                 </form>
               </TabsContent>
-
               <TabsContent value="files" className="space-y-6 mt-6">
                 <div className="space-y-4">
                   {uploadedFiles.length === 0 && (
@@ -1045,7 +985,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
                       )}
                     </div>
                   )}
-
                   {uploadedFiles.length > 0 && (
                     <div className="flex justify-end gap-3 pt-4 border-t">
                       <Button type="button" variant="outline" onClick={handleCloseDialog}>
@@ -1085,7 +1024,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
               Edit Knowledge Entry
             </DialogTitle>
           </DialogHeader>
-          
           <div className="flex-1 overflow-y-auto">
             <form onSubmit={handleSubmit} className="space-y-6 p-1">
               <div className="space-y-2">
@@ -1098,7 +1036,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
                   required
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="edit-usage_context" className="text-sm font-medium">Usage Context</Label>
                 <Select
@@ -1125,7 +1062,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="edit-description" className="text-sm font-medium">Description</Label>
                 <Input
@@ -1135,7 +1071,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
                   placeholder="Brief description of this knowledge (optional)"
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="edit-content" className="text-sm font-medium">Content *</Label>
                 <Textarea
@@ -1150,7 +1085,6 @@ export const AgentKnowledgeBaseManager = ({ agentId, agentName }: AgentKnowledge
                   Approximately {Math.ceil(formData.content.length / 4).toLocaleString()} tokens
                 </div>
               </div>
-
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <Button type="button" variant="outline" onClick={handleCloseDialog}>
                   Cancel

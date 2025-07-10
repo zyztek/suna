@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react';
 
 export function FooterSection() {
   const tablet = useMediaQuery('(max-width: 1024px)');
-  const { theme, resolvedTheme } = useTheme();
+  const { _theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   // After mount, we can access the theme

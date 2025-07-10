@@ -3,7 +3,7 @@
 import { createClient } from '../supabase/server';
 
 export async function editPersonalAccountName(
-  prevState: any,
+  _prevState: any,
   formData: FormData,
 ) {
   const name = formData.get('name') as string;

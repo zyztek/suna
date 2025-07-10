@@ -16,8 +16,8 @@ type Props = {
   returnUrl: string;
 };
 
-export default function AccountBillingStatus({ accountId, returnUrl }: Props) {
-  const { session, isLoading: authLoading } = useAuth();
+export default function AccountBillingStatus({ _accountId, returnUrl }: Props) {
+  const { _session, isLoading: authLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isManaging, setIsManaging] = useState(false);
   const {
@@ -90,14 +90,6 @@ export default function AccountBillingStatus({ accountId, returnUrl }: Props) {
   const isPlan = (planId?: string) => {
     return subscriptionData?.plan_name === planId;
   };
-
-  const planName = isPlan('free')
-    ? 'Free'
-    : isPlan('base')
-      ? 'Pro'
-      : isPlan('extra')
-        ? 'Enterprise'
-        : 'Unknown';
 
   return (
     <div className="rounded-xl border shadow-sm bg-card p-6">

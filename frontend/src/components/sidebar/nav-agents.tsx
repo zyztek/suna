@@ -1,5 +1,4 @@
 'use client';
-
 import { useEffect, useState, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -16,7 +15,6 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { usePathname, useRouter } from "next/navigation"
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,11 +41,9 @@ import { ShareModal } from "./share-modal"
 import { DeleteConfirmationDialog } from "@/components/thread/DeleteConfirmationDialog"
 import { useDeleteOperation } from '@/contexts/DeleteOperationContext'
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import { ThreadWithProject } from '@/hooks/react-query/sidebar/use-sidebar';
 import { processThreadsWithProjects, useDeleteMultipleThreads, useDeleteThread, useProjects, useThreads } from '@/hooks/react-query/sidebar/use-sidebar';
 import { projectKeys, threadKeys } from '@/hooks/react-query/sidebar/keys';
-
 export function NavAgents() {
   const { isMobile, state } = useSidebar()
   const [loadingThreadId, setLoadingThreadId] = useState<string | null>(null)
@@ -61,38 +57,31 @@ export function NavAgents() {
   const { performDelete } = useDeleteOperation();
   const isPerformingActionRef = useRef(false);
   const queryClient = useQueryClient();
-
   const [selectedThreads, setSelectedThreads] = useState<Set<string>>(new Set());
   const [deleteProgress, setDeleteProgress] = useState(0);
   const [totalToDelete, setTotalToDelete] = useState(0);
-
   const {
     data: projects = [],
     isLoading: isProjectsLoading,
     error: projectsError
   } = useProjects();
-
   const {
     data: threads = [],
     isLoading: isThreadsLoading,
     error: threadsError
   } = useThreads();
-
   const { mutate: deleteThreadMutation, isPending: isDeletingSingle } = useDeleteThread();
   const {
     mutate: deleteMultipleThreadsMutation,
     isPending: isDeletingMultiple
   } = useDeleteMultipleThreads();
-
   const combinedThreads: ThreadWithProject[] =
     !isProjectsLoading && !isThreadsLoading ?
       processThreadsWithProjects(threads, projects) : [];
-
   const handleDeletionProgress = (completed: number, total: number) => {
     const percentage = (completed / total) * 100;
     setDeleteProgress(percentage);
   };
-
   useEffect(() => {
     const handleProjectUpdate = (event: Event) => {
       const customEvent = event as CustomEvent;
@@ -102,7 +91,6 @@ export function NavAgents() {
         queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
       }
     };
-
     window.addEventListener('project-updated', handleProjectUpdate as EventListener);
     return () => {
       window.removeEventListener(
@@ -111,33 +99,27 @@ export function NavAgents() {
       );
     };
   }, [queryClient]);
-
   useEffect(() => {
     setLoadingThreadId(null);
   }, [pathname]);
-
   useEffect(() => {
     const handleNavigationComplete = () => {
       console.log('NAVIGATION - Navigation event completed');
       document.body.style.pointerEvents = 'auto';
       isNavigatingRef.current = false;
     };
-
     window.addEventListener("popstate", handleNavigationComplete);
-
     return () => {
       window.removeEventListener('popstate', handleNavigationComplete);
       // Ensure we clean up any leftover styles
       document.body.style.pointerEvents = "auto";
     };
   }, []);
-
   // Reset isNavigatingRef when pathname changes
   useEffect(() => {
     isNavigatingRef.current = false;
     document.body.style.pointerEvents = 'auto';
   }, [pathname]);
-
   // Function to handle thread click with loading state
   const handleThreadClick = (e: React.MouseEvent<HTMLAnchorElement>, threadId: string, url: string) => {
     // If thread is selected, prevent navigation 
@@ -145,19 +127,16 @@ export function NavAgents() {
       e.preventDefault();
       return;
     }
-
     e.preventDefault()
     setLoadingThreadId(threadId)
     router.push(url)
   }
-
   // Toggle thread selection for multi-select
   const toggleThreadSelection = (threadId: string, e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
-
     setSelectedThreads(prev => {
       const newSelection = new Set(prev);
       if (newSelection.has(threadId)) {
@@ -168,74 +147,59 @@ export function NavAgents() {
       return newSelection;
     });
   };
-
   // Select all threads
   const selectAllThreads = () => {
     const allThreadIds = combinedThreads.map(thread => thread.threadId);
     setSelectedThreads(new Set(allThreadIds));
   };
-
   // Deselect all threads
   const deselectAllThreads = () => {
     setSelectedThreads(new Set());
   };
-
   // Function to handle thread deletion
   const handleDeleteThread = async (threadId: string, threadName: string) => {
     setThreadToDelete({ id: threadId, name: threadName });
     setIsDeleteDialogOpen(true);
   };
-
   // Function to handle multi-delete
   const handleMultiDelete = () => {
     if (selectedThreads.size === 0) return;
-
     // Get thread names for confirmation dialog
     const threadsToDelete = combinedThreads.filter(t => selectedThreads.has(t.threadId));
     const threadNames = threadsToDelete.map(t => t.projectName).join(", ");
-
     setThreadToDelete({
       id: "multiple",
       name: selectedThreads.size > 3
         ? `${selectedThreads.size} conversations`
         : threadNames
     });
-
     setTotalToDelete(selectedThreads.size);
     setDeleteProgress(0);
     setIsDeleteDialogOpen(true);
   };
-
   const confirmDelete = async () => {
     if (!threadToDelete || isPerformingActionRef.current) return;
-
     // Mark action in progress
     isPerformingActionRef.current = true;
-
     // Close dialog first for immediate feedback
     setIsDeleteDialogOpen(false);
-
     // Check if it's a single thread or multiple threads
     if (threadToDelete.id !== "multiple") {
       // Single thread deletion
       const threadId = threadToDelete.id;
       const isActive = pathname?.includes(threadId);
-
       // Store threadToDelete in a local variable since it might be cleared
       const deletedThread = { ...threadToDelete };
-
       // Get sandbox ID from projects data
       const thread = combinedThreads.find(t => t.threadId === threadId);
       const project = projects.find(p => p.id === thread?.projectId);
       const sandboxId = project?.sandbox?.id;
-
       // Log operation start
       console.log('DELETION - Starting thread deletion process', {
         threadId: deletedThread.id,
         isCurrentThread: isActive,
         sandboxId
       });
-
       // Use the centralized deletion system with completion callback
       await performDelete(
         threadId,
@@ -267,10 +231,8 @@ export function NavAgents() {
       // Multi-thread deletion
       const threadIdsToDelete = Array.from(selectedThreads);
       const isActiveThreadIncluded = threadIdsToDelete.some(id => pathname?.includes(id));
-
       // Show initial toast
       toast.info(`Deleting ${threadIdsToDelete.length} conversations...`);
-
       try {
         // If the active thread is included, handle navigation first
         if (isActiveThreadIncluded) {
@@ -278,11 +240,9 @@ export function NavAgents() {
           isNavigatingRef.current = true;
           document.body.style.pointerEvents = 'none';
           router.push('/dashboard');
-
           // Wait a moment for navigation to start
           await new Promise(resolve => setTimeout(resolve, 100));
         }
-
         // Use the mutation for bulk deletion
         deleteMultipleThreadsMutation(
           {
@@ -300,15 +260,12 @@ export function NavAgents() {
             onSuccess: (data) => {
               // Invalidate queries to refresh the list
               queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
-
               // Show success message
               toast.success(`Successfully deleted ${data.successful.length} conversations`);
-
               // If some deletions failed, show warning
               if (data.failed.length > 0) {
                 toast.warning(`Failed to delete ${data.failed.length} conversations`);
               }
-
               // Reset states
               setSelectedThreads(new Set());
               setDeleteProgress(0);
@@ -329,7 +286,6 @@ export function NavAgents() {
       } catch (err) {
         console.error('Error initiating bulk deletion:', err);
         toast.error('Error initiating deletion process');
-
         // Reset states
         setSelectedThreads(new Set());
         setThreadToDelete(null);
@@ -339,15 +295,12 @@ export function NavAgents() {
       }
     }
   };
-
   // Loading state or error handling
   const isLoading = isProjectsLoading || isThreadsLoading;
   const hasError = projectsError || threadsError;
-
   if (hasError) {
     console.error('Error loading data:', { projectsError, threadsError });
   }
-
   return (
     <SidebarGroup>
       <div className="flex justify-between items-center">
@@ -386,10 +339,7 @@ export function NavAgents() {
           </div>
         ) : null}
       </div>
-
       <SidebarMenu className="overflow-y-auto max-h-[calc(100vh-200px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-
-
         {state !== 'collapsed' && (
           <>
             {isLoading ? (
@@ -410,7 +360,6 @@ export function NavAgents() {
                   const isActive = pathname?.includes(thread.threadId) || false;
                   const isThreadLoading = loadingThreadId === thread.threadId;
                   const isSelected = selectedThreads.has(thread.threadId);
-
                   return (
                     <SidebarMenuItem key={`thread-${thread.threadId}`} className="group/row">
                       <SidebarMenuButton
@@ -435,7 +384,6 @@ export function NavAgents() {
                             ) : null}
                             <span className="truncate">{thread.projectName}</span>
                           </Link>
-                          
                           {/* Checkbox - only visible on hover of this specific area */}
                           <div
                             className="mr-1 flex-shrink-0 w-4 h-4 flex items-center justify-center group/checkbox"
@@ -450,7 +398,6 @@ export function NavAgents() {
                               {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
                             </div>
                           </div>
-
                           {/* Dropdown Menu - inline with content */}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -519,7 +466,6 @@ export function NavAgents() {
           </>
         )}
       </SidebarMenu>
-
       {(isDeletingSingle || isDeletingMultiple) && totalToDelete > 0 && (
         <div className="mt-2 px-2">
           <div className="text-xs text-muted-foreground mb-1">
@@ -533,14 +479,12 @@ export function NavAgents() {
           </div>
         </div>
       )}
-
       <ShareModal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         threadId={selectedItem?.threadId}
         projectId={selectedItem?.projectId}
       />
-
       {threadToDelete && (
         <DeleteConfirmationDialog
           isOpen={isDeleteDialogOpen}

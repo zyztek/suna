@@ -210,7 +210,7 @@ export function StrReplaceToolView({
 
   // Generate diff data (only if we have both strings)
   const lineDiff = oldStr && newStr ? generateLineDiff(oldStr, newStr) : [];
-  const charDiff = oldStr && newStr ? generateCharDiff(oldStr, newStr) : [];
+
 
   // Calculate stats on changes
   const stats: DiffStats = calculateDiffStats(lineDiff);

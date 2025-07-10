@@ -36,7 +36,7 @@ async function sendWelcomeEmail(email: string, name?: string) {
   }
 }
 
-export async function signIn(prevState: any, formData: FormData) {
+export async function signIn(_prevState: any, formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
   const returnUrl = formData.get('returnUrl') as string | undefined;
@@ -64,7 +64,7 @@ export async function signIn(prevState: any, formData: FormData) {
   return { success: true, redirectTo: returnUrl || '/dashboard' };
 }
 
-export async function signUp(prevState: any, formData: FormData) {
+export async function signUp(_prevState: any, formData: FormData) {
   const origin = formData.get('origin') as string;
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
@@ -119,7 +119,7 @@ export async function signUp(prevState: any, formData: FormData) {
   return { success: true, redirectTo: returnUrl || '/dashboard' };
 }
 
-export async function forgotPassword(prevState: any, formData: FormData) {
+export async function forgotPassword(_prevState: any, formData: FormData) {
   const email = formData.get('email') as string;
   const origin = formData.get('origin') as string;
 
@@ -143,7 +143,7 @@ export async function forgotPassword(prevState: any, formData: FormData) {
   };
 }
 
-export async function resetPassword(prevState: any, formData: FormData) {
+export async function resetPassword(_prevState: any, formData: FormData) {
   const password = formData.get('password') as string;
   const confirmPassword = formData.get('confirmPassword') as string;
 

@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -10,7 +9,6 @@ import {
   Message as BaseApiMessageType,
 } from '@/lib/api';
 import { toast } from 'sonner';
-import { Skeleton } from '@/components/ui/skeleton';
 import { FileViewerModal } from '@/components/thread/file-viewer-modal';
 import {
   ToolCallSidePanel,
@@ -30,11 +28,9 @@ import { safeJsonParse } from '@/components/thread/utils';
 import { useAgentStream } from '@/hooks/useAgentStream';
 import { ThreadSkeleton } from '@/components/thread/content/ThreadSkeleton';
 import { extractToolName } from '@/components/thread/tool-views/xml-parser';
-
 const threadErrorCodeMessages: Record<string, string> = {
   PGRST116: 'The requested chat does not exist, has been deleted, or you do not have access to it.',
 };
-
 interface ApiMessageType extends BaseApiMessageType {
   message_id?: string;
   thread_id?: string;
@@ -49,7 +45,6 @@ interface ApiMessageType extends BaseApiMessageType {
     avatar_color?: string;
   };
 }
-
 interface StreamingToolCall {
   id?: string;
   name?: string;
@@ -57,7 +52,6 @@ interface StreamingToolCall {
   index?: number;
   xml_tag_name?: string;
 }
-
 export default function ThreadPage({
   params,
 }: {
@@ -65,7 +59,6 @@ export default function ThreadPage({
 }) {
   const unwrappedParams = React.use(params);
   const threadId = unwrappedParams.threadId;
-
   const router = useRouter();
   const [messages, setMessages] = useState<UnifiedMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -78,50 +71,39 @@ export default function ThreadPage({
   const [toolCalls, setToolCalls] = useState<ToolCallInput[]>([]);
   const [currentToolIndex, setCurrentToolIndex] = useState<number>(0);
   const [autoOpenedPanel, setAutoOpenedPanel] = useState(false);
-
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [streamingText, setStreamingText] = useState('');
   const [currentToolCall, setCurrentToolCall] =
     useState<StreamingToolCall | null>(null);
-
   const [externalNavIndex, setExternalNavIndex] = React.useState<number | undefined>(undefined);
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const latestMessageRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [userHasScrolled, setUserHasScrolled] = useState(false);
   const hasInitiallyScrolled = useRef<boolean>(false);
-
   const [project, setProject] = useState<Project | null>(null);
   const [sandboxId, setSandboxId] = useState<string | null>(null);
   const [fileViewerOpen, setFileViewerOpen] = useState(false);
   const [projectName, setProjectName] = useState<string>('');
   const [fileToView, setFileToView] = useState<string | null>(null);
-
   const initialLoadCompleted = useRef<boolean>(false);
   const messagesLoadedRef = useRef(false);
   const agentRunsCheckedRef = useRef(false);
-
   const [streamingTextContent, setStreamingTextContent] = useState('');
-
   const userClosedPanelRef = useRef(false);
-
   useEffect(() => {
     userClosedPanelRef.current = true;
     setIsSidePanelOpen(false);
   }, []);
-
   const toggleSidePanel = useCallback(() => {
     setIsSidePanelOpen((prev) => !prev);
   }, []);
-
   const handleSidePanelNavigate = useCallback((newIndex: number) => {
     setCurrentToolIndex(newIndex);
     console.log(`Tool panel manually set to index ${newIndex}`);
   }, []);
-
   const handleNewMessageFromStream = useCallback((message: UnifiedMessage) => {
     console.log(
       `[STREAM HANDLER] Received message: ID=${message.message_id}, Type=${message.type}`,
@@ -131,7 +113,6 @@ export default function ThreadPage({
         `[STREAM HANDLER] Received message is missing ID: Type=${message.type}, Content=${message.content?.substring(0, 50)}...`,
       );
     }
-
     setMessages((prev) => {
       const messageExists = prev.some(
         (m) => m.message_id === message.message_id,
@@ -144,12 +125,10 @@ export default function ThreadPage({
         return [...prev, message];
       }
     });
-
     if (message.type === 'tool') {
       setAutoOpenedPanel(false);
     }
   }, []);
-
   const handleStreamStatusChange = useCallback(
     (hookStatus: string) => {
       console.log(`[PAGE] Hook status changed: ${hookStatus}`);
@@ -179,38 +158,29 @@ export default function ThreadPage({
     },
     [threadId],
   );
-
   const handleStreamError = useCallback((errorMessage: string) => {
     console.error(`[PAGE] Stream hook error: ${errorMessage}`);
     toast.error(errorMessage, { duration: 15000 });
   }, []);
-
   const handleStreamClose = useCallback(() => {
     console.log(`[PAGE] Stream hook closed with final status: ${agentStatus}`);
   }, [agentStatus]);
-
   // Handle streaming tool calls
   const handleStreamingToolCall = useCallback(
     (toolCall: StreamingToolCall | null) => {
       if (!toolCall) return;
-
       // Normalize the tool name like the project thread page does
       const rawToolName = toolCall.name || toolCall.xml_tag_name || 'Unknown Tool';
       const toolName = rawToolName.replace(/_/g, '-').toLowerCase();
-
       console.log('[STREAM] Received tool call:', toolName, '(raw:', rawToolName, ')');
-
       // If user explicitly closed the panel, don't reopen it for streaming calls
       if (userClosedPanelRef.current) return;
-
       // Create a properly formatted tool call input for the streaming tool
       // that matches the format of historical tool calls
       const toolArguments = toolCall.arguments || '';
-
       // Format the arguments in a way that matches the expected XML format for each tool
       // This ensures the specialized tool views render correctly
       let formattedContent = toolArguments;
-      
       if (
         toolName.includes('command') &&
         !toolArguments.includes('<execute-command>')
@@ -241,7 +211,6 @@ export default function ThreadPage({
           }
         }
       }
-
       const newToolCall: ToolCallInput = {
         assistantCall: {
           name: toolName,  // Use normalized tool name
@@ -255,7 +224,6 @@ export default function ThreadPage({
           timestamp: new Date().toISOString(),
         },
       };
-
       // Update the tool calls state to reflect the streaming tool
       setToolCalls((prev) => {
         // If the same tool is already being streamed, update it instead of adding a new one
@@ -272,40 +240,32 @@ export default function ThreadPage({
         }
         return [newToolCall];
       });
-
       setCurrentToolIndex(0);
       setIsSidePanelOpen(true);
     },
     [],
   );
-
   useEffect(() => {
     if (!isPlaying || messages.length === 0) return;
-
     let playbackTimeout: NodeJS.Timeout;
-
     const playbackNextMessage = async () => {
       if (currentMessageIndex >= messages.length) {
         setIsPlaying(false);
         return;
       }
-
       const currentMessage = messages[currentMessageIndex];
       console.log(
         `Playing message ${currentMessageIndex}:`,
         currentMessage.type,
         currentMessage.message_id,
       );
-
       setCurrentMessageIndex((prevIndex) => prevIndex + 1);
     };
     playbackTimeout = setTimeout(playbackNextMessage, 500);
-
     return () => {
       clearTimeout(playbackTimeout);
     };
   }, [isPlaying, currentMessageIndex, messages]);
-
   const {
     status: streamHookStatus,
     toolCall: streamingToolCall,
@@ -323,7 +283,6 @@ export default function ThreadPage({
     threadId,
     setMessages,
   );
-
   useEffect(() => {
     if (agentRunId && agentRunId !== currentHookRunId) {
       console.log(
@@ -332,24 +291,19 @@ export default function ThreadPage({
       startStreaming(agentRunId);
     }
   }, [agentRunId, startStreaming, currentHookRunId]);
-
   // Handle streaming tool calls
   useEffect(() => {
     if (streamingToolCall) {
       handleStreamingToolCall(streamingToolCall);
     }
   }, [streamingToolCall, handleStreamingToolCall]);
-
   useEffect(() => {
     let isMounted = true;
-
     async function loadData() {
       if (!initialLoadCompleted.current) setIsLoading(true);
       setError(null);
-
       try {
         if (!threadId) throw new Error('Thread ID is required');
-
         const [threadData, messagesData] = await Promise.all([
           getThread(threadId).catch((err) => {
             if (threadErrorCodeMessages[err.code]) {
@@ -364,16 +318,13 @@ export default function ThreadPage({
             return [];
           }),
         ]);
-
         if (!isMounted) return;
-
         const projectData = threadData?.project_id
           ? await getProject(threadData.project_id).catch((err) => {
             console.warn('[SHARE] Could not load project data:', err);
             return null;
           })
           : null;
-
         if (isMounted) {
           if (projectData) {
             setProject(projectData);
@@ -382,12 +333,10 @@ export default function ThreadPage({
             } else if (projectData.sandbox?.id) {
               setSandboxId(projectData.sandbox.id);
             }
-
             setProjectName(projectData.name || '');
           } else {
             setProjectName('Shared Conversation');
           }
-
           const unifiedMessages = (messagesData || [])
             .filter((msg) => msg.type !== 'status')
             .map((msg: ApiMessageType) => ({
@@ -402,13 +351,11 @@ export default function ThreadPage({
               agent_id: (msg as any).agent_id,
               agents: (msg as any).agents,
             }));
-
           setMessages(unifiedMessages);
           const historicalToolPairs: ToolCallInput[] = [];
           const assistantMessages = unifiedMessages.filter(
             (m) => m.type === 'assistant' && m.message_id,
           );
-
           assistantMessages.forEach((assistantMsg) => {
             const resultMessage = unifiedMessages.find((toolMsg) => {
               if (toolMsg.type !== 'tool' || !toolMsg.metadata || !assistantMsg.message_id) return false;
@@ -419,7 +366,6 @@ export default function ThreadPage({
                 return false;
               }
             });
-
             if (resultMessage) {
               // Determine tool name from assistant message content
               let toolName = 'unknown';
@@ -450,7 +396,6 @@ export default function ThreadPage({
                   }
                 }
               } catch { }
-
               let isSuccess = true;
               try {
                 const toolResultContent = (() => {
@@ -473,7 +418,6 @@ export default function ThreadPage({
                   }
                 }
               } catch { }
-
               historicalToolPairs.push({
                 assistantCall: {
                   name: toolName,
@@ -493,7 +437,6 @@ export default function ThreadPage({
             const timeB = new Date(b.assistantCall.timestamp || '').getTime();
             return timeA - timeB;
           });
-
           setToolCalls(historicalToolPairs);
           initialLoadCompleted.current = true;
         }
@@ -514,12 +457,9 @@ export default function ThreadPage({
       isMounted = false;
     };
   }, [threadId]);
-
-
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     messagesEndRef.current?.scrollIntoView({ behavior });
   };
-
   const handleToolClick = useCallback(
     (clickedAssistantMessageId: string | null, clickedToolName: string) => {
       if (!clickedAssistantMessageId) {
@@ -529,20 +469,16 @@ export default function ThreadPage({
         toast.warning('Cannot view details: Assistant message ID is missing.');
         return;
       }
-
       userClosedPanelRef.current = false;
-
       console.log(
         '[PAGE] Tool Click Triggered. Assistant Message ID:',
         clickedAssistantMessageId,
         'Tool Name:',
         clickedToolName,
       );
-
       const toolIndex = toolCalls.findIndex((tc) => {
         if (!tc.toolResult?.content || tc.toolResult.content === 'STREAMING')
           return false;
-
         const assistantMessage = messages.find(
           (m) =>
             m.message_id === clickedAssistantMessageId &&
@@ -565,7 +501,6 @@ export default function ThreadPage({
           tc.toolResult?.content === toolMessage?.content
         );
       });
-
       if (toolIndex !== -1) {
         console.log(
           `[PAGE] Found tool call at index ${toolIndex} for assistant message ${clickedAssistantMessageId}`,
@@ -573,7 +508,6 @@ export default function ThreadPage({
         setExternalNavIndex(toolIndex);
         setCurrentToolIndex(toolIndex);
         setIsSidePanelOpen(true);
-
         setTimeout(() => setExternalNavIndex(undefined), 100);
       } else {
         console.warn(
@@ -584,7 +518,6 @@ export default function ThreadPage({
     },
     [messages, toolCalls],
   );
-
   const handleOpenFileViewer = useCallback((filePath?: string, filePathList?: string[]) => {
     if (filePath) {
       setFileToView(filePath);
@@ -593,7 +526,6 @@ export default function ThreadPage({
     }
     setFileViewerOpen(true);
   }, []);
-
   const playbackController: PlaybackController = PlaybackControls({
     messages,
     isSidePanelOpen,
@@ -603,7 +535,6 @@ export default function ThreadPage({
     onFileViewerOpen: handleOpenFileViewer,
     projectName: projectName || 'Shared Conversation',
   });
-
   const {
     playbackState,
     renderHeader,
@@ -613,18 +544,15 @@ export default function ThreadPage({
     resetPlayback,
     skipToEnd,
   } = playbackController;
-
   useEffect(() => {
     setIsPlaying(playbackState.isPlaying);
     setCurrentMessageIndex(playbackState.currentMessageIndex);
   }, [playbackState.isPlaying, playbackState.currentMessageIndex]);
-
   useEffect(() => {
     if (playbackState.visibleMessages.length > 0 && !userHasScrolled) {
       scrollToBottom('smooth');
     }
   }, [playbackState.visibleMessages, userHasScrolled]);
-
   useEffect(() => {
     if (!latestMessageRef.current || playbackState.visibleMessages.length === 0)
       return;
@@ -635,12 +563,10 @@ export default function ThreadPage({
     observer.observe(latestMessageRef.current);
     return () => observer.disconnect();
   }, [playbackState.visibleMessages, streamingText, currentToolCall]);
-
   useEffect(() => {
     console.log(
       `[PAGE] 🔄 Page AgentStatus: ${agentStatus}, Hook Status: ${streamHookStatus}, Target RunID: ${agentRunId || 'none'}, Hook RunID: ${currentHookRunId || 'none'}`,
     );
-
     if (
       (streamHookStatus === 'completed' ||
         streamHookStatus === 'stopped' ||
@@ -656,7 +582,6 @@ export default function ThreadPage({
       setAutoOpenedPanel(false);
     }
   }, [agentStatus, streamHookStatus, agentRunId, currentHookRunId]);
-
   const autoScrollToBottom = useCallback(
     (behavior: ScrollBehavior = 'smooth') => {
       if (!userHasScrolled && messagesEndRef.current) {
@@ -665,7 +590,6 @@ export default function ThreadPage({
     },
     [userHasScrolled],
   );
-
   useEffect(() => {
     if (!isPlaying || currentMessageIndex <= 0 || !messages.length) return;
     const currentMsg = messages[currentMessageIndex - 1];
@@ -693,7 +617,6 @@ export default function ThreadPage({
       }
     }
   }, [currentMessageIndex, isPlaying, messages, toolCalls]);
-
   useEffect(() => {
     if (!isPlaying || messages.length === 0 || currentMessageIndex <= 0) return;
     const currentMessages = messages.slice(0, currentMessageIndex);
@@ -724,13 +647,11 @@ export default function ThreadPage({
       }
     }
   }, [currentMessageIndex, isPlaying, messages, toolCalls]);
-
   if (isLoading && !initialLoadCompleted.current) {
     return (
       <ThreadSkeleton isSidePanelOpen={isSidePanelOpen} showHeader={true} />
     );
   }
-
   if (error) {
     return (
       <div className="flex h-screen">
@@ -762,7 +683,6 @@ export default function ThreadPage({
       </div>
     );
   }
-
   return (
     <div className="flex h-screen">
       <div
@@ -785,7 +705,6 @@ export default function ThreadPage({
         {renderWelcomeOverlay()}
         {renderFloatingControls()}
       </div>
-
       <ToolCallSidePanel
         isOpen={isSidePanelOpen}
         onClose={() => {
@@ -801,7 +720,6 @@ export default function ThreadPage({
         project={project}
         onFileClick={handleOpenFileViewer}
       />
-
       <FileViewerModal
         open={fileViewerOpen}
         onOpenChange={setFileViewerOpen}

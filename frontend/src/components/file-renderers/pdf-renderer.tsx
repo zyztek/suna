@@ -1,33 +1,26 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Document, Page, pdfjs } from 'react-pdf';
-
 // Import styles for annotations and text layer
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.mjs',
   import.meta.url,
 ).toString();
-
 interface PdfRendererProps {
   url: string;
   className?: string;
 }
-
 export function PdfRenderer({ url, className }: PdfRendererProps) {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
-
   function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
     setNumPages(numPages);
   }
-
   function changePage(offset: number) {
     setPageNumber((prevPageNumber) => {
       const newPageNumber = prevPageNumber + offset;
@@ -36,23 +29,18 @@ export function PdfRenderer({ url, className }: PdfRendererProps) {
         : prevPageNumber;
     });
   }
-
   function previousPage() {
     changePage(-1);
   }
-
   function nextPage() {
     changePage(1);
   }
-
   function zoomIn() {
     setScale((prevScale) => Math.min(prevScale + 0.2, 3.0));
   }
-
   function zoomOut() {
     setScale((prevScale) => Math.max(prevScale - 0.2, 0.5));
   }
-
   return (
     <div className={cn('flex flex-col w-full h-full', className)}>
       <div className="flex-1 overflow-auto rounded-md">
@@ -69,7 +57,6 @@ export function PdfRenderer({ url, className }: PdfRendererProps) {
           />
         </Document>
       </div>
-
       {numPages && (
         <div className="flex items-center justify-between p-2 bg-background border-t">
           <div className="flex items-center space-x-2">
@@ -89,7 +76,6 @@ export function PdfRenderer({ url, className }: PdfRendererProps) {
               +
             </button>
           </div>
-
           <div className="flex items-center space-x-2">
             <button
               onClick={previousPage}

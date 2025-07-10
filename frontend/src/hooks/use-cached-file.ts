@@ -673,7 +673,7 @@ export async function fetchFileContent(
   const { contentType = 'text', token } = options;
   
   // For internal tracking
-  const requestId = Math.random().toString(36).substring(2, 9);
+
   console.log(`[FILE CACHE] Fetching fresh content for ${sandboxId}:${filePath}`);
   
   const attemptFetch = async (isRetry: boolean = false): Promise<string | Blob | any> => {

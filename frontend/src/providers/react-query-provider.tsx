@@ -1,14 +1,11 @@
 'use client';
-
 import { useState } from 'react';
 import {
   HydrationBoundary,
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { handleApiError } from '@/lib/error-handler';
-
 export function ReactQueryProvider({
   children,
   dehydratedState,
@@ -47,7 +44,6 @@ export function ReactQueryProvider({
         },
       }),
   );
-
   return (
     <QueryClientProvider client={queryClient}>
       <HydrationBoundary state={dehydratedState}>

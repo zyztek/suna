@@ -33,7 +33,7 @@ export const useCreateAgentWorkflow = () => {
     ({ agentId, workflow }: { agentId: string; workflow: CreateWorkflowRequest }) => 
       createAgentWorkflow(agentId, workflow),
     {
-      onSuccess: (data, variables) => {
+      onSuccess: (_data, variables) => {
         queryClient.invalidateQueries({ queryKey: workflowKeys.agent(variables.agentId) });
         toast.success('Workflow created successfully');
       },
@@ -48,7 +48,7 @@ export const useUpdateAgentWorkflow = () => {
     ({ agentId, workflowId, workflow }: { agentId: string; workflowId: string; workflow: UpdateWorkflowRequest }) => 
       updateAgentWorkflow(agentId, workflowId, workflow),
     {
-      onSuccess: (data, variables) => {
+      onSuccess: (_data, variables) => {
         queryClient.invalidateQueries({ queryKey: workflowKeys.agent(variables.agentId) });
         toast.success('Workflow updated successfully');
       },

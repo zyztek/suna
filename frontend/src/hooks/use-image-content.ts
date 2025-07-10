@@ -1,12 +1,8 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { FileCache } from './use-cached-file';
-
 // Track in-progress image loads to prevent duplication
 const inProgressImageLoads = new Map<string, Promise<string>>();
-
 /**
  * Hook to fetch and cache image content with authentication
  */
@@ -15,7 +11,6 @@ export function useImageContent(sandboxId?: string, filePath?: string) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const { session } = useAuth();
-
   useEffect(() => {
     if (!sandboxId || !filePath || !session?.access_token) {
       console.log('[useImageContent] Missing required parameters:', {
@@ -26,17 +21,14 @@ export function useImageContent(sandboxId?: string, filePath?: string) {
       setImageUrl(null);
       return;
     }
-
     // Ensure path has /workspace prefix for consistent caching
     let normalizedPath = filePath;
     if (!normalizedPath.startsWith('/workspace')) {
       normalizedPath = `/workspace/${normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath}`;
     }
-
     // Define consistent cache keys
     const cacheKey = `${sandboxId}:${normalizedPath}:blob`;
     const loadKey = `${sandboxId}:${normalizedPath}`;
-    
     // Check if image is already in cache
     const cached = FileCache.get(cacheKey);
     if (cached) {
@@ -64,12 +56,10 @@ export function useImageContent(sandboxId?: string, filePath?: string) {
         return;
       }
     }
-
     // Check if this image is already being loaded by another component
     if (inProgressImageLoads.has(loadKey)) {
       console.log('[useImageContent] Image load already in progress, waiting for result');
       setIsLoading(true);
-      
       inProgressImageLoads.get(loadKey)!
         .then(blobUrl => {
           setImageUrl(blobUrl);
@@ -80,18 +70,14 @@ export function useImageContent(sandboxId?: string, filePath?: string) {
           setError(err);
           setIsLoading(false);
         });
-      
       return;
     }
-
     // If not cached or in progress, fetch the image directly with proper authentication
     console.log('[useImageContent] Fetching image:', normalizedPath);
     setIsLoading(true);
-    
     // Create a URL for the fetch request
     const url = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/sandboxes/${sandboxId}/files/content`);
     url.searchParams.append('path', normalizedPath);
-    
     // Create a promise for this load and track it
     const loadPromise = fetch(url.toString(), {
       headers: {
@@ -108,16 +94,12 @@ export function useImageContent(sandboxId?: string, filePath?: string) {
         // Create a blob URL from the image data
         const blobUrl = URL.createObjectURL(blob);
         console.log('[useImageContent] Successfully created blob URL from fetched image');
-        
         // Cache both the blob and the URL
         FileCache.set(cacheKey, blobUrl);
-        
         return blobUrl;
       });
-    
     // Store the promise in the in-progress map
     inProgressImageLoads.set(loadKey, loadPromise);
-    
     // Now use the promise for our state
     loadPromise
       .then(blobUrl => {
@@ -140,14 +122,12 @@ export function useImageContent(sandboxId?: string, filePath?: string) {
         // Remove from in-progress map when done
         inProgressImageLoads.delete(loadKey);
       });
-
     // Clean up function to handle component unmount
     return () => {
       // We don't revoke the objectURL here because it's cached
       // The URLs will be revoked when the cache entry is replaced or on page unload
     };
   }, [sandboxId, filePath, session?.access_token]);
-
   return {
     data: imageUrl,
     isLoading,

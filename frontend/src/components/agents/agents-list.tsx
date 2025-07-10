@@ -28,7 +28,7 @@ export const AgentsList = ({
   agents, 
   onEditAgent, 
   onDeleteAgent, 
-  onToggleDefault,
+  _onToggleDefault,
   deleteAgentMutation 
 }: AgentsListProps) => {
   return (

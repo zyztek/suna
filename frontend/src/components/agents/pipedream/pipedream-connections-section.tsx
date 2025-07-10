@@ -34,7 +34,7 @@ interface AppTableProps {
   onManageProfile: (profile: PipedreamProfile) => void;
 }
 
-const AppTable: React.FC<AppTableProps> = ({ appSlug, appName, profiles, onManageProfile }) => {
+const AppTable: React.FC<AppTableProps> = ({ _appSlug, appName, profiles, onManageProfile }) => {
 
   const columns: DataTableColumn<PipedreamProfile>[] = [
     {
@@ -128,7 +128,7 @@ export const PipedreamConnectionsSection: React.FC<PipedreamConnectionsSectionPr
   const [showProfileManager, setShowProfileManager] = useState(false);
   const [showAppBrowser, setShowAppBrowser] = useState(false);
   const [selectedAppForProfile, setSelectedAppForProfile] = useState<{ app_slug: string; app_name: string } | null>(null);
-  const [selectedProfile, setSelectedProfile] = useState<PipedreamProfile | null>(null);
+  const [_selectedProfile, setSelectedProfile] = useState<PipedreamProfile | null>(null);
   const queryClient = useQueryClient();
   const { data: profiles, isLoading, error } = usePipedreamProfiles();
 
@@ -164,8 +164,8 @@ export const PipedreamConnectionsSection: React.FC<PipedreamConnectionsSectionPr
   }, {} as Record<string, PipedreamProfile[]>) || {};
 
   const totalProfiles = profiles?.length || 0;
-  const connectedProfiles = profiles?.filter(p => p.is_connected).length || 0;
-  const uniqueApps = Object.keys(profilesByApp).length;
+
+
 
   return (
     <div className="space-y-6">

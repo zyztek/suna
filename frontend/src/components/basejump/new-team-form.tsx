@@ -103,7 +103,7 @@ export default function NewTeamForm() {
       )}
 
       <SubmitButton
-        formAction={async (prevState: any, formData: FormData) =>
+        formAction={async (_prevState: any, formData: FormData) =>
           formAction(formData)
         }
         pendingText="Creating team..."

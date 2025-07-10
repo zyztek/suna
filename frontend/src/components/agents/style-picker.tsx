@@ -1,16 +1,12 @@
 "use client"
-
 import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Palette, Search } from "lucide-react"
 import React from "react"
-
 const EMOJI_CATEGORIES = {
   smileys: {
     name: "Smileys & People",
@@ -1528,7 +1524,6 @@ const EMOJI_CATEGORIES = {
     ],
   },
 }
-
 const COLOR_PALETTE = [
   "#ef4444",
   "#f97316",
@@ -1555,7 +1550,6 @@ const COLOR_PALETTE = [
   "#ffffff",
   "#f8fafc",
 ]
-
 export const StylePicker = ({ 
   children, 
   agentId, 
@@ -1574,16 +1568,13 @@ export const StylePicker = ({
   const [isOpen, setIsOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [activeCategory, setActiveCategory] = useState("smileys")
-
   // Update local state when props change
   React.useEffect(() => {
     if (currentColor) setSelectedColor(currentColor);
   }, [currentColor]);
-
   React.useEffect(() => {
     if (currentEmoji) setSelectedEmoji(currentEmoji);
   }, [currentEmoji]);
-
   const filteredEmojis = useMemo(() => {
     if (!searchTerm) return EMOJI_CATEGORIES[activeCategory as keyof typeof EMOJI_CATEGORIES].emojis
     const allEmojis = Object.values(EMOJI_CATEGORIES).flatMap((category) => category.emojis)
@@ -1591,26 +1582,21 @@ export const StylePicker = ({
       return emoji.includes(searchTerm)
     })
   }, [searchTerm, activeCategory])
-
   const handleSubmit = () => {
     onStyleChange(selectedEmoji, selectedColor);
     setIsOpen(false)
   }
-
   const handleReset = () => {
     // Reset to generated defaults based on agent ID
     const avatars = ['🤖', '🎯', '⚡', '🚀', '🔮', '🎨', '📊', '🔧', '💡', '🌟'];
     const colors = ["#ef4444", "#f97316", "#f59e0b", "#eab308", "#84cc16", "#22c55e", "#10b981", "#14b8a6", "#06b6d4", "#0ea5e9", "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7"];
-    
     const avatarIndex = agentId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % avatars.length;
     const colorIndex = agentId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
-    
     setSelectedEmoji(avatars[avatarIndex]);
     setSelectedColor(colors[colorIndex]);
     setSearchTerm("")
     setActiveCategory("smileys")
   }
-
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
@@ -1655,9 +1641,7 @@ export const StylePicker = ({
                   />
                 </div>
               </div>
-
               <Separator />
-
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">{selectedEmoji}</span>
@@ -1700,7 +1684,6 @@ export const StylePicker = ({
                     ))}
                   </div>
                 </ScrollArea>
-
                 {searchTerm && filteredEmojis.length === 0 && (
                   <div className="text-center text-muted-foreground py-4">No emojis found for "{searchTerm}"</div>
                 )}

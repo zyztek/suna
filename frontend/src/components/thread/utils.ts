@@ -7,12 +7,12 @@ import {
   Search,
   Globe,
   Code,
-  MessageSquare,
-  Folder,
+  _MessageSquare,
+  _Folder,
   FileX,
   CloudUpload,
   Wrench,
-  Cog,
+  _Cog,
   Network,
   FileSearch,
   FilePlus,
@@ -387,16 +387,6 @@ const TOOL_DISPLAY_NAMES = new Map([
   ['get_popular_mcp_servers', 'Getting Popular MCP Servers'],
   ['test_mcp_server_connection', 'Testing MCP Server Connection'],
 
-]);
-
-
-const MCP_SERVER_NAMES = new Map([
-  ['exa', 'Exa Search'],
-  ['github', 'GitHub'],
-  ['notion', 'Notion'],
-  ['slack', 'Slack'],
-  ['filesystem', 'File System'],
-  ['memory', 'Memory'],
 ]);
 
 function formatMCPToolName(serverName: string, toolName: string): string {

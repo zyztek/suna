@@ -5,25 +5,22 @@ import {
     AlertTriangle,
     ExternalLink,
     Globe,
-    Folder,
+    _Folder,
     TerminalIcon,
 } from 'lucide-react';
 import { ToolViewProps } from './types';
 import { getToolTitle, normalizeContentToString } from './utils';
-import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LoadingState } from './shared/LoadingState';
-
 interface DeployResult {
     message?: string;
     output?: string;
     success?: boolean;
     url?: string;
 }
-
 function extractDeployData(assistantContent: any, toolContent: any): {
     name: string | null;
     directoryPath: string | null;
@@ -34,7 +31,6 @@ function extractDeployData(assistantContent: any, toolContent: any): {
     let directoryPath: string | null = null;
     let deployResult: DeployResult | null = null;
     let rawContent: string | null = null;
-
     // Try to extract from assistant content first
     const assistantStr = normalizeContentToString(assistantContent);
     if (assistantStr) {
@@ -52,14 +48,12 @@ function extractDeployData(assistantContent: any, toolContent: any): {
             if (dirMatch) directoryPath = dirMatch[1];
         }
     }
-
     // Extract deploy result from tool content
     const toolStr = normalizeContentToString(toolContent);
     if (toolStr) {
         rawContent = toolStr;
         try {
             const parsed = JSON.parse(toolStr);
-
             // Handle the nested tool_execution structure
             let resultData = null;
             if (parsed.tool_execution && parsed.tool_execution.result) {
@@ -73,14 +67,12 @@ function extractDeployData(assistantContent: any, toolContent: any): {
                 // Fallback to old format
                 resultData = parsed;
             }
-
             if (resultData) {
                 deployResult = {
                     message: resultData.output?.message || null,
                     output: resultData.output?.output || null,
                     success: resultData.success !== undefined ? resultData.success : true,
                 };
-
                 // Try to extract deployment URL from output
                 if (deployResult.output) {
                     const urlMatch = deployResult.output.match(/https:\/\/[^\s]+\.pages\.dev[^\s]*/);
@@ -98,10 +90,8 @@ function extractDeployData(assistantContent: any, toolContent: any): {
             };
         }
     }
-
     return { name, directoryPath, deployResult, rawContent };
 }
-
 export function DeployToolView({
     name = 'deploy',
     assistantContent,
@@ -115,23 +105,18 @@ export function DeployToolView({
         assistantContent,
         toolContent
     );
-
     const toolTitle = getToolTitle(name);
     const actualIsSuccess = deployResult?.success !== undefined ? deployResult.success : isSuccess;
-
     // Clean up terminal output for display
     const cleanOutput = React.useMemo(() => {
         if (!deployResult?.output) return [];
-
         let output = deployResult.output;
         // Remove ANSI escape codes
         output = output.replace(/\u001b\[[0-9;]*m/g, '');
         // Replace escaped newlines with actual newlines
         output = output.replace(/\\n/g, '\n');
-
         return output.split('\n').filter(line => line.trim().length > 0);
     }, [deployResult?.output]);
-
     return (
         <Card className="gap-0 flex border shadow-none border-t border-b-0 border-x-0 p-0 rounded-none flex-col h-full overflow-hidden bg-card">
             <CardHeader className="h-14 bg-zinc-50/80 dark:bg-zinc-900/80 backdrop-blur-sm border-b p-2 px-4 space-y-2">
@@ -146,7 +131,6 @@ export function DeployToolView({
                             </CardTitle>
                         </div>
                     </div>
-
                     {!isStreaming && (
                         <Badge
                             variant="secondary"
@@ -166,7 +150,6 @@ export function DeployToolView({
                     )}
                 </div>
             </CardHeader>
-
             <CardContent className="p-0 h-full flex-1 overflow-hidden relative">
                 {isStreaming ? (
                     <LoadingState
@@ -180,7 +163,6 @@ export function DeployToolView({
                 ) : (
                     <ScrollArea className="h-full w-full">
                         <div className="p-4">
-
                             {/* Success State */}
                             {actualIsSuccess && deployResult ? (
                                 <div className="space-y-4">
@@ -199,13 +181,11 @@ export function DeployToolView({
                                                         Live
                                                     </Badge>
                                                 </div>
-
                                                 <div className="bg-zinc-50 dark:bg-zinc-800 rounded p-2 mb-3">
                                                     <code className="text-xs font-mono text-zinc-700 dark:text-zinc-300 break-all">
                                                         {deployResult.url}
                                                     </code>
                                                 </div>
-
                                                 <Button
                                                     asChild
                                                     size="sm"
@@ -219,7 +199,6 @@ export function DeployToolView({
                                             </div>
                                         </div>
                                     )}
-
                                     {/* Terminal Output */}
                                     {cleanOutput.length > 0 && (
                                         <div className="bg-zinc-100 dark:bg-neutral-900 rounded-lg overflow-hidden border border-zinc-200/20">
@@ -255,7 +234,6 @@ export function DeployToolView({
                                             The deployment encountered an error. Check the logs below for details.
                                         </p>
                                     </div>
-
                                     {/* Raw Error Output */}
                                     {rawContent && (
                                         <div className="bg-zinc-100 dark:bg-neutral-900 rounded-lg overflow-hidden border border-zinc-200/20">

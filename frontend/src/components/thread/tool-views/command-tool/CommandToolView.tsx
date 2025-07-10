@@ -4,21 +4,19 @@ import {
   CheckCircle,
   AlertTriangle,
   CircleDashed,
-  Code,
+  _Code,
   Clock,
-  ArrowRight,
+  _ArrowRight,
   TerminalIcon,
 } from 'lucide-react';
 import { ToolViewProps } from '../types';
 import { formatTimestamp, getToolTitle } from '../utils';
-import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LoadingState } from '../shared/LoadingState';
 import { extractCommandData } from './_utils';
-
 export function CommandToolView({
   name = 'execute-command',
   assistantContent,
@@ -31,7 +29,6 @@ export function CommandToolView({
   const { resolvedTheme } = useTheme();
   const isDarkTheme = resolvedTheme === 'dark';
   const [showFullOutput, setShowFullOutput] = useState(true);
-
   const {
     command,
     output,
@@ -49,13 +46,10 @@ export function CommandToolView({
     toolTimestamp,
     assistantTimestamp
   );
-
   const displayText = name === 'check-command-output' ? sessionName : command;
   const displayLabel = name === 'check-command-output' ? 'Session' : 'Command';
   const displayPrefix = name === 'check-command-output' ? 'tmux:' : '$';
-
   const toolTitle = getToolTitle(name);
-
   const formattedOutput = React.useMemo(() => {
     if (!output) return [];
     let processedOutput = output;
@@ -68,26 +62,21 @@ export function CommandToolView({
       }
     } catch (e) {
     }
-
     processedOutput = String(processedOutput);
     processedOutput = processedOutput.replace(/\\\\/g, '\\');
-
     processedOutput = processedOutput
       .replace(/\\n/g, '\n')
       .replace(/\\t/g, '\t')
       .replace(/\\"/g, '"')
       .replace(/\\'/g, "'");
-
     processedOutput = processedOutput.replace(/\\u([0-9a-fA-F]{4})/g, (_match, group) => {
       return String.fromCharCode(parseInt(group, 16));
     });
     return processedOutput.split('\n');
   }, [output]);
-
   const hasMoreLines = formattedOutput.length > 10;
   const previewLines = formattedOutput.slice(0, 10);
   const linesToShow = showFullOutput ? formattedOutput : previewLines;
-
   return (
     <Card className="gap-0 flex border shadow-none border-t border-b-0 border-x-0 p-0 rounded-none flex-col h-full overflow-hidden bg-card">
       <CardHeader className="h-14 bg-zinc-50/80 dark:bg-zinc-900/80 backdrop-blur-sm border-b p-2 px-4 space-y-2">
@@ -102,7 +91,6 @@ export function CommandToolView({
               </CardTitle>
             </div>
           </div>
-
           {!isStreaming && (
             <Badge
               variant="secondary"
@@ -125,7 +113,6 @@ export function CommandToolView({
           )}
         </div>
       </CardHeader>
-
       <CardContent className="p-0 h-full flex-1 overflow-hidden relative">
         {isStreaming ? (
           <LoadingState
@@ -139,12 +126,8 @@ export function CommandToolView({
         ) : displayText ? (
           <ScrollArea className="h-full w-full">
             <div className="p-4">
-
-
               {output && (
                 <div className="mb-4">
-
-
                   <div className="bg-zinc-100 dark:bg-neutral-900 rounded-lg overflow-hidden border border-zinc-200/20">
                     <div className="bg-zinc-300 dark:bg-neutral-800 flex items-center justify-between dark:border-zinc-700/50">
                       <div className="bg-zinc-200 w-full dark:bg-zinc-800 px-4 py-2 flex items-center gap-2">
@@ -178,7 +161,6 @@ export function CommandToolView({
                   </div>
                 </div>
               )}
-
               {!output && !isStreaming && (
                 <div className="bg-black rounded-lg overflow-hidden border border-zinc-700/20 shadow-md p-6 flex items-center justify-center">
                   <div className="text-center">
@@ -206,7 +188,6 @@ export function CommandToolView({
           </div>
         )}
       </CardContent>
-
       <div className="px-4 py-2 h-10 bg-gradient-to-r from-zinc-50/90 to-zinc-100/90 dark:from-zinc-900/90 dark:to-zinc-800/90 backdrop-blur-sm border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center gap-4">
         <div className="h-full flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
           {!isStreaming && displayText && (
@@ -216,7 +197,6 @@ export function CommandToolView({
             </Badge>
           )}
         </div>
-
         <div className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
           <Clock className="h-3.5 w-3.5" />
           {actualToolTimestamp && !isStreaming

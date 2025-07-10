@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { Settings, Trash2, Star, MessageCircle, Wrench, Globe, GlobeLock, Download, Shield, AlertTriangle, GitBranch } from 'lucide-react';
+import { Trash2, Star, MessageCircle, Wrench, GlobeLock, Download, Shield, GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { getAgentAvatar } from '../../lib/utils/get-agent-style';
 import { useCreateTemplate, useUnpublishTemplate } from '@/hooks/react-query/secure-mcp/use-secure-mcp';
 import { toast } from 'sonner';
-
 interface Agent {
   agent_id: string;
   name: string;
@@ -33,7 +32,6 @@ interface Agent {
     version_number: number;
   };
 }
-
 interface AgentsGridProps {
   agents: Agent[];
   onEditAgent: (agentId: string) => void;
@@ -41,7 +39,6 @@ interface AgentsGridProps {
   onToggleDefault: (agentId: string, currentDefault: boolean) => void;
   deleteAgentMutation: { isPending: boolean };
 }
-
 const AgentModal = ({ agent, isOpen, onClose, onCustomize, onChat, onPublish, onUnpublish, isPublishing, isUnpublishing }) => {
   const getAgentStyling = (agent: Agent) => {
     if (agent.avatar && agent.avatar_color) {
@@ -52,14 +49,11 @@ const AgentModal = ({ agent, isOpen, onClose, onCustomize, onChat, onPublish, on
     }
     return getAgentAvatar(agent.agent_id);
   };
-
   const { avatar, color } = getAgentStyling(agent);
-  
   const truncateDescription = (text, maxLength = 120) => {
     if (!text || text.length <= maxLength) return text || 'Try out this agent';
     return text.substring(0, maxLength) + '...';
   };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md p-0 overflow-hidden border-none">
@@ -75,7 +69,6 @@ const AgentModal = ({ agent, isOpen, onClose, onCustomize, onChat, onPublish, on
               )}
             </div>
           </div>
-
           <div className="p-4 space-y-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
@@ -99,7 +92,6 @@ const AgentModal = ({ agent, isOpen, onClose, onCustomize, onChat, onPublish, on
                 {truncateDescription(agent.description)}
               </p>
             </div>
-
             <div className="flex gap-3 pt-2">
               <Button
                 onClick={() => onCustomize(agent.agent_id)}
@@ -173,7 +165,6 @@ const AgentModal = ({ agent, isOpen, onClose, onCustomize, onChat, onPublish, on
     </Dialog>
   );
 };
-
 export const AgentsGrid = ({ 
   agents, 
   onEditAgent, 
@@ -185,24 +176,19 @@ export const AgentsGrid = ({
   const [publishingId, setPublishingId] = useState<string | null>(null);
   const [unpublishingId, setUnpublishingId] = useState<string | null>(null);
   const router = useRouter();
-  
   const unpublishAgentMutation = useUnpublishTemplate();
   const createTemplateMutation = useCreateTemplate();
-
   const handleAgentClick = (agent: Agent) => {
     setSelectedAgent(agent);
   };
-
   const handleCustomize = (agentId: string) => {
     router.push(`/agents/config/${agentId}`);
     setSelectedAgent(null);
   };
-
   const handleChat = (agentId: string) => {
     router.push(`/dashboard?agent_id=${agentId}`);
     setSelectedAgent(null);
   };
-
   const handlePublish = async (agentId: string) => {
     try {
       setPublishingId(agentId);
@@ -219,7 +205,6 @@ export const AgentsGrid = ({
       setPublishingId(null);
     }
   };
-
   const handleUnpublish = async (agentId: string) => {
     try {
       setUnpublishingId(agentId);
@@ -232,7 +217,6 @@ export const AgentsGrid = ({
       setUnpublishingId(null);
     }
   };
-
   const getAgentStyling = (agent: Agent) => {
     if (agent.avatar && agent.avatar_color) {
       return {
@@ -242,7 +226,6 @@ export const AgentsGrid = ({
     }
     return getAgentAvatar(agent.agent_id);
   };
-
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -284,12 +267,10 @@ export const AgentsGrid = ({
                 <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
                   {agent.description || 'Try out this agent'}
                 </p>
-                
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground text-xs">
                     By me
                   </span>
-                  
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     {!agent.is_default && (
                       <AlertDialog>
@@ -342,7 +323,6 @@ export const AgentsGrid = ({
           );
         })}
       </div>
-
       {selectedAgent && (
         <AgentModal
           agent={selectedAgent}

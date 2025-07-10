@@ -1,9 +1,7 @@
 'use client';
-
 import * as React from 'react';
 import Link from 'next/link';
-import { Bot, Menu, Store, Plus, Zap, Plug } from 'lucide-react';
-
+import { Bot, Menu, Plus, Plug } from 'lucide-react';
 import { NavAgents } from '@/components/sidebar/nav-agents';
 import { NavUserWithTeams } from '@/components/sidebar/nav-user-with-teams';
 import { KortixLogo } from '@/components/sidebar/kortix-logo';
@@ -27,11 +25,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import { useFeatureFlags } from '@/lib/feature-flags';
-
 export function SidebarLeft({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
@@ -46,17 +42,14 @@ export function SidebarLeft({
     email: 'loading@example.com',
     avatar: '',
   });
-
   const pathname = usePathname();
   const { flags, loading: flagsLoading } = useFeatureFlags(['custom_agents', 'agent_marketplace']);
   const customAgentsEnabled = flags.custom_agents;
   const marketplaceEnabled = flags.agent_marketplace;
-  
   useEffect(() => {
     const fetchUserData = async () => {
       const supabase = createClient();
       const { data } = await supabase.auth.getUser();
-
       if (data.user) {
         setUser({
           name:
@@ -68,10 +61,8 @@ export function SidebarLeft({
         });
       }
     };
-
     fetchUserData();
   }, []);
-
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === 'b') {
@@ -84,11 +75,9 @@ export function SidebarLeft({
         );
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [state, setOpen]);
-
   return (
     <Sidebar
       collapsible="icon"

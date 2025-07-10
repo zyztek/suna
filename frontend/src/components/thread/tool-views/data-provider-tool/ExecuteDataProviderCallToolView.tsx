@@ -16,12 +16,11 @@ import {
   Globe
 } from 'lucide-react';
 import { ToolViewProps } from '../types';
-import { formatTimestamp, getToolTitle } from '../utils';
+import { formatTimestamp } from '../utils';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { extractDataProviderCallData } from './_utils';
-
 const PROVIDER_CONFIG = {
   'linkedin': {
     name: 'LinkedIn Data Provider',
@@ -72,7 +71,6 @@ const PROVIDER_CONFIG = {
     borderColor: 'border-indigo-200 dark:border-indigo-800'
   }
 };
-
 export function ExecuteDataProviderCallToolView({
   name = 'execute-data-provider-call',
   assistantContent,
@@ -82,7 +80,6 @@ export function ExecuteDataProviderCallToolView({
   isSuccess = true,
   isStreaming = false,
 }: ToolViewProps) {
-
   const {
     serviceName,
     route,
@@ -98,14 +95,11 @@ export function ExecuteDataProviderCallToolView({
     toolTimestamp,
     assistantTimestamp
   );
-
   const providerKey = serviceName?.toLowerCase() as keyof typeof PROVIDER_CONFIG;
   const providerConfig = providerKey && PROVIDER_CONFIG[providerKey]
     ? PROVIDER_CONFIG[providerKey]
     : PROVIDER_CONFIG['linkedin'];
-
   const IconComponent = providerConfig.icon;
-
   return (
     <Card className="gap-0 flex border shadow-none border-t border-b-0 border-x-0 p-0 rounded-none flex-col h-full overflow-hidden bg-card">
       <CardHeader className="h-14 bg-zinc-50/80 dark:bg-zinc-900/80 backdrop-blur-sm border-b p-2 px-4 space-y-2">
@@ -120,7 +114,6 @@ export function ExecuteDataProviderCallToolView({
               </CardTitle>
             </div>
           </div>
-
           {!isStreaming && (
             <Badge
               variant="secondary"
@@ -141,7 +134,6 @@ export function ExecuteDataProviderCallToolView({
           )}
         </div>
       </CardHeader>
-
       <CardContent className="p-0 h-full flex-1 overflow-hidden relative">
         {isStreaming ? (
           <div className="flex flex-col items-center justify-center h-full py-8 px-6">
@@ -167,7 +159,6 @@ export function ExecuteDataProviderCallToolView({
               )}>
                 <IconComponent className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
-
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
                   {providerConfig.name}
@@ -178,14 +169,12 @@ export function ExecuteDataProviderCallToolView({
                   </p>
                 )}
               </div>
-
               {route && (
                 <Badge variant="outline" className="text-xs font-mono">
                   {route}
                 </Badge>
               )}
             </div>
-
             {output && !actualIsSuccess && (
               <div className="p-4 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-200 dark:border-red-800/50">
                 <div className="flex items-center gap-2 mb-2">
@@ -199,7 +188,6 @@ export function ExecuteDataProviderCallToolView({
                 </p>
               </div>
             )}
-
             {payload && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
@@ -231,7 +219,6 @@ export function ExecuteDataProviderCallToolView({
                     <span>Raw JSON</span>
                     <ChevronRight className="h-3 w-3 text-zinc-400 group-open:rotate-90 transition-transform" />
                   </summary>
-
                   <div className="mt-3 p-4 bg-zinc-900 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800">
                     <pre className="text-xs font-mono text-emerald-400 dark:text-emerald-300 overflow-x-auto">
                       {JSON.stringify(payload, null, 2)}

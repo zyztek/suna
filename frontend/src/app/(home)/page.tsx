@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+
 import { CTASection } from '@/components/home/sections/cta-section';
 // import { FAQSection } from "@/components/sections/faq-section";
 import { FooterSection } from '@/components/home/sections/footer-section';

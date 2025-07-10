@@ -1,5 +1,4 @@
 "use client";
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,9 +18,7 @@ import {
 } from 'lucide-react';
 import { TriggerConfiguration } from './types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { getDisplayName } from 'next/dist/shared/lib/utils';
-import { getDialogIcon, getTriggerIcon } from './utils';
-
+import { getTriggerIcon } from './utils';
 interface ConfiguredTriggersListProps {
   triggers: TriggerConfiguration[];
   onEdit: (trigger: TriggerConfiguration) => void;
@@ -29,7 +26,6 @@ interface ConfiguredTriggersListProps {
   onToggle: (trigger: TriggerConfiguration) => void;
   isLoading?: boolean;
 }
-
 const getTriggerTypeColor = (triggerType: string) => {
   switch (triggerType) {
     case 'telegram':
@@ -50,7 +46,6 @@ const getTriggerTypeColor = (triggerType: string) => {
       return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
   }
 };
-
 const copyToClipboard = async (text: string) => {
   try {
     await navigator.clipboard.writeText(text);
@@ -58,7 +53,6 @@ const copyToClipboard = async (text: string) => {
     console.error('Failed to copy text: ', err);
   }
 };
-
 export const ConfiguredTriggersList: React.FC<ConfiguredTriggersListProps> = ({
   triggers,
   onEdit,
@@ -78,7 +72,6 @@ export const ConfiguredTriggersList: React.FC<ConfiguredTriggersListProps> = ({
               <div className="p-2 rounded-lg bg-muted border">
                 {getTriggerIcon(trigger.trigger_type)}
               </div>
-              
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2 mb-1">
                   <h4 className="text-sm font-medium truncate">
@@ -97,13 +90,11 @@ export const ConfiguredTriggersList: React.FC<ConfiguredTriggersListProps> = ({
                     {trigger.is_active ? "Active" : "Inactive"}
                   </Badge>
                 </div>
-                
                 {trigger.description && (
                   <p className="text-xs text-muted-foreground truncate">
                     {trigger.description}
                   </p>
                 )}
-                
                 {trigger.webhook_url && (
                   <div className="flex items-center space-x-2 mt-2">
                     <code className="text-xs bg-muted px-2 py-1 rounded font-mono max-w-xs truncate">
@@ -145,7 +136,6 @@ export const ConfiguredTriggersList: React.FC<ConfiguredTriggersListProps> = ({
                 )}
               </div>
             </div>
-            
             <div className="flex items-center space-x-2">
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -161,7 +151,6 @@ export const ConfiguredTriggersList: React.FC<ConfiguredTriggersListProps> = ({
                   <p>{trigger.is_active ? 'Disable' : 'Enable'} trigger</p>
                 </TooltipContent>
               </Tooltip>
-              
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -178,7 +167,6 @@ export const ConfiguredTriggersList: React.FC<ConfiguredTriggersListProps> = ({
                   <p>Edit trigger</p>
                 </TooltipContent>
               </Tooltip>
-              
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button

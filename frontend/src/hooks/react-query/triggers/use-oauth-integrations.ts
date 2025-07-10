@@ -99,7 +99,7 @@ export const useOAuthIntegrations = (agentId: string) => {
 };
 
 export const useInstallOAuthIntegration = () => {
-  const queryClient = useQueryClient();
+
 
   return useMutation({
     mutationFn: initiateOAuthInstall,
@@ -136,14 +136,14 @@ export const useOAuthCallbackHandler = () => {
   const handleCallback = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const agentId = sessionStorage.getItem('oauth_agent_id');
-    const provider = sessionStorage.getItem('oauth_provider');
+
     
     const slackSuccess = urlParams.get('slack_success');
     const discordSuccess = urlParams.get('discord_success');
     const teamsSuccess = urlParams.get('teams_success');
-    const triggerId = urlParams.get('trigger_id');
-    const workspaceName = urlParams.get('workspace');
-    const botName = urlParams.get('bot_name');
+
+
+
 
     const slackError = urlParams.get('slack_error');
     const discordError = urlParams.get('discord_error');

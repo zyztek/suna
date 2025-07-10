@@ -19,7 +19,7 @@ export const WebhookTriggerConfigForm: React.FC<WebhookTriggerConfigFormProps> =
   provider,
   config,
   onChange,
-  errors,
+  _errors,
 }) => {
   const [showSecret, setShowSecret] = useState(false);
   const [newHeaderKey, setNewHeaderKey] = useState('');

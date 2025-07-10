@@ -560,7 +560,7 @@ export function FileViewerModal({
   );
 
   // Add a helper to directly interact with the raw cache
-  const checkCacheForFile = useCallback(
+
     (filePath: string): {
       found: boolean;
       content: any;

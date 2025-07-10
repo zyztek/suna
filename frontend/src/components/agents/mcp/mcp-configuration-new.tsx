@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Settings, Zap, Code2, Server, Store } from 'lucide-react';
+import { Settings, Zap, Server, Store } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { MCPConfigurationProps, MCPConfiguration as MCPConfigurationType } from './types';
 import { ConfiguredMcpList } from './configured-mcp-list';
 import { CustomMCPDialog } from './custom-mcp-dialog';
 import { PipedreamRegistry } from '@/components/agents/pipedream/pipedream-registry';
-
 export const MCPConfigurationNew: React.FC<MCPConfigurationProps> = ({
   configuredMCPs,
   onConfigurationChange,
@@ -14,7 +13,6 @@ export const MCPConfigurationNew: React.FC<MCPConfigurationProps> = ({
   const [showCustomDialog, setShowCustomDialog] = useState(false);
   const [showRegistryDialog, setShowRegistryDialog] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-
   const handleEditMCP = (index: number) => {
     const mcp = configuredMCPs[index];
     if (mcp.customType === 'pipedream') {
@@ -22,13 +20,11 @@ export const MCPConfigurationNew: React.FC<MCPConfigurationProps> = ({
     }
     setEditingIndex(index);
   };
-
   const handleRemoveMCP = (index: number) => {
     const newMCPs = [...configuredMCPs];
     newMCPs.splice(index, 1);
     onConfigurationChange(newMCPs);
   };
-
   const handleSaveCustomMCP = (customConfig: any) => {
     const mcpConfig: MCPConfigurationType = {
       name: customConfig.name,
@@ -41,7 +37,6 @@ export const MCPConfigurationNew: React.FC<MCPConfigurationProps> = ({
     };
     onConfigurationChange([...configuredMCPs, mcpConfig]);
   };
-
   const handleToolsSelected = (profileId: string, selectedTools: string[], appName: string, appSlug: string) => {
     const pipedreamMCP: MCPConfigurationType = {
       name: appName,
@@ -65,7 +60,6 @@ export const MCPConfigurationNew: React.FC<MCPConfigurationProps> = ({
     onConfigurationChange([...nonPipedreamMCPs, pipedreamMCP]);
     setShowRegistryDialog(false);
   };
-
   return (
     <div className="space-y-6">
       <div className="rounded-xl p-6 border">
@@ -112,7 +106,6 @@ export const MCPConfigurationNew: React.FC<MCPConfigurationProps> = ({
           </div>
         </div>
       </div>
-      
       {configuredMCPs.length === 0 && (
         <div className="text-center py-12 px-6 bg-muted/30 rounded-xl border-2 border-dashed border-border">
           <div className="mx-auto w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-4">
@@ -136,7 +129,6 @@ export const MCPConfigurationNew: React.FC<MCPConfigurationProps> = ({
           </div>
         </div>
       )}
-      
       {configuredMCPs.length > 0 && (
         <div className="bg-card rounded-xl border border-border overflow-hidden">
           <div className="px-6 py-4 border-b border-border bg-muted/30">

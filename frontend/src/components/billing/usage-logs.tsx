@@ -75,10 +75,6 @@ export default function UsageLogs({ accountId }: Props) {
     setPage(nextPage);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
-  };
-
   const formatCost = (cost: number | string) => {
     if (typeof cost === 'string' || cost === 0) {
       return typeof cost === 'string' ? cost : '$0.0000';
@@ -194,11 +190,6 @@ export default function UsageLogs({ accountId }: Props) {
   }
 
   const dailyUsage = groupLogsByDate(allLogs);
-  const totalUsage = allLogs.reduce(
-    (sum, log) =>
-      sum + (typeof log.estimated_cost === 'number' ? log.estimated_cost : 0),
-    0,
-  );
 
   return (
     <div className="space-y-6">

@@ -1,10 +1,8 @@
 'use client';
-
-import { useEffect, useCallback, useRef, useState } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import Script from 'next/script';
 import { createClient } from '@/lib/supabase/client';
 import { useTheme } from 'next-themes';
-
 // Add type declarations for Google One Tap
 declare global {
   interface Window {
@@ -26,14 +24,12 @@ declare global {
     };
   }
 }
-
 // Define types for Google Sign-In
 interface GoogleSignInResponse {
   credential: string;
   clientId?: string;
   select_by?: string;
 }
-
 interface GoogleInitializeConfig {
   client_id: string | undefined;
   callback: ((response: GoogleSignInResponse) => void) | undefined;
@@ -42,7 +38,6 @@ interface GoogleInitializeConfig {
   context?: string;
   itp_support?: boolean;
 }
-
 interface GoogleButtonOptions {
   type?: string;
   theme?: string;
@@ -52,7 +47,6 @@ interface GoogleButtonOptions {
   logoAlignment?: string;
   width?: number;
 }
-
 interface GoogleNotification {
   isNotDisplayed: () => boolean;
   getNotDisplayedReason: () => string;
@@ -61,36 +55,28 @@ interface GoogleNotification {
   isDismissedMoment: () => boolean;
   getDismissedReason: () => string;
 }
-
 interface GoogleSignInProps {
   returnUrl?: string;
 }
-
 export default function GoogleSignIn({ returnUrl }: GoogleSignInProps) {
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   const [isLoading, setIsLoading] = useState(false);
   const { resolvedTheme } = useTheme();
-
   const handleGoogleSignIn = useCallback(
     async (response: GoogleSignInResponse) => {
       try {
         setIsLoading(true);
         const supabase = createClient();
-
         console.log('Starting Google sign in process');
-
         const { error } = await supabase.auth.signInWithIdToken({
           provider: 'google',
           token: response.credential,
         });
-
         if (error) throw error;
-
         console.log(
           'Google sign in successful, preparing redirect to:',
           returnUrl || '/dashboard',
         );
-
         // Add a longer delay before redirecting to ensure localStorage is properly saved
         setTimeout(() => {
           console.log('Executing redirect now to:', returnUrl || '/dashboard');
@@ -103,11 +89,9 @@ export default function GoogleSignIn({ returnUrl }: GoogleSignInProps) {
     },
     [returnUrl],
   );
-
   useEffect(() => {
     // Assign the callback to window object so it can be called from the Google button
     window.handleGoogleSignIn = handleGoogleSignIn;
-
     if (window.google && googleClientId) {
       window.google.accounts.id.initialize({
         client_id: googleClientId,
@@ -117,7 +101,6 @@ export default function GoogleSignIn({ returnUrl }: GoogleSignInProps) {
         itp_support: true,
       });
     }
-
     return () => {
       // Cleanup
       delete window.handleGoogleSignIn;
@@ -126,7 +109,6 @@ export default function GoogleSignIn({ returnUrl }: GoogleSignInProps) {
       }
     };
   }, [googleClientId, handleGoogleSignIn]);
-
   if (!googleClientId) {
     return (
       <button
@@ -155,7 +137,6 @@ export default function GoogleSignIn({ returnUrl }: GoogleSignInProps) {
       </button>
     );
   }
-
   return (
     <>
       {/* Google One Tap container */}
@@ -168,12 +149,10 @@ export default function GoogleSignIn({ returnUrl }: GoogleSignInProps) {
         data-itp_support="true"
         data-callback="handleGoogleSignIn"
       />
-
       {/* Google Sign-In button container styled to match site design */}
       <div id="google-signin-button" className="w-full h-12">
         {/* The Google button will be rendered here */}
       </div>
-
       <Script
         src="https://accounts.google.com/gsi/client"
         strategy="afterInteractive"
@@ -193,7 +172,6 @@ export default function GoogleSignIn({ returnUrl }: GoogleSignInProps) {
                 logoAlignment: 'left',
                 width: buttonContainer.offsetWidth,
               });
-
               // Apply custom styles to match site design
               setTimeout(() => {
                 const googleButton =

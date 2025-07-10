@@ -1,12 +1,10 @@
 "use client";
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, ExternalLink, AlertCircle, Clock } from 'lucide-react';
+import { Loader2, AlertCircle, Clock } from 'lucide-react';
 import { SlackIcon } from '@/components/ui/icons/slack';
-import { getTriggerIcon } from './utils';
 import { TriggerConfigDialog } from './trigger-config-dialog';
-import { TriggerProvider, ScheduleTriggerConfig } from './types';
+import { TriggerProvider } from './types';
 import { Dialog } from '@/components/ui/dialog';
 import { 
   useOAuthIntegrations, 
@@ -20,11 +18,9 @@ import {
   useDeleteTrigger 
 } from '@/hooks/react-query/triggers';
 import { toast } from 'sonner';
-
 interface OneClickIntegrationsProps {
   agentId: string;
 }
-
 const OAUTH_PROVIDERS = {
   slack: {
     name: 'Slack',
@@ -37,14 +33,11 @@ const OAUTH_PROVIDERS = {
     isOAuth: false
   }
 } as const;
-
 type ProviderKey = keyof typeof OAUTH_PROVIDERS;
-
 export const OneClickIntegrations: React.FC<OneClickIntegrationsProps> = ({
   agentId
 }) => {
   const [configuringSchedule, setConfiguringSchedule] = useState(false);
-  
   const { data: integrationStatus, isLoading, error } = useOAuthIntegrations(agentId);
   const { data: triggers = [] } = useAgentTriggers(agentId);
   const installMutation = useInstallOAuthIntegration();
@@ -52,17 +45,14 @@ export const OneClickIntegrations: React.FC<OneClickIntegrationsProps> = ({
   const createTriggerMutation = useCreateTrigger();
   const deleteTriggerMutation = useDeleteTrigger();
   const { handleCallback } = useOAuthCallbackHandler();
-
   useEffect(() => {
     handleCallback();
   }, []);
-
   const handleInstall = async (provider: ProviderKey) => {
     if (provider === 'schedule') {
       setConfiguringSchedule(true);
       return;
     }
-    
     try {
       await installMutation.mutateAsync({
         agent_id: agentId,
@@ -72,7 +62,6 @@ export const OneClickIntegrations: React.FC<OneClickIntegrationsProps> = ({
       console.error(`Error installing ${provider}:`, error);
     }
   };
-
   const handleUninstall = async (provider: ProviderKey, triggerId?: string) => {
     if (provider === 'schedule' && triggerId) {
       try {
@@ -84,14 +73,12 @@ export const OneClickIntegrations: React.FC<OneClickIntegrationsProps> = ({
       }
       return;
     }
-    
     try {
       await uninstallMutation.mutateAsync(triggerId!);
     } catch (error) {
       console.error('Error uninstalling integration:', error);
     }
   };
-
   const handleScheduleSave = async (config: any) => {
     try {
       await createTriggerMutation.mutateAsync({
@@ -108,7 +95,6 @@ export const OneClickIntegrations: React.FC<OneClickIntegrationsProps> = ({
       console.error('Error creating schedule trigger:', error);
     }
   };
-
   const getIntegrationForProvider = (provider: ProviderKey) => {
     if (provider === 'schedule') {
       return triggers.find(trigger => trigger.trigger_type === 'schedule');
@@ -117,11 +103,9 @@ export const OneClickIntegrations: React.FC<OneClickIntegrationsProps> = ({
       integration.provider === provider
     );
   };
-
   const isProviderInstalled = (provider: ProviderKey) => {
     return !!getIntegrationForProvider(provider);
   };
-
   const getTriggerId = (provider: ProviderKey) => {
     const integration = getIntegrationForProvider(provider);
     if (provider === 'schedule') {
@@ -129,7 +113,6 @@ export const OneClickIntegrations: React.FC<OneClickIntegrationsProps> = ({
     }
     return integration?.trigger_id;
   };
-
   if (error) {
     return (
       <div className="p-4 border border-destructive/20 bg-destructive/5 rounded-lg">
@@ -145,7 +128,6 @@ export const OneClickIntegrations: React.FC<OneClickIntegrationsProps> = ({
       </div>
     );
   }
-
   const scheduleProvider: TriggerProvider = {
     provider_id: 'schedule',
     name: 'Schedule',
@@ -154,7 +136,6 @@ export const OneClickIntegrations: React.FC<OneClickIntegrationsProps> = ({
     webhook_enabled: true,
     config_schema: {}
   };
-
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-3">
@@ -165,11 +146,9 @@ export const OneClickIntegrations: React.FC<OneClickIntegrationsProps> = ({
           const isLoading = installMutation.isPending || uninstallMutation.isPending || 
                            (provider === 'schedule' && (createTriggerMutation.isPending || deleteTriggerMutation.isPending));
           const triggerId = getTriggerId(provider);
-          
           const buttonText = provider === 'schedule' 
             ? config.name 
             : (isInstalled ? `Disconnect ${config.name}` : `Connect ${config.name}`);
-          
           return (
             <Button
               key={providerId}

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { getAgentAvatar } from '../../lib/utils/get-agent-style';
 import {
@@ -15,7 +14,6 @@ import { useAddUserMessageMutation } from '@/hooks/react-query/threads/use-messa
 import { useStartAgentMutation, useStopAgentMutation } from '@/hooks/react-query/threads/use-agent-run';
 import { BillingError } from '@/lib/api';
 import { normalizeFilenameToNFC } from '@/lib/utils/unicode';
-
 interface Agent {
   agent_id: string;
   name: string;
@@ -27,11 +25,9 @@ interface Agent {
   created_at?: string;
   updated_at?: string;
 }
-
 interface AgentPreviewProps {
   agent: Agent;
 }
-
 export const AgentPreview = ({ agent }: AgentPreviewProps) => {
   const [messages, setMessages] = useState<UnifiedMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -40,10 +36,8 @@ export const AgentPreview = ({ agent }: AgentPreviewProps) => {
   const [agentStatus, setAgentStatus] = useState<'idle' | 'running' | 'connecting' | 'error'>('idle');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasStartedConversation, setHasStartedConversation] = useState(false);
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<ChatInputHandles>(null);
-
   const getAgentStyling = () => {
     const agentData = agent as any;
     if (agentData.avatar && agentData.avatar_color) {
@@ -54,25 +48,19 @@ export const AgentPreview = ({ agent }: AgentPreviewProps) => {
     }
     return getAgentAvatar(agent.agent_id);
   };
-
   const { avatar, color } = getAgentStyling();
-
   const initiateAgentMutation = useInitiateAgentWithInvalidation();
   const addUserMessageMutation = useAddUserMessageMutation();
   const startAgentMutation = useStartAgentMutation();
   const stopAgentMutation = useStopAgentMutation();
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
-
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
   const handleNewMessageFromStream = useCallback((message: UnifiedMessage) => {
     console.log(`[PREVIEW STREAM] Received message: ID=${message.message_id}, Type=${message.type}`);
-
     setMessages((prev) => {
       const messageExists = prev.some((m) => m.message_id === message.message_id);
       if (messageExists) {
@@ -82,7 +70,6 @@ export const AgentPreview = ({ agent }: AgentPreviewProps) => {
       }
     });
   }, []);
-
   const handleStreamStatusChange = useCallback((hookStatus: string) => {
     console.log(`[PREVIEW] Stream status changed: ${hookStatus}`);
     switch (hookStatus) {
@@ -103,7 +90,6 @@ export const AgentPreview = ({ agent }: AgentPreviewProps) => {
         break;
     }
   }, []);
-
   const handleStreamError = useCallback((errorMessage: string) => {
     console.error(`[PREVIEW] Stream error: ${errorMessage}`);
     if (!errorMessage.toLowerCase().includes('not found') &&
@@ -111,11 +97,9 @@ export const AgentPreview = ({ agent }: AgentPreviewProps) => {
       toast.error(`Stream Error: ${errorMessage}`);
     }
   }, []);
-
   const handleStreamClose = useCallback(() => {
     console.log(`[PREVIEW] Stream closed`);
   }, []);
-
   const {
     status: streamHookStatus,
     textContent: streamingTextContent,
@@ -134,14 +118,12 @@ export const AgentPreview = ({ agent }: AgentPreviewProps) => {
     threadId,
     setMessages,
   );
-
   useEffect(() => {
     if (agentRunId && agentRunId !== currentHookRunId && threadId) {
       console.log(`[PREVIEW] Starting stream for agentRunId: ${agentRunId}, threadId: ${threadId}`);
       startStreaming(agentRunId);
     }
   }, [agentRunId, startStreaming, currentHookRunId, threadId]);
-
   useEffect(() => {
     console.log('[PREVIEW] State update:', {
       threadId,
@@ -153,13 +135,11 @@ export const AgentPreview = ({ agent }: AgentPreviewProps) => {
       hasStartedConversation
     });
   }, [threadId, agentRunId, currentHookRunId, agentStatus, streamHookStatus, messages.length, hasStartedConversation]);
-
   useEffect(() => {
     if (streamingTextContent) {
       scrollToBottom();
     }
   }, [streamingTextContent]);
-
   const handleSubmitFirstMessage = async (
     message: string,
     options?: {
@@ -171,32 +151,25 @@ export const AgentPreview = ({ agent }: AgentPreviewProps) => {
     },
   ) => {
     if (!message.trim() && !chatInputRef.current?.getPendingFiles().length) return;
-
     setIsSubmitting(true);
     setHasStartedConversation(true);
-
     try {
       const files = chatInputRef.current?.getPendingFiles() || [];
-
       const formData = new FormData();
       formData.append('prompt', message);
       formData.append('agent_id', agent.agent_id);
-
       files.forEach((file, index) => {
         const normalizedName = normalizeFilenameToNFC(file.name);
         formData.append('files', file, normalizedName);
       });
-
       if (options?.model_name) formData.append('model_name', options.model_name);
       formData.append('enable_thinking', String(options?.enable_thinking ?? false));
       formData.append('reasoning_effort', options?.reasoning_effort ?? 'low');
       formData.append('stream', String(options?.stream ?? true));
       formData.append('enable_context_manager', String(options?.enable_context_manager ?? false));
-
       console.log('[PREVIEW] Initiating agent...');
       const result = await initiateAgentMutation.mutateAsync(formData);
       console.log('[PREVIEW] Agent initiated:', result);
-
       if (result.thread_id) {
         setThreadId(result.thread_id);
         if (result.agent_run_id) {
@@ -228,7 +201,6 @@ export const AgentPreview = ({ agent }: AgentPreviewProps) => {
         };
         setMessages([userMessage]);
       }
-
       chatInputRef.current?.clearPendingFiles();
       setInputValue('');
     } catch (error: any) {
@@ -243,7 +215,6 @@ export const AgentPreview = ({ agent }: AgentPreviewProps) => {
       setIsSubmitting(false);
     }
   };
-
   const handleSubmitMessage = useCallback(
     async (
       message: string,
@@ -251,7 +222,6 @@ export const AgentPreview = ({ agent }: AgentPreviewProps) => {
     ) => {
       if (!message.trim() || !threadId) return;
       setIsSubmitting(true);
-
       const optimisticUserMessage: UnifiedMessage = {
         message_id: `temp-${Date.now()}`,
         thread_id: threadId,
@@ -262,27 +232,21 @@ export const AgentPreview = ({ agent }: AgentPreviewProps) => {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
-
       setMessages((prev) => [...prev, optimisticUserMessage]);
       setInputValue('');
-
       try {
         const messagePromise = addUserMessageMutation.mutateAsync({
           threadId,
           message
         });
-
         const agentPromise = startAgentMutation.mutateAsync({
           threadId,
           options
         });
-
         const results = await Promise.allSettled([messagePromise, agentPromise]);
-
         if (results[0].status === 'rejected') {
           throw new Error(`Failed to send message: ${results[0].reason?.message || results[0].reason}`);
         }
-
         if (results[1].status === 'rejected') {
           const error = results[1].reason;
           if (error instanceof BillingError) {
@@ -292,10 +256,8 @@ export const AgentPreview = ({ agent }: AgentPreviewProps) => {
           }
           throw new Error(`Failed to start agent: ${error?.message || error}`);
         }
-
         const agentResult = results[1].value;
         setAgentRunId(agentResult.agent_run_id);
-
       } catch (err) {
         console.error('[PREVIEW] Error sending message:', err);
         toast.error(err instanceof Error ? err.message : 'Operation failed');
@@ -306,12 +268,10 @@ export const AgentPreview = ({ agent }: AgentPreviewProps) => {
     },
     [threadId, addUserMessageMutation, startAgentMutation],
   );
-
   const handleStopAgent = useCallback(async () => {
     console.log('[PREVIEW] Stopping agent...');
     setAgentStatus('idle');
     await stopStreaming();
-
     if (agentRunId) {
       try {
         await stopAgentMutation.mutateAsync(agentRunId);
@@ -320,13 +280,10 @@ export const AgentPreview = ({ agent }: AgentPreviewProps) => {
       }
     }
   }, [stopStreaming, agentRunId, stopAgentMutation]);
-
   const handleToolClick = useCallback((assistantMessageId: string | null, toolName: string) => {
     console.log('[PREVIEW] Tool clicked:', toolName);
     toast.info(`Tool: ${toolName} (Preview mode - tool details not available)`);
   }, []);
-
-
   return (
     <div className="h-full flex flex-col bg-muted dark:bg-muted/30">
       <div className="flex-shrink-0 flex items-center gap-3 p-8">

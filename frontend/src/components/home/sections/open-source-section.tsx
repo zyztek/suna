@@ -1,8 +1,6 @@
 import { SectionHeader } from '@/components/home/section-header';
-import { siteConfig } from '@/lib/home';
 import { Github } from 'lucide-react';
 import Link from 'next/link';
-
 export function OpenSourceSection() {
   return (
     <section
@@ -19,7 +17,6 @@ export function OpenSourceSection() {
             future of AI.
           </p>
         </SectionHeader>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-12">
           <div className="rounded-xl bg-[#F3F4F6] dark:bg-[#F9FAFB]/[0.02] border border-border p-6">
             <div className="flex flex-col gap-6">
@@ -75,7 +72,6 @@ export function OpenSourceSection() {
               </Link>
             </div>
           </div>
-
           <div className="rounded-xl bg-[#F3F4F6] dark:bg-[#F9FAFB]/[0.02] border border-border p-6">
             <div className="flex flex-col gap-6">
               <h3 className="text-xl md:text-2xl font-medium tracking-tight">

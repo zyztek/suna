@@ -97,7 +97,7 @@ const MONTHS = [
 ];
 
 export const ScheduleTriggerConfigForm: React.FC<ScheduleTriggerConfigFormProps> = ({
-  provider,
+  _provider,
   config,
   onChange,
   errors,
@@ -141,7 +141,7 @@ export const ScheduleTriggerConfigForm: React.FC<ScheduleTriggerConfigFormProps>
       const { hour, minute } = oneTimeTime;
       const day = selectedDate.getDate();
       const month = selectedDate.getMonth() + 1;
-      const year = selectedDate.getFullYear();
+
       return `${minute} ${hour} ${day} ${month} *`;
     }
     return config.cron_expression || '';

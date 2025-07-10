@@ -1,31 +1,24 @@
 'use client';
-
 import React, { useEffect, useState } from 'react';
 import { 
   AlertTriangle, 
   Zap
 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PipedreamConnectionsSection } from '../../../../components/agents/pipedream/pipedream-connections-section';
 import { useRouter } from 'next/navigation';
 import { useFeatureFlag } from '@/lib/feature-flags';
-import { toast } from 'sonner';
-
 export default function AppProfilesPage() {
   const { enabled: customAgentsEnabled, loading: flagLoading } = useFeatureFlag("custom_agents");
   const router = useRouter();
   const [selectedApp, setSelectedApp] = useState<{ app_slug: string; app_name: string } | null>(null);
-  
   useEffect(() => {
     if (!flagLoading && !customAgentsEnabled) {
       router.replace("/dashboard");
     }
   }, [flagLoading, customAgentsEnabled, router]);
-
   const handleAppSelection = (app: { app_slug: string; app_name: string }) => {
     setSelectedApp(app);
   };
-
   if (flagLoading) {
     return (
       <div className="container mx-auto max-w-4xl px-6 py-6">
@@ -41,7 +34,6 @@ export default function AppProfilesPage() {
               </div>
             </div>
           </div>
-          
           <div className="animate-pulse space-y-4">
             <div className="h-4 bg-muted rounded w-3/4"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -54,11 +46,9 @@ export default function AppProfilesPage() {
       </div>
     );
   }
-
   if (!customAgentsEnabled) {
     return null;
   }
-
   return (
     <div className="container mx-auto max-w-4xl px-6 py-6">
       <div className="space-y-6">

@@ -1,8 +1,6 @@
 "use client";
-
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Zap, MessageSquare, Webhook, Plus, Settings } from 'lucide-react';
+import { Zap, Settings } from 'lucide-react';
 import { Dialog } from '@/components/ui/dialog';
 import { ConfiguredTriggersList } from './configured-triggers-list';
 import { TriggerConfigDialog } from './trigger-config-dialog';
@@ -17,30 +15,24 @@ import {
 } from '@/hooks/react-query/triggers';
 import { toast } from 'sonner';
 import { OneClickIntegrations } from './one-click-integrations';
-
 interface AgentTriggersConfigurationProps {
   agentId: string;
 }
-
-
 export const AgentTriggersConfiguration: React.FC<AgentTriggersConfigurationProps> = ({
   agentId,
 }) => {
   const [configuringProvider, setConfiguringProvider] = useState<TriggerProvider | null>(null);
   const [editingTrigger, setEditingTrigger] = useState<TriggerConfiguration | null>(null);
-
   const { data: triggers = [], isLoading, error } = useAgentTriggers(agentId);
   const { data: providers = [] } = useTriggerProviders();
   const createTriggerMutation = useCreateTrigger();
   const updateTriggerMutation = useUpdateTrigger();
   const deleteTriggerMutation = useDeleteTrigger();
   const toggleTriggerMutation = useToggleTrigger();
-
   const handleProviderClick = (provider: TriggerProvider) => {
     setConfiguringProvider(provider);
     setEditingTrigger(null);
   };
-
   const handleEditTrigger = (trigger: TriggerConfiguration) => {
     setEditingTrigger(trigger);
     setConfiguringProvider({
@@ -52,7 +44,6 @@ export const AgentTriggersConfiguration: React.FC<AgentTriggersConfigurationProp
       config_schema: {}
     });
   };
-
   const handleRemoveTrigger = async (trigger: TriggerConfiguration) => {
     try {
       await deleteTriggerMutation.mutateAsync(trigger.trigger_id);
@@ -62,7 +53,6 @@ export const AgentTriggersConfiguration: React.FC<AgentTriggersConfigurationProp
       console.error('Error deleting trigger:', error);
     }
   };
-
   const handleSaveTrigger = async (config: any) => {
     try {
       if (editingTrigger) {
@@ -91,7 +81,6 @@ export const AgentTriggersConfiguration: React.FC<AgentTriggersConfigurationProp
     setConfiguringProvider(null);
     setEditingTrigger(null);
   };
-
   const handleToggleTrigger = async (trigger: TriggerConfiguration) => {
     try {
       await toggleTriggerMutation.mutateAsync({
@@ -104,11 +93,9 @@ export const AgentTriggersConfiguration: React.FC<AgentTriggersConfigurationProp
       console.error('Error toggling trigger:', error);
     }
   };
-
   const availableProviders = providers.filter(provider => 
     ['telegram', 'slack', 'webhook'].includes(provider.trigger_type)
   );
-
   if (error) {
     return (
       <div className="rounded-xl p-6 border border-destructive/20 bg-destructive/5">
@@ -126,7 +113,6 @@ export const AgentTriggersConfiguration: React.FC<AgentTriggersConfigurationProp
       </div>
     );
   }
-
   return (
     <div className="space-y-8">
       <OneClickIntegrations agentId={agentId} />
@@ -169,7 +155,6 @@ export const AgentTriggersConfiguration: React.FC<AgentTriggersConfigurationProp
           </div>
         </div>
       )}
-
       {!isLoading && triggers.length === 0 && (
         <div className="text-center py-12 px-6 bg-muted/30 rounded-xl border-2 border-dashed border-border">
           <div className="mx-auto w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-4 border">
@@ -183,7 +168,6 @@ export const AgentTriggersConfiguration: React.FC<AgentTriggersConfigurationProp
           </p>
         </div>
       )}
-      
       {configuringProvider && (
         <Dialog open={!!configuringProvider} onOpenChange={() => setConfiguringProvider(null)}>
           <TriggerConfigDialog

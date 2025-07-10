@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { 
   ArrowLeft, 
   Save,
-  Edit2,
+  _Edit2,
   Settings,
   GitBranch,
 } from 'lucide-react';
@@ -98,7 +98,7 @@ const reconstructFromFlatJSON = (flatSteps: any[]): ConditionalStep[] => {
   }
   for (const flatStep of flatSteps) {
     if (flatStep.type !== 'condition' && flatStep.conditions) {
-      for (const [conditionId, conditionStep] of conditionSteps) {
+      for (const [_conditionId, conditionStep] of conditionSteps) {
         if (JSON.stringify(conditionStep.conditions) === JSON.stringify(flatStep.conditions)) {
           const childStep: ConditionalStep = {
             id: flatStep.id || Math.random().toString(36).substr(2, 9),

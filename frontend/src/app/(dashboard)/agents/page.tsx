@@ -1,21 +1,17 @@
 'use client';
-
 import React, { useState, useMemo, useEffect } from 'react';
-import { Bot, ShoppingBag, FileText, Plus, Search, Download, User, Calendar, Tags, Shield, Star, Globe, GlobeLock, GitBranch, Eye, Edit2, Loader2, AlertCircle, AlertTriangle, CheckCircle, MailCheck, Settings, Wrench, Key, X } from 'lucide-react';
+import { Bot, ShoppingBag, FileText, Plus, Search, Download, User, Calendar, Tags, Shield, Globe, GlobeLock, GitBranch, Eye, Loader2, AlertTriangle, CheckCircle, Settings, Wrench, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-
 // Import hooks and components from existing pages
 import { useAgents, useUpdateAgent, useDeleteAgent, useOptimisticAgentUpdate, useCreateAgent } from '@/hooks/react-query/agents/use-agents';
 import { useMarketplaceTemplates, useInstallTemplate, useMyTemplates, useUnpublishTemplate, usePublishTemplate } from '@/hooks/react-query/secure-mcp/use-secure-mcp';
@@ -23,7 +19,6 @@ import { useCreateCredentialProfile, type CreateCredentialProfileRequest } from 
 import { useMCPServerDetails } from '@/hooks/react-query/mcp/use-mcp-servers';
 import { usePipedreamProfiles } from '@/hooks/react-query/pipedream/use-pipedream-profiles';
 import { useFeatureFlag } from '@/lib/feature-flags';
-
 // Import components from existing pages
 import { UpdateAgentDialog } from '../../../components/agents/update-agent-dialog';
 import { SearchAndFilters } from '../../../components/agents/search-and-filters';
@@ -34,25 +29,21 @@ import { LoadingState } from '../../../components/agents/loading-state';
 import { Pagination } from '../../../components/agents/pagination';
 import { CredentialProfileSelector } from '@/components/workflows/CredentialProfileSelector';
 import { CredentialProfileSelector as PipedreamCredentialProfileSelector } from '@/components/agents/pipedream/credential-profile-selector';
-
 // Import utilities
 import { getAgentAvatar } from '../../../lib/utils/get-agent-style';
 import { generateRandomAvatar } from '../../../lib/utils/_avatar-generator';
 import { DEFAULT_AGENTPRESS_TOOLS } from '../../../components/agents/tools';
 import { AgentsParams } from '@/hooks/react-query/agents/utils';
-
 type ViewMode = 'grid' | 'list';
 type AgentSortOption = 'name' | 'created_at' | 'updated_at' | 'tools_count';
 type MarketplaceSortOption = 'newest' | 'popular' | 'most_downloaded' | 'name';
 type SortOrder = 'asc' | 'desc';
-
 interface FilterOptions {
   hasDefaultAgent: boolean;
   hasMcpTools: boolean;
   hasAgentpressTools: boolean;
   selectedTools: string[];
 }
-
 interface MarketplaceTemplate {
   id: string;
   name: string;
@@ -79,7 +70,6 @@ interface MarketplaceTemplate {
     source_version_name?: string;
   };
 }
-
 interface SetupStep {
   id: string;
   title: string;
@@ -98,19 +88,16 @@ interface SetupStep {
   app_slug?: string;
   app_name?: string;
 }
-
 interface PublishDialogData {
   templateId: string;
   templateName: string;
   currentTags: string[];
 }
-
 interface MissingProfile {
   qualified_name: string;
   display_name: string;
   required_config: string[];
 }
-
 interface AgentPreviewSheetProps {
   item: MarketplaceTemplate | null;
   open: boolean;
@@ -118,7 +105,6 @@ interface AgentPreviewSheetProps {
   onInstall: (item: MarketplaceTemplate) => void;
   isInstalling: boolean;
 }
-
 interface InstallDialogProps {
   item: MarketplaceTemplate | null;
   open: boolean;
@@ -126,7 +112,6 @@ interface InstallDialogProps {
   onInstall: (item: MarketplaceTemplate, instanceName?: string, profileMappings?: Record<string, string>, customMcpConfigs?: Record<string, Record<string, any>>) => Promise<void>;
   isInstalling: boolean;
 }
-
 const AgentPreviewSheet: React.FC<AgentPreviewSheetProps> = ({
   item,
   open,
@@ -135,11 +120,9 @@ const AgentPreviewSheet: React.FC<AgentPreviewSheetProps> = ({
   isInstalling
 }) => {
   if (!item) return null;
-
   const { avatar, color } = item.avatar && item.avatar_color 
     ? { avatar: item.avatar, color: item.avatar_color }
     : getAgentAvatar(item.id);
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -147,7 +130,6 @@ const AgentPreviewSheet: React.FC<AgentPreviewSheetProps> = ({
       day: 'numeric'
     });
   };
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent>
@@ -205,7 +187,6 @@ const AgentPreviewSheet: React.FC<AgentPreviewSheetProps> = ({
               {item.description || 'No description available for this agent.'}
             </p>
           </div>
-
           {item.tags && item.tags.length > 0 && (
             <div className="space-y-2">
               <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
@@ -279,7 +260,6 @@ const AgentPreviewSheet: React.FC<AgentPreviewSheetProps> = ({
     </Sheet>
   );
 };
-
 const InstallDialog: React.FC<InstallDialogProps> = ({ 
   item, 
   open, 
@@ -309,11 +289,9 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
     config: {},
     is_default: false
   });
-
   const createProfileMutation = useCreateCredentialProfile();
   const { data: serverDetails } = useMCPServerDetails(createProfileForQualifiedName);
   const { data: pipedreamProfiles } = usePipedreamProfiles();
-
   React.useEffect(() => {
     if (item && open) {
       setInstanceName(`${item.name}`);
@@ -325,34 +303,27 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
       checkRequirementsAndSetupSteps();
     }
   }, [item, open]);
-
   const refreshRequirements = React.useCallback(() => {
     if (item && open) {
       setIsCheckingRequirements(true);
       checkRequirementsAndSetupSteps();
     }
   }, [item, open]);
-
   const checkRequirementsAndSetupSteps = async () => {
     if (!item?.mcp_requirements) return;
-    
     const steps: SetupStep[] = [];
-    
     // First, separate Pipedream services (custom_type === "pipedream")
     const pipedreamServices = item.mcp_requirements.filter(req => 
       req.custom_type === 'pipedream'
     );
-    
     // Then, get custom servers (custom_type exists but is not "pipedream")
     const customServers = item.mcp_requirements.filter(req => 
       req.custom_type && req.custom_type !== 'pipedream'
     );
-    
     // Finally, get regular services (no custom_type)
     const regularServices = item.mcp_requirements.filter(req => 
       !req.custom_type
     );
-
     for (const req of pipedreamServices) {
       const appSlug = req.qualified_name; // Use the full qualified_name as app_slug
       steps.push({
@@ -365,7 +336,6 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
         app_slug: appSlug,
       });
     }
-
     for (const req of regularServices) {
       steps.push({
         id: req.qualified_name,
@@ -376,7 +346,6 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
         qualified_name: req.qualified_name,
       });
     }
-
     for (const req of customServers) {
       steps.push({
         id: req.qualified_name,
@@ -395,12 +364,10 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
         }))
       });
     }
-
     setSetupSteps(steps);
     setMissingProfiles([]); 
     setIsCheckingRequirements(false);
   };
-
   const handleFieldChange = (stepId: string, fieldKey: string, value: string) => {
     setSetupData(prev => ({
       ...prev,
@@ -410,21 +377,18 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
       }
     }));
   };
-
   const handleProfileSelect = (qualifiedName: string, profileId: string | null) => {
     setProfileMappings(prev => ({
       ...prev,
       [qualifiedName]: profileId || ''
     }));
   };
-
   const handlePipedreamProfileSelect = (qualifiedName: string, profileId: string | null) => {
     setPipedreamProfileMappings(prev => ({
       ...prev,
       [qualifiedName]: profileId || ''
     }));
   };
-
   const handleCreateNewProfile = (qualifiedName: string, displayName: string) => {
     setCreateProfileForQualifiedName(qualifiedName);
     setCreateProfileForDisplayName(displayName);
@@ -436,21 +400,17 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
     });
     setShowCreateProfileDialog(true);
   };
-
   const getConfigProperties = () => {
     const schema = serverDetails?.connections?.[0]?.configSchema;
     return schema?.properties || {};
   };
-
   const getRequiredFields = () => {
     const schema = serverDetails?.connections?.[0]?.configSchema;
     return schema?.required || [];
   };
-
   const isFieldRequired = (fieldName: string) => {
     return getRequiredFields().includes(fieldName);
   };
-
   const handleConfigChange = (key: string, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -460,7 +420,6 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
       }
     }));
   };
-
   const handleCreateSubmit = async () => {
     try {
       const request: CreateCredentialProfileRequest = {
@@ -470,18 +429,14 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
         config: formData.config,
         is_default: formData.is_default
       };
-
       const response = await createProfileMutation.mutateAsync(request);
       toast.success('Credential profile created successfully!');
-      
       setProfileMappings(prev => ({
         ...prev,
         [createProfileForQualifiedName]: response.profile_id || 'new-profile'
       }));
-      
       setShowCreateProfileDialog(false);
       refreshRequirements();
-      
       setFormData({
         profile_name: '',
         display_name: '',
@@ -492,13 +447,10 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
       toast.error(error.message || 'Failed to create credential profile');
     }
   };
-
   const isCurrentStepComplete = (): boolean => {
     if (setupSteps.length === 0) return true;
     if (currentStep >= setupSteps.length) return true;
-    
     const step = setupSteps[currentStep];
-    
     if (step.type === 'credential_profile') {
       return !!profileMappings[step.qualified_name];
     } else if (step.type === 'pipedream_profile') {
@@ -510,10 +462,8 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
         return value && value.trim().length > 0;
       }) || false;
     }
-    
     return false;
   };
-
   const handleNext = () => {
     if (currentStep < setupSteps.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -521,23 +471,19 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
       handleInstall();
     }
   };
-
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
   };
-
   const handleInstall = async () => {
     if (!item) return;
-
     const customMcpConfigs: Record<string, Record<string, any>> = {};
     setupSteps.forEach(step => {
       if (step.type === 'custom_server') {
         customMcpConfigs[step.qualified_name] = setupData[step.id] || {};
       }
     });
-
     setupSteps.forEach(step => {
       if (step.type === 'pipedream_profile') {
         const profileId = pipedreamProfileMappings[step.qualified_name];
@@ -552,35 +498,27 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
         }
       }
     });
-    
     const regularProfileMappings = { ...profileMappings };
     await onInstall(item, instanceName, regularProfileMappings, customMcpConfigs);
   };
-
   const canInstall = () => {
     if (!item) return false;
     if (!instanceName.trim()) return false;
-    
     const regularRequirements = item.mcp_requirements?.filter(req => 
       !req.custom_type
     ) || [];
     const missingProfileMappings = regularRequirements.filter(req => !profileMappings[req.qualified_name]);
     if (missingProfileMappings.length > 0) return false;
-    
     const pipedreamRequirements = item.mcp_requirements?.filter(req => 
       req.custom_type === 'pipedream'
     ) || [];
     const missingPipedreamMappings = pipedreamRequirements.filter(req => !pipedreamProfileMappings[req.qualified_name]);
     if (missingPipedreamMappings.length > 0) return false;
-    
     if (setupSteps.length > 0 && currentStep < setupSteps.length) return false;
     return true;
   };
-
   if (!item) return null;
-
   const currentStepData = setupSteps[currentStep];
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
@@ -592,7 +530,6 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
             Install {item.name}
           </DialogTitle>
         </DialogHeader>
-
         <div className="space-y-6 py-4">
           {isCheckingRequirements ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
@@ -609,7 +546,6 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
                   className="h-11"
                 />
               </div>
-              
               <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/50">
                 <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                 <AlertDescription className="text-green-800 dark:text-green-200">
@@ -635,7 +571,6 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
                     </div>
                   </div>
                 </div>
-
                 <div className="space-y-4">
                   {currentStepData.type === 'credential_profile' ? (
                     <div className="space-y-4">
@@ -736,7 +671,6 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
                   </p>
                 </div>
               </div>
-
               <div className="ml-12 space-y-3">
                 <Input
                   value={instanceName}
@@ -748,7 +682,6 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
             </div>
           )}
         </div>
-
         <DialogFooter className="flex-col gap-3">
           <div className="flex gap-3 w-full justify-end">
             {currentStep > 0 && (
@@ -756,7 +689,6 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
                 Back
               </Button>
             )}
-            
             {setupSteps.length === 0 ? (
               <Button 
                 onClick={handleInstall}
@@ -802,7 +734,6 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
           </div>
         </DialogFooter>
       </DialogContent>
-
       {/* Create Profile Dialog */}
       <Dialog open={showCreateProfileDialog} onOpenChange={setShowCreateProfileDialog}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
@@ -815,7 +746,6 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
               Create a new credential profile for <strong>{createProfileForDisplayName}</strong>
             </DialogDescription>
           </DialogHeader>
-
           <div className="space-y-6 flex-1 overflow-y-auto">
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-4">
@@ -832,7 +762,6 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
                   </p>
                 </div>
               </div>
-
               {Object.keys(getConfigProperties()).length > 0 ? (
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold flex items-center gap-2">
@@ -868,7 +797,6 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
                   </AlertDescription>
                 </Alert>
               )}
-
               <Alert>
                 <Shield className="h-4 w-4" />
                 <AlertDescription>
@@ -877,7 +805,6 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
               </Alert>
             </div>
           </div>
-
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateProfileDialog(false)}>
               Cancel
@@ -904,24 +831,20 @@ const InstallDialog: React.FC<InstallDialogProps> = ({
     </Dialog>
   );
 };
-
 export default function AgentsPage() {
   const { enabled: customAgentsEnabled, loading: agentsFlagLoading } = useFeatureFlag("custom_agents");
   const { enabled: agentMarketplaceEnabled, loading: marketplaceFlagLoading } = useFeatureFlag("agent_marketplace");
   const router = useRouter();
   const flagLoading = agentsFlagLoading || marketplaceFlagLoading;
-
   useEffect(() => {
     if (!flagLoading && !customAgentsEnabled) {
       router.replace("/dashboard");
     }
   }, [flagLoading, customAgentsEnabled, router]);
-
   const [activeTab, setActiveTab] = useState("my-agents");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingAgentId, setEditingAgentId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  
   // My Agents state
   const [agentsPage, setAgentsPage] = useState(1);
   const [agentsSearchQuery, setAgentsSearchQuery] = useState('');
@@ -933,7 +856,6 @@ export default function AgentsPage() {
     hasAgentpressTools: false,
     selectedTools: []
   });
-
   // Marketplace state
   const [marketplacePage, setMarketplacePage] = useState(1);
   const [marketplaceSearchQuery, setMarketplaceSearchQuery] = useState('');
@@ -943,12 +865,10 @@ export default function AgentsPage() {
   const [selectedItem, setSelectedItem] = useState<MarketplaceTemplate | null>(null);
   const [showInstallDialog, setShowInstallDialog] = useState(false);
   const [showPreviewSheet, setShowPreviewSheet] = useState(false);
-
   // Templates state
   const [templatesActioningId, setTemplatesActioningId] = useState<string | null>(null);
   const [publishDialog, setPublishDialog] = useState<PublishDialogData | null>(null);
   const [publishTags, setPublishTags] = useState('');
-
   // Build query parameters for agents
   const agentsQueryParams: AgentsParams = useMemo(() => {
     const params: AgentsParams = {
@@ -958,7 +878,6 @@ export default function AgentsPage() {
       sort_by: agentsSortBy,
       sort_order: agentsSortOrder,
     };
-
     if (agentsFilters.hasDefaultAgent) {
       params.has_default = true;
     }
@@ -971,10 +890,8 @@ export default function AgentsPage() {
     if (agentsFilters.selectedTools.length > 0) {
       params.tools = agentsFilters.selectedTools.join(',');
     }
-
     return params;
   }, [agentsPage, agentsSearchQuery, agentsSortBy, agentsSortOrder, agentsFilters]);
-
   // Build query parameters for marketplace
   const marketplaceQueryParams = useMemo(() => ({
     limit: 20,
@@ -982,12 +899,10 @@ export default function AgentsPage() {
     search: marketplaceSearchQuery || undefined,
     tags: marketplaceSelectedTags.length > 0 ? marketplaceSelectedTags.join(',') : undefined,
   }), [marketplacePage, marketplaceSearchQuery, marketplaceSelectedTags]);
-
   // API hooks
   const { data: agentsResponse, isLoading: agentsLoading, error: agentsError, refetch: loadAgents } = useAgents(agentsQueryParams);
   const { data: marketplaceTemplates, isLoading: marketplaceLoading } = useMarketplaceTemplates(marketplaceQueryParams);
   const { data: myTemplates, isLoading: templatesLoading, error: templatesError } = useMyTemplates();
-  
   const updateAgentMutation = useUpdateAgent();
   const deleteAgentMutation = useDeleteAgent();
   const createAgentMutation = useCreateAgent();
@@ -995,15 +910,12 @@ export default function AgentsPage() {
   const installTemplateMutation = useInstallTemplate();
   const unpublishMutation = useUnpublishTemplate();
   const publishMutation = usePublishTemplate();
-
   const agents = agentsResponse?.agents || [];
   const agentsPagination = agentsResponse?.pagination;
-
   // Transform marketplace templates data
   const { kortixTeamItems, communityItems } = useMemo(() => {
     const kortixItems: MarketplaceTemplate[] = [];
     const communityItems: MarketplaceTemplate[] = [];
-
     if (marketplaceTemplates) {
       marketplaceTemplates.forEach(template => {
         const item: MarketplaceTemplate = {
@@ -1022,7 +934,6 @@ export default function AgentsPage() {
           mcp_requirements: template.mcp_requirements,
           metadata: template.metadata,
         };
-
         if (template.is_kortix_team) {
           kortixItems.push(item);
         } else {
@@ -1030,7 +941,6 @@ export default function AgentsPage() {
         }
       });
     }
-
     const sortItems = (items: MarketplaceTemplate[]) => {
       return items.sort((a, b) => {
         switch (marketplaceSortBy) {
@@ -1047,17 +957,14 @@ export default function AgentsPage() {
         }
       });
     };
-
     return {
       kortixTeamItems: sortItems(kortixItems),
       communityItems: sortItems(communityItems)
     };
   }, [marketplaceTemplates, marketplaceSortBy]);
-
   const allMarketplaceItems = useMemo(() => {
     return [...kortixTeamItems, ...communityItems];
   }, [kortixTeamItems, communityItems]);
-
   const allTags = useMemo(() => {
     const tags = new Set<string>();
     allMarketplaceItems.forEach(item => {
@@ -1065,7 +972,6 @@ export default function AgentsPage() {
     });
     return Array.from(tags);
   }, [allMarketplaceItems]);
-
   const allTools = useMemo(() => {
     const toolsSet = new Set<string>();
     agents.forEach(agent => {
@@ -1078,7 +984,6 @@ export default function AgentsPage() {
     });
     return Array.from(toolsSet).sort();
   }, [agents]);
-
   const agentsActiveFiltersCount = useMemo(() => {
     let count = 0;
     if (agentsFilters.hasDefaultAgent) count++;
@@ -1087,7 +992,6 @@ export default function AgentsPage() {
     count += agentsFilters.selectedTools.length;
     return count;
   }, [agentsFilters]);
-
   const clearAgentsFilters = () => {
     setAgentsSearchQuery('');
     setAgentsFilters({
@@ -1098,22 +1002,18 @@ export default function AgentsPage() {
     });
     setAgentsPage(1);
   };
-
   const clearMarketplaceFilters = () => {
     setMarketplaceSearchQuery('');
     setMarketplaceSelectedTags([]);
     setMarketplacePage(1);
   };
-
   // Reset pages when search or filters change
   useEffect(() => {
     setAgentsPage(1);
   }, [agentsSearchQuery, agentsSortBy, agentsSortOrder, agentsFilters]);
-
   useEffect(() => {
     setMarketplacePage(1);
   }, [marketplaceSearchQuery, marketplaceSelectedTags, marketplaceSortBy]);
-
   // Agent handlers
   const handleDeleteAgent = async (agentId: string) => {
     try {
@@ -1122,7 +1022,6 @@ export default function AgentsPage() {
       console.error('Error deleting agent:', error);
     }
   };
-
   const handleToggleDefault = async (agentId: string, currentDefault: boolean) => {
     optimisticallyUpdateAgent(agentId, { is_default: !currentDefault });
     try {
@@ -1135,16 +1034,13 @@ export default function AgentsPage() {
       console.error('Error updating agent:', error);
     }
   };
-
   const handleEditAgent = (agentId: string) => {
     setEditingAgentId(agentId);
     setEditDialogOpen(true);
   };
-
   const handleCreateNewAgent = async () => {
     try {
       const { avatar, avatar_color } = generateRandomAvatar();
-      
       const defaultAgentData = {
         name: 'New Agent',
         description: 'A newly created agent',
@@ -1160,25 +1056,21 @@ export default function AgentsPage() {
         ),
         is_default: false,
       };
-
       const newAgent = await createAgentMutation.mutateAsync(defaultAgentData);
       router.push(`/agents/config/${newAgent.agent_id}`);
     } catch (error) {
       console.error('Error creating agent:', error);
     }
   };
-
   // Marketplace handlers
   const handleItemClick = (item: MarketplaceTemplate) => {
     setSelectedItem(item);
     setShowPreviewSheet(true);
   };
-
   const handlePreviewInstall = (item: MarketplaceTemplate) => {
     setShowPreviewSheet(false);
     setShowInstallDialog(true);
   };
-
   const handleInstallClick = (item: MarketplaceTemplate, e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
@@ -1186,7 +1078,6 @@ export default function AgentsPage() {
     setSelectedItem(item);
     setShowInstallDialog(true);
   };
-
   const handleInstall = async (
     item: MarketplaceTemplate, 
     instanceName?: string, 
@@ -1194,26 +1085,22 @@ export default function AgentsPage() {
     customMcpConfigs?: Record<string, Record<string, any>>
   ) => {
     setInstallingItemId(item.id);
-    
     try {
       if (!instanceName || instanceName.trim() === '') {
         toast.error('Please provide a name for the agent');
         return;
       }
-
       const regularRequirements = item.mcp_requirements?.filter(req => 
         !req.custom_type
       ) || [];
       const missingProfiles = regularRequirements.filter(req => 
         !profileMappings || !profileMappings[req.qualified_name] || profileMappings[req.qualified_name].trim() === ''
       );
-      
       if (missingProfiles.length > 0) {
         const missingNames = missingProfiles.map(req => req.display_name).join(', ');
         toast.error(`Please select credential profiles for: ${missingNames}`);
         return;
       }
-
       const customRequirements = item.mcp_requirements?.filter(req => 
         req.custom_type && req.custom_type !== 'pipedream'
       ) || [];
@@ -1221,13 +1108,11 @@ export default function AgentsPage() {
         !customMcpConfigs || !customMcpConfigs[req.qualified_name] || 
         req.required_config.some(field => !customMcpConfigs[req.qualified_name][field]?.trim())
       );
-      
       if (missingCustomConfigs.length > 0) {
         const missingNames = missingCustomConfigs.map(req => req.display_name).join(', ');
         toast.error(`Please provide all required configuration for: ${missingNames}`);
         return;
       }
-
       // Check if all Pipedream services have custom MCP configs
       const pipedreamRequirements = item.mcp_requirements?.filter(req => 
         req.custom_type === 'pipedream'
@@ -1236,24 +1121,20 @@ export default function AgentsPage() {
         !customMcpConfigs || !customMcpConfigs[req.qualified_name] || 
         !customMcpConfigs[req.qualified_name].profile_id
       );
-      
       if (missingPipedreamConfigs.length > 0) {
         const missingNames = missingPipedreamConfigs.map(req => req.display_name).join(', ');
         toast.error(`Please select Pipedream profiles for: ${missingNames}`);
         return;
       }
-
       const result = await installTemplateMutation.mutateAsync({
         template_id: item.template_id,
         instance_name: instanceName,
         profile_mappings: profileMappings,
         custom_mcp_configs: customMcpConfigs
       });
-
       console.log('Profile mappings being sent:', profileMappings);
       console.log('Custom MCP configs being sent:', customMcpConfigs);
       console.log('Item MCP requirements:', item.mcp_requirements);
-
       if (result.status === 'installed') {
         toast.success(`Agent "${instanceName}" installed successfully!`);
         setShowInstallDialog(false);
@@ -1267,7 +1148,6 @@ export default function AgentsPage() {
       }
     } catch (error: any) {
       console.error('Installation error:', error);
-      
       // Handle specific error types
       if (error.message?.includes('already in your library')) {
         toast.error('This agent is already in your library');
@@ -1290,7 +1170,6 @@ export default function AgentsPage() {
       setInstallingItemId(null);
     }
   };
-
   const handleTagFilter = (tag: string) => {
     setMarketplaceSelectedTags(prev => 
       prev.includes(tag) 
@@ -1298,7 +1177,6 @@ export default function AgentsPage() {
         : [...prev, tag]
     );
   };
-
   const getItemStyling = (item: MarketplaceTemplate) => {
     if (item.avatar && item.avatar_color) {
       return {
@@ -1308,7 +1186,6 @@ export default function AgentsPage() {
     }
     return getAgentAvatar(item.id);
   };
-
   // Template handlers
   const handleUnpublish = async (templateId: string, templateName: string) => {
     try {
@@ -1321,7 +1198,6 @@ export default function AgentsPage() {
       setTemplatesActioningId(null);
     }
   };
-
   const openPublishDialog = (template: any) => {
     setPublishDialog({
       templateId: template.template_id,
@@ -1330,23 +1206,18 @@ export default function AgentsPage() {
     });
     setPublishTags((template.tags || []).join(', '));
   };
-
   const handlePublish = async () => {
     if (!publishDialog) return;
-
     try {
       setTemplatesActioningId(publishDialog.templateId);
-      
       const tags = publishTags
         .split(',')
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0);
-
       await publishMutation.mutateAsync({
         template_id: publishDialog.templateId,
         tags: tags.length > 0 ? tags : undefined
       });
-      
       toast.success(`${publishDialog.templateName} has been published to the marketplace`);
       setPublishDialog(null);
       setPublishTags('');
@@ -1356,7 +1227,6 @@ export default function AgentsPage() {
       setTemplatesActioningId(null);
     }
   };
-
   const getTemplateStyling = (template: any) => {
     if (template.avatar && template.avatar_color) {
       return {
@@ -1366,7 +1236,6 @@ export default function AgentsPage() {
     }
     return getAgentAvatar(template.template_id);
   };
-
   if (flagLoading) {
     return (
       <div className="container max-w-7xl mx-auto px-4 py-8">
@@ -1396,11 +1265,9 @@ export default function AgentsPage() {
       </div>
     );
   }
-
   if (!customAgentsEnabled) {
     return null;
   }
-
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8">
       <div className="space-y-8">
@@ -1420,7 +1287,6 @@ export default function AgentsPage() {
             </div>
           </div>
         </div>
-
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
@@ -1437,7 +1303,6 @@ export default function AgentsPage() {
               My Templates
             </TabsTrigger>
           </TabsList>
-
           {/* My Agents Tab */}
           <TabsContent value="my-agents" className="space-y-6">
             <SearchAndFilters
@@ -1455,7 +1320,6 @@ export default function AgentsPage() {
               setViewMode={setViewMode}
               allTools={allTools}
             />
-
             <div className="flex items-center justify-between">
               <ResultsInfo
                 isLoading={agentsLoading}
@@ -1469,7 +1333,6 @@ export default function AgentsPage() {
                 Create Agent
               </Button>
             </div>
-
             {agentsLoading ? (
               <LoadingState viewMode={viewMode} />
             ) : agents.length === 0 ? (
@@ -1487,7 +1350,6 @@ export default function AgentsPage() {
                 deleteAgentMutation={deleteAgentMutation}
               />
             )}
-
             {agentsPagination && agentsPagination.pages > 1 && (
               <Pagination
                 currentPage={agentsPagination.page}
@@ -1497,7 +1359,6 @@ export default function AgentsPage() {
               />
             )}
           </TabsContent>
-
           {/* Marketplace Tab */}
           <TabsContent value="marketplace" className="space-y-6">
             <div className="flex flex-col gap-4">
@@ -1529,7 +1390,6 @@ export default function AgentsPage() {
                 </div>
               )}
             </div>
-
             <div className="text-sm text-muted-foreground">
               {marketplaceLoading ? (
                 "Loading marketplace..."
@@ -1537,7 +1397,6 @@ export default function AgentsPage() {
                 `${allMarketplaceItems.length} template${allMarketplaceItems.length !== 1 ? 's' : ''} found`
               )}
             </div>
-
             {marketplaceLoading ? (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -1763,7 +1622,6 @@ export default function AgentsPage() {
               </div>
             )}
           </TabsContent>
-
           {/* My Templates Tab */}
           <TabsContent value="my-templates" className="space-y-6">
             {templatesError ? (
@@ -1806,7 +1664,6 @@ export default function AgentsPage() {
                 {myTemplates?.map((template) => {
                   const { avatar, color } = getTemplateStyling(template);
                   const isActioning = templatesActioningId === template.template_id;
-                  
                   return (
                     <div 
                       key={template.template_id} 
@@ -1845,7 +1702,6 @@ export default function AgentsPage() {
                         <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
                           {template.description || 'No description available'}
                         </p>
-                        
                         {template.tags && template.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mb-3">
                             {template.tags.slice(0, 2).map(tag => (
@@ -1860,7 +1716,6 @@ export default function AgentsPage() {
                             )}
                           </div>
                         )}
-
                         <div className="space-y-1 mb-4">
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
                             <Calendar className="h-3 w-3" />
@@ -1879,7 +1734,6 @@ export default function AgentsPage() {
                             </div>
                           )}
                         </div>
-
                         <div className="mt-auto space-y-2">
                           {template.is_public ? (
                             <>
@@ -1942,7 +1796,6 @@ export default function AgentsPage() {
             )}
           </TabsContent>
         </Tabs>
-
         {/* Dialogs */}
         <UpdateAgentDialog
           agentId={editingAgentId}
@@ -1953,7 +1806,6 @@ export default function AgentsPage() {
           }}
           onAgentUpdated={loadAgents}
         />
-
         {/* Publish Dialog */}
         <Dialog open={!!publishDialog} onOpenChange={() => setPublishDialog(null)}>
           <DialogContent className="sm:max-w-md">
@@ -2005,7 +1857,6 @@ export default function AgentsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
         {/* Marketplace Dialogs */}
         <AgentPreviewSheet
           item={selectedItem}

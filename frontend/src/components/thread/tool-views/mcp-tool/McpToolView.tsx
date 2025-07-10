@@ -26,7 +26,7 @@ import {
   getMCPServerIcon,
   getMCPServerColor,
   formatMCPToolDisplayName,
-  MCPResult,
+  _MCPResult,
   ParsedMCPTool
 } from './_utils';
 
@@ -41,7 +41,7 @@ export function McpToolView({
 }: ToolViewProps) {
   const { resolvedTheme } = useTheme();
   const [progress, setProgress] = useState(0);
-  const [expandedArgs, setExpandedArgs] = useState(false);
+  const [_expandedArgs, setExpandedArgs] = useState(false);
   const [expandedResult, setExpandedResult] = useState(false);
 
   const parsedTool = parseMCPToolCall(assistantContent || '');
@@ -49,7 +49,7 @@ export function McpToolView({
 
   const serverName = result?.mcp_metadata?.server_name || parsedTool.serverName;
   const toolName = result?.mcp_metadata?.tool_name || parsedTool.toolName;
-  const fullToolName = result?.mcp_metadata?.full_tool_name || parsedTool.fullToolName;
+
   const argumentsCount = result?.mcp_metadata?.arguments_count ?? Object.keys(parsedTool.arguments).length;
 
   const displayName = result?.mcp_metadata ?
@@ -76,7 +76,7 @@ export function McpToolView({
     }
   }, [isStreaming]);
 
-  const hasArguments = Object.keys(parsedTool.arguments).length > 0;
+
 
   return (
     <Card className="gap-0 flex border shadow-none border-t border-b-0 border-x-0 p-0 rounded-none flex-col h-full overflow-hidden bg-card">

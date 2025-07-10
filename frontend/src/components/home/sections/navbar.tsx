@@ -1,27 +1,22 @@
 'use client';
-
-import { Icons } from '@/components/home/icons';
 import { NavMenu } from '@/components/home/nav-menu';
 import { ThemeToggle } from '@/components/home/theme-toggle';
 import { siteConfig } from '@/lib/home';
 import { cn } from '@/lib/utils';
-import { Menu, X, Github } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { AnimatePresence, motion, useScroll } from 'motion/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/components/AuthProvider';
-
 const INITIAL_WIDTH = '70rem';
 const MAX_WIDTH = '800px';
-
 const overlayVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
   exit: { opacity: 0 },
 };
-
 const drawerVariants = {
   hidden: { opacity: 0, y: 100 },
   visible: {
@@ -41,17 +36,14 @@ const drawerVariants = {
     transition: { duration: 0.1 },
   },
 };
-
 const drawerMenuContainerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
 };
-
 const drawerMenuVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
 };
-
 export function Navbar() {
   const { scrollY } = useScroll();
   const [hasScrolled, setHasScrolled] = useState(false);
@@ -60,17 +52,14 @@ export function Navbar() {
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { user } = useAuth();
-
   useEffect(() => {
     setMounted(true);
   }, []);
-
   useEffect(() => {
     const handleScroll = () => {
       const sections = siteConfig.nav.links.map((item) =>
         item.href.substring(1),
       );
-
       for (const section of sections) {
         const element = document.getElementById(section);
         if (element) {
@@ -82,29 +71,23 @@ export function Navbar() {
         }
       }
     };
-
     window.addEventListener('scroll', handleScroll);
     handleScroll();
-
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
   useEffect(() => {
     const unsubscribe = scrollY.on('change', (latest) => {
       setHasScrolled(latest > 10);
     });
     return unsubscribe;
   }, [scrollY]);
-
   const toggleDrawer = () => setIsDrawerOpen((prev) => !prev);
   const handleOverlayClick = () => setIsDrawerOpen(false);
-
   const logoSrc = !mounted
     ? '/kortix-logo.svg'
     : resolvedTheme === 'dark'
       ? '/kortix-logo-white.svg'
       : '/kortix-logo.svg';
-
   return (
     <header
       className={cn(
@@ -135,9 +118,7 @@ export function Navbar() {
                 priority
               /> 
             </Link>
-
             <NavMenu />
-
             <div className="flex flex-row items-center gap-1 md:gap-3 shrink-0">
               <div className="flex items-center space-x-3">
                 {/* <Link
@@ -180,7 +161,6 @@ export function Navbar() {
           </div>
         </div>
       </motion.div>
-
       {/* Mobile Drawer */}
       <AnimatePresence>
         {isDrawerOpen && (
@@ -194,7 +174,6 @@ export function Navbar() {
               transition={{ duration: 0.2 }}
               onClick={handleOverlayClick}
             />
-
             <motion.div
               className="fixed inset-x-0 w-[95%] mx-auto bottom-3 bg-background border border-border p-4 rounded-xl shadow-lg"
               initial="hidden"
@@ -224,7 +203,6 @@ export function Navbar() {
                     <X className="size-5" />
                   </button>
                 </div>
-
                 <motion.ul
                   className="flex flex-col text-sm mb-4 border border-border rounded-md"
                   variants={drawerMenuContainerVariants}
@@ -258,7 +236,6 @@ export function Navbar() {
                     ))}
                   </AnimatePresence>
                 </motion.ul>
-
                 {/* Action buttons */}
                 <div className="flex flex-col gap-2">
                   {user ? (

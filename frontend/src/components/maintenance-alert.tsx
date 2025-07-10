@@ -1,5 +1,4 @@
 'use client';
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,15 +10,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Clock, Github, X } from 'lucide-react';
 import Link from 'next/link';
-import { AnimatePresence, motion } from 'motion/react';
+import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
-
 interface MaintenanceAlertProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   closeable?: boolean;
 }
-
 export function MaintenanceAlert({
   open,
   onOpenChange,
@@ -41,7 +38,6 @@ export function MaintenanceAlert({
           <div className="absolute inset-0 bg-accent/20 opacity-20">
             <div className="absolute inset-0 bg-grid-white/10 [mask-image:radial-gradient(white,transparent_85%)]" />
           </div>
-
           {closeable && (
             <Button
               variant="ghost"
@@ -53,7 +49,6 @@ export function MaintenanceAlert({
               <span className="sr-only">Close</span>
             </Button>
           )}
-
           <AlertDialogHeader className="gap-6 px-8 pt-10 pb-6 relative z-10">
             <motion.div
               className="flex items-center justify-center"
@@ -67,7 +62,6 @@ export function MaintenanceAlert({
                 </div>
               </div>
             </motion.div>
-
             <motion.div
               initial={{ y: -10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -77,7 +71,6 @@ export function MaintenanceAlert({
                 High Demand Notice
               </AlertDialogTitle>
             </motion.div>
-
             <motion.div
               initial={{ y: -10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -94,7 +87,6 @@ export function MaintenanceAlert({
               </AlertDialogDescription>
             </motion.div>
           </AlertDialogHeader>
-
           <AlertDialogFooter className="p-8 pt-4 border-t border-border/40 bg-background/40 backdrop-blur-sm">
             <Link
               href="https://github.com/kortix-ai/suna"

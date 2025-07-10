@@ -4,18 +4,18 @@ import { handleApiSuccess } from './error-handler';
 import { 
   Project, 
   Thread, 
-  Message, 
+  _Message, 
   AgentRun, 
-  InitiateAgentResponse,
+  _InitiateAgentResponse,
   HealthCheckResponse,
-  FileInfo,
+  _FileInfo,
   CreateCheckoutSessionRequest,
   CreateCheckoutSessionResponse,
   CreatePortalSessionRequest,
   SubscriptionStatus,
   AvailableModelsResponse,
   BillingStatusResponse,
-  BillingError,
+  _BillingError,
   UsageLogsResponse
 } from './api';
 

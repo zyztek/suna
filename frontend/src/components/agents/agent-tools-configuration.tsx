@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
-import { Search, Settings2 } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { DEFAULT_AGENTPRESS_TOOLS, getToolDisplayName } from './tools';
-
 interface AgentToolsConfigurationProps {
   tools: Record<string, { enabled: boolean; description: string }>;
   onToolsChange: (tools: Record<string, { enabled: boolean; description: string }>) => void;
 }
-
 export const AgentToolsConfiguration = ({ tools, onToolsChange }: AgentToolsConfigurationProps) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
-
   const handleToolToggle = (toolName: string, enabled: boolean) => {
     const updatedTools = {
       ...tools,
@@ -23,24 +20,19 @@ export const AgentToolsConfiguration = ({ tools, onToolsChange }: AgentToolsConf
     };
     onToolsChange(updatedTools);
   };
-
   const getSelectedToolsCount = (): number => {
     return Object.values(tools).filter(tool => tool.enabled).length;
   };
-
   const getFilteredTools = (): Array<[string, any]> => {
     let toolEntries = Object.entries(DEFAULT_AGENTPRESS_TOOLS);
-    
     if (searchQuery) {
       toolEntries = toolEntries.filter(([toolName, toolInfo]) => 
         getToolDisplayName(toolName).toLowerCase().includes(searchQuery.toLowerCase()) ||
         toolInfo.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    
     return toolEntries;
   };
-
   return (
     <Card className='px-0 bg-transparent border-none shadow-none'>
       <CardHeader className='px-0'>
@@ -60,7 +52,6 @@ export const AgentToolsConfiguration = ({ tools, onToolsChange }: AgentToolsConf
             className="pl-10"
           />
         </div>
-
         <div className="gap-4 grid grid-cols-1 md:grid-cols-2 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent">
           {getFilteredTools().map(([toolName, toolInfo]) => (
             <div 
@@ -88,7 +79,6 @@ export const AgentToolsConfiguration = ({ tools, onToolsChange }: AgentToolsConf
             </div>
           ))}
         </div>
-
         {getFilteredTools().length === 0 && (
           <div className="text-center py-8">
             <div className="text-4xl mb-3">🔍</div>

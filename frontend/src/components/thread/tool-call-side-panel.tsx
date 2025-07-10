@@ -1,18 +1,16 @@
 'use client';
-
 import { Project } from '@/lib/api';
 import { getToolIcon, getUserFriendlyToolName } from '@/components/thread/utils';
 import React from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ApiMessageType } from '@/components/thread/types';
-import { CircleDashed, X, ChevronLeft, ChevronRight, Computer, Radio, Maximize2, Minimize2 } from 'lucide-react';
+import { CircleDashed, X, ChevronLeft, ChevronRight, Computer, Minimize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { ToolView } from './tool-views/wrapper';
 import { motion, AnimatePresence } from 'framer-motion';
-
 export interface ToolCallInput {
   assistantCall: {
     content?: string;
@@ -26,7 +24,6 @@ export interface ToolCallInput {
   };
   messages?: ApiMessageType[];
 }
-
 interface ToolCallSidePanelProps {
   isOpen: boolean;
   onClose: () => void;
@@ -49,17 +46,14 @@ interface ToolCallSidePanelProps {
   agentName?: string;
   onFileClick?: (filePath: string) => void;
 }
-
 interface ToolCallSnapshot {
   id: string;
   toolCall: ToolCallInput;
   index: number;
   timestamp: number;
 }
-
 const FLOATING_LAYOUT_ID = 'tool-panel-float';
 const CONTENT_LAYOUT_ID = 'tool-panel-content';
-
 export function ToolCallSidePanel({
   isOpen,
   onClose,
@@ -79,13 +73,10 @@ export function ToolCallSidePanel({
   const [navigationMode, setNavigationMode] = React.useState<'live' | 'manual'>('live');
   const [toolCallSnapshots, setToolCallSnapshots] = React.useState<ToolCallSnapshot[]>([]);
   const [isInitialized, setIsInitialized] = React.useState(false);
-
   const isMobile = useIsMobile();
-
   const handleClose = React.useCallback(() => {
     onClose();
   }, [onClose]);
-
   React.useEffect(() => {
     const newSnapshots = toolCalls.map((toolCall, index) => ({
       id: `${index}-${toolCall.assistantCall.timestamp || Date.now()}`,
@@ -93,17 +84,14 @@ export function ToolCallSidePanel({
       index,
       timestamp: Date.now(),
     }));
-
     const hadSnapshots = toolCallSnapshots.length > 0;
     const hasNewSnapshots = newSnapshots.length > toolCallSnapshots.length;
     setToolCallSnapshots(newSnapshots);
-
     if (!isInitialized && newSnapshots.length > 0) {
       const completedCount = newSnapshots.filter(s =>
         s.toolCall.toolResult?.content &&
         s.toolCall.toolResult.content !== 'STREAMING'
       ).length;
-
       if (completedCount > 0) {
         let lastCompletedIndex = -1;
         for (let i = newSnapshots.length - 1; i >= 0; i--) {
@@ -143,18 +131,15 @@ export function ToolCallSidePanel({
     } else if (hasNewSnapshots && navigationMode === 'manual') {
     }
   }, [toolCalls, navigationMode, toolCallSnapshots.length, isInitialized]);
-
   React.useEffect(() => {
     if (isOpen && !isInitialized && toolCallSnapshots.length > 0) {
       setInternalIndex(Math.min(currentIndex, toolCallSnapshots.length - 1));
     }
   }, [isOpen, currentIndex, isInitialized, toolCallSnapshots.length]);
-
   const safeInternalIndex = Math.min(internalIndex, Math.max(0, toolCallSnapshots.length - 1));
   const currentSnapshot = toolCallSnapshots[safeInternalIndex];
   const currentToolCall = currentSnapshot?.toolCall;
   const totalCalls = toolCallSnapshots.length;
-
   const extractToolName = (toolCall: any) => {
     const rawName = toolCall?.assistantCall?.name || 'Tool Call';
     if (rawName === 'call-mcp-tool') {
@@ -173,17 +158,14 @@ export function ToolCallSidePanel({
     }
     return getUserFriendlyToolName(rawName);
   };
-
   const completedToolCalls = toolCallSnapshots.filter(snapshot =>
     snapshot.toolCall.toolResult?.content &&
     snapshot.toolCall.toolResult.content !== 'STREAMING'
   );
   const totalCompletedCalls = completedToolCalls.length;
-
   let displayToolCall = currentToolCall;
   let displayIndex = safeInternalIndex;
   let displayTotalCalls = totalCalls;
-
   const isCurrentToolStreaming = currentToolCall?.toolResult?.content === 'STREAMING';
   if (isCurrentToolStreaming && totalCompletedCalls > 0) {
     const lastCompletedSnapshot = completedToolCalls[completedToolCalls.length - 1];
@@ -197,26 +179,21 @@ export function ToolCallSidePanel({
       displayTotalCalls = totalCompletedCalls;
     }
   }
-
   const currentToolName = displayToolCall?.assistantCall?.name || 'Tool Call';
   const CurrentToolIcon = getToolIcon(
     currentToolCall?.assistantCall?.name || 'unknown',
   );
   const isStreaming = displayToolCall?.toolResult?.content === 'STREAMING';
-
   // Extract actual success value from tool content with fallbacks
   const getActualSuccess = (toolCall: any): boolean => {
     const content = toolCall?.toolResult?.content;
     if (!content) return toolCall?.toolResult?.isSuccess ?? true;
-
     const safeParse = (data: any) => {
       try { return typeof data === 'string' ? JSON.parse(data) : data; }
       catch { return null; }
     };
-
     const parsed = safeParse(content);
     if (!parsed) return toolCall?.toolResult?.isSuccess ?? true;
-
     if (parsed.content) {
       const inner = safeParse(parsed.content);
       if (inner?.tool_execution?.result?.success !== undefined) {
@@ -226,36 +203,26 @@ export function ToolCallSidePanel({
     const success = parsed.tool_execution?.result?.success ??
       parsed.result?.success ??
       parsed.success;
-
     return success !== undefined ? success : (toolCall?.toolResult?.isSuccess ?? true);
   };
-
   const isSuccess = isStreaming ? true : getActualSuccess(displayToolCall);
-
   const internalNavigate = React.useCallback((newIndex: number, source: string = 'internal') => {
     if (newIndex < 0 || newIndex >= totalCalls) return;
-
     const isNavigatingToLatest = newIndex === totalCalls - 1;
-
     console.log(`[INTERNAL_NAV] ${source}: ${internalIndex} -> ${newIndex}, mode will be: ${isNavigatingToLatest ? 'live' : 'manual'}`);
-
     setInternalIndex(newIndex);
-
     if (isNavigatingToLatest) {
       setNavigationMode('live');
     } else {
       setNavigationMode('manual');
     }
-
     if (source === 'user_explicit') {
       onNavigate(newIndex);
     }
   }, [internalIndex, totalCalls, onNavigate]);
-
   const isLiveMode = navigationMode === 'live';
   const showJumpToLive = navigationMode === 'manual' && agentStatus === 'running';
   const showJumpToLatest = navigationMode === 'manual' && agentStatus !== 'running';
-
   const navigateToPrevious = React.useCallback(() => {
     if (displayIndex > 0) {
       const targetCompletedIndex = displayIndex - 1;
@@ -269,7 +236,6 @@ export function ToolCallSidePanel({
       }
     }
   }, [displayIndex, completedToolCalls, toolCallSnapshots, internalNavigate]);
-
   const navigateToNext = React.useCallback(() => {
     if (displayIndex < displayTotalCalls - 1) {
       const targetCompletedIndex = displayIndex + 1;
@@ -288,22 +254,18 @@ export function ToolCallSidePanel({
       }
     }
   }, [displayIndex, displayTotalCalls, completedToolCalls, toolCallSnapshots, internalNavigate]);
-
   const jumpToLive = React.useCallback(() => {
     setNavigationMode('live');
     internalNavigate(totalCalls - 1, 'user_explicit');
   }, [totalCalls, internalNavigate]);
-
   const jumpToLatest = React.useCallback(() => {
     setNavigationMode('manual');
     internalNavigate(totalCalls - 1, 'user_explicit');
   }, [totalCalls, internalNavigate]);
-
   const renderStatusButton = React.useCallback(() => {
     const baseClasses = "flex items-center justify-center gap-1.5 px-2 py-0.5 rounded-full w-[116px]";
     const dotClasses = "w-1.5 h-1.5 rounded-full";
     const textClasses = "text-xs font-medium";
-
     if (isLiveMode) {
       if (agentStatus === 'running') {
         return (
@@ -344,7 +306,6 @@ export function ToolCallSidePanel({
       }
     }
   }, [isLiveMode, agentStatus, jumpToLive, jumpToLatest]);
-
   const handleSliderChange = React.useCallback(([newValue]: [number]) => {
     const targetSnapshot = completedToolCalls[newValue];
     if (targetSnapshot) {
@@ -356,26 +317,21 @@ export function ToolCallSidePanel({
         } else {
           setNavigationMode('manual');
         }
-
         internalNavigate(actualIndex, 'user_explicit');
       }
     }
   }, [completedToolCalls, toolCallSnapshots, internalNavigate]);
-
   React.useEffect(() => {
     if (!isOpen) return;
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === 'i') {
         event.preventDefault();
         handleClose();
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, handleClose]);
-
   React.useEffect(() => {
     if (!isOpen) return;
     const handleSidebarToggle = (event: CustomEvent) => {
@@ -383,7 +339,6 @@ export function ToolCallSidePanel({
         handleClose();
       }
     };
-
     window.addEventListener(
       'sidebar-left-toggled',
       handleSidebarToggle as EventListener,
@@ -394,13 +349,11 @@ export function ToolCallSidePanel({
         handleSidebarToggle as EventListener,
       );
   }, [isOpen, handleClose]);
-
   React.useEffect(() => {
     if (externalNavigateToIndex !== undefined && externalNavigateToIndex >= 0 && externalNavigateToIndex < totalCalls) {
       internalNavigate(externalNavigateToIndex, 'external_click');
     }
   }, [externalNavigateToIndex, totalCalls, internalNavigate]);
-
   React.useEffect(() => {
     if (!isStreaming) return;
     const interval = setInterval(() => {
@@ -409,14 +362,11 @@ export function ToolCallSidePanel({
         return prev + '.';
       });
     }, 500);
-
     return () => clearInterval(interval);
   }, [isStreaming]);
-
   if (!isOpen) {
     return null;
   }
-
   if (isLoading) {
     return (
       <div className="fixed inset-0 z-30 pointer-events-none">
@@ -464,7 +414,6 @@ export function ToolCallSidePanel({
       </div>
     );
   }
-
   const renderContent = () => {
     if (!displayToolCall && toolCallSnapshots.length === 0) {
       return (
@@ -509,7 +458,6 @@ export function ToolCallSidePanel({
         </div>
       );
     }
-
     if (!displayToolCall && toolCallSnapshots.length > 0) {
       const firstStreamingTool = toolCallSnapshots.find(s => s.toolCall.toolResult?.content === 'STREAMING');
       if (firstStreamingTool && totalCompletedCalls === 0) {
@@ -558,7 +506,6 @@ export function ToolCallSidePanel({
           </div>
         );
       }
-
       return (
         <div className="flex flex-col h-full">
           <div className="pt-4 pl-4 pr-4">
@@ -587,7 +534,6 @@ export function ToolCallSidePanel({
         </div>
       );
     }
-
     const toolView = (
       <ToolView
         name={displayToolCall.assistantCall.name}
@@ -605,7 +551,6 @@ export function ToolCallSidePanel({
         onFileClick={onFileClick}
       />
     );
-
     return (
       <div className="flex flex-col h-full">
         <motion.div
@@ -618,7 +563,6 @@ export function ToolCallSidePanel({
                 {agentName ? `${agentName}'s Computer` : 'Suna\'s Computer'}
               </h2>
             </motion.div>
-
             {displayToolCall.toolResult?.content && !isStreaming && (
               <div className="flex items-center gap-2">
                 <Button
@@ -632,7 +576,6 @@ export function ToolCallSidePanel({
                 </Button>
               </div>
             )}
-
             {isStreaming && (
               <div className="flex items-center gap-2">
                 <div className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 flex items-center gap-1.5">
@@ -650,7 +593,6 @@ export function ToolCallSidePanel({
                 </Button>
               </div>
             )}
-
             {!displayToolCall.toolResult?.content && !isStreaming && (
               <Button
                 variant="ghost"
@@ -664,14 +606,12 @@ export function ToolCallSidePanel({
             )}
           </div>
         </motion.div>
-
         <div className="flex-1 overflow-auto scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent">
           {toolView}
         </div>
       </div>
     );
   };
-
   return (
     <AnimatePresence mode="wait">
       {isOpen && (
@@ -721,14 +661,12 @@ export function ToolCallSidePanel({
                     <ChevronLeft className="h-3.5 w-3.5 mr-1" />
                     <span>Prev</span>
                   </Button>
-
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium tabular-nums min-w-[44px]">
                       {displayIndex + 1}/{displayTotalCalls}
                     </span>
                     {renderStatusButton()}
                   </div>
-
                   <Button
                     variant="outline"
                     size="sm"
@@ -765,7 +703,6 @@ export function ToolCallSidePanel({
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
-
                   <div className="flex-1 relative">
                     <Slider
                       min={0}
@@ -776,7 +713,6 @@ export function ToolCallSidePanel({
                       className="w-full [&>span:first-child]:h-1.5 [&>span:first-child]:bg-zinc-200 dark:[&>span:first-child]:bg-zinc-800 [&>span:first-child>span]:bg-zinc-500 dark:[&>span:first-child>span]:bg-zinc-400 [&>span:first-child>span]:h-1.5"
                     />
                   </div>
-
                   <div className="flex items-center gap-1.5">
                     {renderStatusButton()}
                   </div>

@@ -1,7 +1,6 @@
 'use client';
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Settings, ChevronRight, Bot, Presentation, Search, Check, ChevronDown } from 'lucide-react';
+import { Settings, ChevronRight, Bot, Search, Check, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,7 +9,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
 import {
   Tooltip,
   TooltipContent,
@@ -21,7 +19,6 @@ import { useAgents } from '@/hooks/react-query/agents/use-agents';
 import { ChatSettingsDialog } from './chat-settings-dialog';
 import { useRouter } from 'next/navigation';
 import { cn, truncateString } from '@/lib/utils';
-
 interface PredefinedAgent {
   id: string;
   name: string;
@@ -29,7 +26,6 @@ interface PredefinedAgent {
   icon: React.ReactNode;
   category: 'productivity' | 'creative' | 'development';
 }
-
 const PREDEFINED_AGENTS: PredefinedAgent[] = [
   // {
   //   id: 'slides',
@@ -46,7 +42,6 @@ const PREDEFINED_AGENTS: PredefinedAgent[] = [
   //   category: 'productivity'
   // }
 ];
-
 interface ChatSettingsDropdownProps {
   selectedAgentId?: string;
   onAgentSelect?: (agentId: string | undefined) => void;
@@ -58,7 +53,6 @@ interface ChatSettingsDropdownProps {
   refreshCustomModels?: () => void;
   disabled?: boolean;
 }
-
 export const ChatSettingsDropdown: React.FC<ChatSettingsDropdownProps> = ({
   selectedAgentId,
   onAgentSelect,
@@ -76,10 +70,8 @@ export const ChatSettingsDropdown: React.FC<ChatSettingsDropdownProps> = ({
   const [dialogOpen, setDialogOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
-
   const { data: agentsResponse, isLoading: agentsLoading } = useAgents();
   const agents = agentsResponse?.agents || [];
-
   // Combine all agents
   const allAgents = [
     {
@@ -100,13 +92,11 @@ export const ChatSettingsDropdown: React.FC<ChatSettingsDropdownProps> = ({
       icon: agent.avatar || <Bot className="h-4 w-4" />
     }))
   ];
-
   // Filter agents based on search query
   const filteredAgents = allAgents.filter((agent) =>
     agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     agent.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
       setTimeout(() => {
@@ -117,7 +107,6 @@ export const ChatSettingsDropdown: React.FC<ChatSettingsDropdownProps> = ({
       setHighlightedIndex(-1);
     }
   }, [isOpen]);
-
   const getAgentDisplay = () => {
     const selectedAgent = allAgents.find(agent => agent.id === selectedAgentId);
     if (selectedAgent) {
@@ -131,18 +120,15 @@ export const ChatSettingsDropdown: React.FC<ChatSettingsDropdownProps> = ({
       icon: <Image src="/kortix-symbol.svg" alt="Suna" width={16} height={16} className="h-4 w-4 dark:invert" />
     };
   };
-
   const handleAgentSelect = (agentId: string | undefined) => {
     onAgentSelect?.(agentId);
     setIsOpen(false);
   };
-
   const handleAgentSettings = (agentId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setIsOpen(false);
     router.push(`/agents/config/${agentId}`);
   };
-
   const handleSearchInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     e.stopPropagation();
     if (e.key === 'ArrowDown') {
@@ -163,22 +149,18 @@ export const ChatSettingsDropdown: React.FC<ChatSettingsDropdownProps> = ({
       }
     }
   };
-
   const handleExploreAll = () => {
     setIsOpen(false);
     router.push('/agents');
   };
-
   const handleMoreOptions = () => {
     setIsOpen(false);
     setDialogOpen(true);
   };
-
   const renderAgentItem = (agent: any, index: number) => {
     const isSelected = agent.id === selectedAgentId;
     const isHighlighted = index === highlightedIndex;
     const hasSettings = agent.type === 'custom' && agent.id;
-
     return (
       <TooltipProvider key={agent.id || 'default'}>
         <Tooltip>
@@ -232,9 +214,7 @@ export const ChatSettingsDropdown: React.FC<ChatSettingsDropdownProps> = ({
       </TooltipProvider>
     );
   };
-
   const agentDisplay = getAgentDisplay();
-
   return (
     <>
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -275,7 +255,6 @@ export const ChatSettingsDropdown: React.FC<ChatSettingsDropdownProps> = ({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-
         <DropdownMenuContent
           align="end"
           className="w-88 p-0 border-0 shadow-md bg-card/98 backdrop-blur-sm"
@@ -303,7 +282,6 @@ export const ChatSettingsDropdown: React.FC<ChatSettingsDropdownProps> = ({
               />
             </div>
           </div>
-
           {/* Agent List */}
           <div className="max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent px-1.5">
             {agentsLoading ? (
@@ -322,7 +300,6 @@ export const ChatSettingsDropdown: React.FC<ChatSettingsDropdownProps> = ({
               </div>
             )}
           </div>
-
           {/* Footer Actions */}
           <div className="p-4 pt-3 border-t border-border/40">
             <div className="flex items-center justify-between gap-2">
@@ -335,7 +312,6 @@ export const ChatSettingsDropdown: React.FC<ChatSettingsDropdownProps> = ({
                 <Search className="h-3 w-3" />
                 Explore All
               </Button>
-
               <Button
                 variant="outline"
                 size="sm"
@@ -350,7 +326,6 @@ export const ChatSettingsDropdown: React.FC<ChatSettingsDropdownProps> = ({
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
-
       <ChatSettingsDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}

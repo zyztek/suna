@@ -15,7 +15,7 @@ import {
   formatTimestamp,
   getToolTitle,
   normalizeContentToString,
-  extractToolData,
+  _extractToolData,
   getFileIconAndColor,
 } from './utils';
 import { cn } from '@/lib/utils';

@@ -1,11 +1,7 @@
-import Image from 'next/image';
 import { siteConfig } from '@/lib/home';
 import Link from 'next/link';
-import { HeroVideoSection } from './hero-video-section';
-
 export function CTASection() {
   const { ctaSection } = siteConfig;
-
   return (
     <section
       id="cta"

@@ -4,16 +4,16 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  BadgeCheck,
-  Bell,
-  ChevronDown,
+  _BadgeCheck,
+  _Bell,
+  _ChevronDown,
   ChevronsUpDown,
   Command,
   CreditCard,
   LogOut,
-  Plus,
-  Settings,
-  User,
+  _Plus,
+  _Settings,
+  _User,
   AudioWaveform,
   Sun,
   Moon,
@@ -44,7 +44,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  _DialogTrigger,
 } from '@/components/ui/dialog';
 import { createClient } from '@/lib/supabase/client';
 import { useTheme } from 'next-themes';

@@ -31,7 +31,7 @@ export default function DashboardLayoutContent({
   const [isApiHealthy, setIsApiHealthy] = useState(true);
   const [isCheckingHealth, setIsCheckingHealth] = useState(true);
   const { data: accounts } = useAccounts();
-  const personalAccount = accounts?.find((account) => account.personal_account);
+
   const { user, isLoading } = useAuth();
   const router = useRouter();
 

@@ -11,7 +11,7 @@ import { SubmitButton } from '@/components/ui/submit-button';
 import { resetPassword } from '../actions';
 
 function ResetPasswordContent() {
-  const router = useRouter();
+
   const searchParams = useSearchParams();
   const code = searchParams.get('code');
 

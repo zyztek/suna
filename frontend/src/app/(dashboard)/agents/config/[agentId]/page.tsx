@@ -1,13 +1,12 @@
 'use client';
-
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, Settings2, Sparkles, Check, Clock, Eye, Menu, Zap, Brain, Workflow } from 'lucide-react';
+import { Loader2, Settings2, Sparkles, Check, Clock, Eye, Menu, Zap, Brain, Workflow } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAgent, useUpdateAgent } from '@/hooks/react-query/agents/use-agents';
 import { AgentMCPConfiguration } from '../../../../../components/agents/agent-mcp-configuration';
@@ -23,20 +22,15 @@ import { AgentBuilderChat } from '../../../../../components/agents/agent-builder
 import { AgentTriggersConfiguration } from '@/components/agents/triggers/agent-triggers-configuration';
 import { AgentKnowledgeBaseManager } from '@/components/agents/knowledge-base/agent-knowledge-base-manager';
 import { AgentWorkflowsConfiguration } from '@/components/agents/workflows/agent-workflows-configuration';
-
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
-
 export default function AgentConfigurationPage() {
   const params = useParams();
   const router = useRouter();
   const agentId = params.agentId as string;
-
   const { data: agent, isLoading, error } = useAgent(agentId);
   const updateAgentMutation = useUpdateAgent();
   const { state, setOpen, setOpenMobile } = useSidebar();
-
   const initialLayoutAppliedRef = useRef(false);
-
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -48,7 +42,6 @@ export default function AgentConfigurationPage() {
     avatar: '',
     avatar_color: '',
   });
-
   const originalDataRef = useRef<typeof formData | null>(null);
   const currentFormDataRef = useRef(formData);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
@@ -56,14 +49,12 @@ export default function AgentConfigurationPage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('agent-builder');
   const accordionRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (!initialLayoutAppliedRef.current) {
       setOpen(false);
       initialLayoutAppliedRef.current = true;
     }
   }, [setOpen]);
-
   useEffect(() => {
     if (agent) {
       const agentData = agent as any;
@@ -82,8 +73,6 @@ export default function AgentConfigurationPage() {
       originalDataRef.current = { ...initialData };
     }
   }, [agent]);
-
-
   useEffect(() => {
     if (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -94,11 +83,9 @@ export default function AgentConfigurationPage() {
       }
     }
   }, [error, router]);
-
   useEffect(() => {
     currentFormDataRef.current = formData;
   }, [formData]);
-
   const hasDataChanged = useCallback((newData: typeof formData, originalData: typeof formData | null): boolean => {
     if (!originalData) return true;
     if (newData.name !== originalData.name ||
@@ -116,7 +103,6 @@ export default function AgentConfigurationPage() {
     }
     return false;
   }, []);
-
   const saveAgent = useCallback(async (data: typeof formData) => {
     try {
       setSaveStatus('saving');
@@ -134,7 +120,6 @@ export default function AgentConfigurationPage() {
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
   }, [agentId, updateAgentMutation]);
-
   const debouncedSave = useCallback((data: typeof formData) => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -147,31 +132,25 @@ export default function AgentConfigurationPage() {
         saveAgent(data);
       }
     }, 500);
-    
     debounceTimerRef.current = timer;
   }, [saveAgent, hasDataChanged]);
-
   const handleFieldChange = useCallback((field: string, value: any) => {
     const newFormData = {
       ...currentFormDataRef.current,
       [field]: value
     };
-    
     setFormData(newFormData);
     debouncedSave(newFormData);
   }, [debouncedSave]);
-
   const handleBatchMCPChange = useCallback((updates: { configured_mcps: any[]; custom_mcps: any[] }) => {
     const newFormData = {
       ...currentFormDataRef.current,
       configured_mcps: updates.configured_mcps,
       custom_mcps: updates.custom_mcps
     };
-    
     setFormData(newFormData);
     debouncedSave(newFormData);
   }, [debouncedSave]);
-
   const scrollToAccordion = useCallback(() => {
     if (accordionRef.current) {
       accordionRef.current.scrollIntoView({ 
@@ -180,7 +159,6 @@ export default function AgentConfigurationPage() {
       });
     }
   }, []);
-
   const handleStyleChange = useCallback((emoji: string, color: string) => {
     const newFormData = {
       ...currentFormDataRef.current,
@@ -190,7 +168,6 @@ export default function AgentConfigurationPage() {
     setFormData(newFormData);
     debouncedSave(newFormData);
   }, [debouncedSave]);
-
   const currentStyle = useMemo(() => {
     if (formData.avatar && formData.avatar_color) {
       return {
@@ -200,7 +177,6 @@ export default function AgentConfigurationPage() {
     }
     return getAgentAvatar(agentId);
   }, [formData.avatar, formData.avatar_color, agentId]);
-
   const memoizedAgentBuilderChat = useMemo(() => (
     <AgentBuilderChat
       agentId={agentId}
@@ -210,7 +186,6 @@ export default function AgentConfigurationPage() {
       currentStyle={currentStyle}
     />
   ), [agentId, formData, handleFieldChange, handleStyleChange, currentStyle]);
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const getSaveStatusBadge = () => {
     const showSaved = saveStatus === 'idle' && !hasDataChanged(formData, originalDataRef.current);
@@ -235,7 +210,6 @@ export default function AgentConfigurationPage() {
             Error saving
           </Badge>
         );
-
       default:
         return showSaved ? (
           <Badge variant="default" className="flex items-center gap-1 text-green-700 dark:text-green-300 bg-green-600/30 hover:bg-green-700/40">
@@ -249,7 +223,6 @@ export default function AgentConfigurationPage() {
         );
     }
   };
-
   const ConfigurationContent = useMemo(() => {
     return (
       <div className="h-full flex flex-col">
@@ -287,7 +260,6 @@ export default function AgentConfigurationPage() {
             </DrawerContent>
           </Drawer>
         </div>
-        
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
           <div className='w-full flex items-center justify-center flex-shrink-0 px-4 md:px-12 md:mt-10'>
             <div className='w-auto flex items-center gap-2'>
@@ -336,7 +308,6 @@ export default function AgentConfigurationPage() {
                   />
                 </div>
               </div>
-
               <div className='flex flex-col mt-6 md:mt-8'>
                 <div className='text-sm font-semibold text-muted-foreground mb-2'>Instructions</div>
                 <EditableText
@@ -348,7 +319,6 @@ export default function AgentConfigurationPage() {
                   minHeight="150px"
                 />
               </div>
-
               <div ref={accordionRef} className="mt-6 border-t">
                 <Accordion 
                   type="multiple" 
@@ -370,7 +340,6 @@ export default function AgentConfigurationPage() {
                       />
                     </AccordionContent>
                   </AccordionItem>
-
                   <AccordionItem value="mcp" className="border-b">
                     <AccordionTrigger className="hover:no-underline text-sm md:text-base">
                       <div className="flex items-center gap-2">
@@ -387,7 +356,6 @@ export default function AgentConfigurationPage() {
                       />
                     </AccordionContent>
                   </AccordionItem>
-
                   <AccordionItem value="triggers" className="border-b">
                     <AccordionTrigger className="hover:no-underline text-sm md:text-base">
                       <div className="flex items-center gap-2">
@@ -402,7 +370,6 @@ export default function AgentConfigurationPage() {
                       />
                     </AccordionContent>
                   </AccordionItem>
-
                   <AccordionItem value="knowledge-base" className="border-b">
                     <AccordionTrigger className="hover:no-underline text-sm md:text-base">
                       <div className="flex items-center gap-2">
@@ -418,7 +385,6 @@ export default function AgentConfigurationPage() {
                       />
                     </AccordionContent>
                   </AccordionItem>
-
                   <AccordionItem value="workflows" className="border-b">
                     <AccordionTrigger className="hover:no-underline text-sm md:text-base">
                       <div className="flex items-center gap-2">
@@ -438,7 +404,6 @@ export default function AgentConfigurationPage() {
               </div>
             </div>
           </TabsContent>
-          
           <TabsContent value="agent-builder" className="mt-0 flex-1 flex flex-col overflow-hidden">
             {memoizedAgentBuilderChat}
           </TabsContent>
@@ -462,7 +427,6 @@ export default function AgentConfigurationPage() {
     getSaveStatusBadge,
     handleBatchMCPChange
   ]);
-
   useEffect(() => {
     return () => {
       if (debounceTimerRef.current) {
@@ -470,7 +434,6 @@ export default function AgentConfigurationPage() {
       }
     };
   }, []);
-
   if (isLoading) {
     return (
       <div className="container mx-auto max-w-7xl px-4 py-8">
@@ -483,11 +446,9 @@ export default function AgentConfigurationPage() {
       </div>
     );
   }
-
   if (error || !agent) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const isAccessDenied = errorMessage.includes('Access denied') || errorMessage.includes('403');
-    
     return (
       <div className="container mx-auto max-w-7xl px-4 py-8">
         <div className="text-center space-y-4">
@@ -507,7 +468,6 @@ export default function AgentConfigurationPage() {
       </div>
     );
   }
-
   return (
     <div className="h-screen flex flex-col">
       <div className="flex-1 flex overflow-hidden">

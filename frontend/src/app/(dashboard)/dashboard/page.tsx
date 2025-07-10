@@ -2,8 +2,6 @@ import { cn } from "@/lib/utils";
 import { DashboardContent } from "../../../components/dashboard/dashboard-content";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { isFlagEnabled } from "@/lib/feature-flags";
-
 export default async function DashboardPage() {
   return (
     <Suspense

@@ -3,7 +3,7 @@ import {
   streamAgent,
   getAgentStatus,
   stopAgent,
-  AgentRun,
+  _AgentRun,
   getMessages,
 } from '@/lib/api';
 import { toast } from 'sonner';

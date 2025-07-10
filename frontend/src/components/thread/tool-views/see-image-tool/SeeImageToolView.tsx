@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Image as ImageIcon, ImageOff, CheckCircle, AlertTriangle, Loader2, Download, ZoomIn, ZoomOut, ExternalLink, Check } from 'lucide-react';
+import { Image as ImageIcon, ImageOffCircle, AlertTriangle, Loader2, Download, ZoomIn, ZoomOut, Check } from 'lucide-react';
 import { ToolViewProps } from '../types';
 import {
   formatTimestamp,
@@ -17,7 +17,6 @@ import { GenericToolView } from '../GenericToolView';
 import { useAuth } from '@/components/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-
 function SafeImage({ src, alt, filePath, className }: { src: string; alt: string; filePath: string; className?: string }) {
   const [imgSrc, setImgSrc] = useState<string | null>(null);
   const [error, setError] = useState(false);
@@ -25,7 +24,6 @@ function SafeImage({ src, alt, filePath, className }: { src: string; alt: string
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const { session } = useAuth();
-
   useEffect(() => {
     const setupAuthenticatedImage = async () => {
       if (src.includes('/sandboxes/') && src.includes('/files/content')) {
@@ -35,11 +33,9 @@ function SafeImage({ src, alt, filePath, className }: { src: string; alt: string
               'Authorization': `Bearer ${session?.access_token}`
             }
           });
-
           if (!response.ok) {
             throw new Error(`Failed to load image: ${response.status} ${response.statusText}`);
           }
-
           const blob = await response.blob();
           const url = URL.createObjectURL(blob);
           setImgSrc(url);
@@ -51,23 +47,19 @@ function SafeImage({ src, alt, filePath, className }: { src: string; alt: string
         setImgSrc(src);
       }
     };
-
     setupAuthenticatedImage();
     setError(false);
     setAttempts(0);
-
     return () => {
       if (imgSrc && imgSrc.startsWith('blob:')) {
         URL.revokeObjectURL(imgSrc);
       }
     };
   }, [src, session?.access_token]);
-
   const handleError = () => {
     if (attempts < 3) {
       setAttempts(attempts + 1);
       console.log(`Image load failed (attempt ${attempts + 1}). Trying alternative:`, filePath);
-
       if (attempts === 0) {
         setImgSrc(filePath);
       } else if (attempts === 1) {
@@ -83,27 +75,22 @@ function SafeImage({ src, alt, filePath, className }: { src: string; alt: string
       setError(true);
     }
   };
-
   const handleZoomToggle = () => {
     setIsZoomed(!isZoomed);
     setZoomLevel(1);
   };
-
   const handleZoomIn = (e: React.MouseEvent) => {
     e.stopPropagation();
     setZoomLevel(prev => Math.min(prev + 0.25, 3));
     if (!isZoomed) setIsZoomed(true);
   };
-
   const handleZoomOut = (e: React.MouseEvent) => {
     e.stopPropagation();
     setZoomLevel(prev => Math.max(prev - 0.25, 0.5));
   };
-
   const handleDownload = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!imgSrc) return;
-
     const link = document.createElement('a');
     link.href = imgSrc;
     link.download = filePath.split('/').pop() || 'image';
@@ -111,7 +98,6 @@ function SafeImage({ src, alt, filePath, className }: { src: string; alt: string
     link.click();
     document.body.removeChild(link);
   };
-
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center w-full h-64 bg-gradient-to-b from-rose-50 to-rose-100 dark:from-rose-950/30 dark:to-rose-900/20 rounded-lg border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 shadow-inner">
@@ -125,7 +111,6 @@ function SafeImage({ src, alt, filePath, className }: { src: string; alt: string
       </div>
     );
   }
-
   if (!imgSrc) {
     return (
       <div className="flex py-8 flex-col items-center justify-center w-full h-64 bg-gradient-to-b from-zinc-50 to-zinc-100 dark:from-zinc-900/50 dark:to-zinc-800/30 rounded-lg border-zinc-200 dark:border-zinc-700/50 shadow-inner">
@@ -142,7 +127,6 @@ function SafeImage({ src, alt, filePath, className }: { src: string; alt: string
       </div>
     );
   }
-
   return (
     <div className="flex flex-col items-center">
       <div className={cn(
@@ -168,13 +152,11 @@ function SafeImage({ src, alt, filePath, className }: { src: string; alt: string
           />
         </div>
       </div>
-
       <div className="flex items-center justify-between w-full px-2 py-2 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800">
         <Badge variant="secondary" className="bg-white/90 dark:bg-black/70 text-zinc-700 dark:text-zinc-300 shadow-sm">
           <ImageIcon className="h-3 w-3 mr-1" />
           {filePath.split('.').pop()?.toUpperCase()}
         </Badge>
-
         <div className="flex items-center gap-1">
           <Button
             variant="outline"
@@ -197,9 +179,7 @@ function SafeImage({ src, alt, filePath, className }: { src: string; alt: string
           >
             <ZoomIn className="h-4 w-4" />
           </Button>
-
           <span className="w-px h-6 bg-zinc-200 dark:bg-zinc-700 mx-2"></span>
-
           <Button
             variant="outline"
             size="icon"
@@ -214,7 +194,6 @@ function SafeImage({ src, alt, filePath, className }: { src: string; alt: string
     </div>
   );
 }
-
 export function SeeImageToolView({
   assistantContent,
   toolContent,
@@ -226,7 +205,6 @@ export function SeeImageToolView({
   project,
 }: ToolViewProps) {
   const [progress, setProgress] = useState(0);
-
   const {
     filePath,
     description,
@@ -241,9 +219,7 @@ export function SeeImageToolView({
     toolTimestamp,
     assistantTimestamp
   );
-
   console.log('Final file path:', filePath);
-
   useEffect(() => {
     if (isStreaming) {
       const timer = setInterval(() => {
@@ -260,7 +236,6 @@ export function SeeImageToolView({
       setProgress(100);
     }
   }, [isStreaming]);
-
   if (!filePath) {
     console.log('No file path found, falling back to GenericToolView');
     return (
@@ -275,19 +250,16 @@ export function SeeImageToolView({
       />
     );
   }
-
   const config = {
     color: 'text-blue-500 dark:text-blue-400',
     bgColor: 'bg-gradient-to-b from-blue-100 to-blue-50 shadow-inner dark:from-blue-800/40 dark:to-blue-900/60 dark:shadow-blue-950/20',
     badgeColor: 'bg-gradient-to-b from-blue-200 to-blue-100 text-blue-700 dark:from-blue-800/50 dark:to-blue-900/60 dark:text-blue-300',
     hoverColor: 'hover:bg-gradient-to-b hover:from-blue-200 hover:to-blue-100 dark:hover:from-blue-800/60 dark:hover:to-blue-900/40'
   };
-
   const imageUrl = constructImageUrl(filePath, project);
   const filename = filePath.split('/').pop() || filePath;
   const fileExt = filename.split('.').pop() || '';
   const isAnimated = ['gif', 'webp'].includes(fileExt.toLowerCase());
-
   return (
     <Card className="flex border shadow-none border-t border-b-0 border-x-0 p-0 rounded-none flex-col h-full overflow-hidden bg-card">
       <CardHeader className="h-14 bg-gradient-to-r from-zinc-50/90 to-zinc-100/90 dark:from-zinc-900/90 dark:to-zinc-800/90 backdrop-blur-sm border-b p-2 px-4 space-y-0">
@@ -309,7 +281,6 @@ export function SeeImageToolView({
               </div>
             </div>
           </div>
-
           {!isStreaming ? (
             <Badge variant="secondary" className={cn(
               "px-2.5 py-1 transition-colors flex items-center gap-1.5",
@@ -337,7 +308,6 @@ export function SeeImageToolView({
           )}
         </div>
       </CardHeader>
-
       <CardContent className="p-0 flex-1 overflow-hidden relative">
         {isStreaming ? (
           <div className="flex flex-col items-center justify-center h-full p-12 bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-950 dark:to-zinc-900">
@@ -370,7 +340,6 @@ export function SeeImageToolView({
           </div>
         )}
       </CardContent>
-
       <div className="h-10 px-4 py-2 bg-gradient-to-r from-zinc-50/90 to-zinc-100/90 dark:from-zinc-900/90 dark:to-zinc-800/90 backdrop-blur-sm border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
         <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
           <Badge className="py-0.5 h-6 bg-gradient-to-b from-blue-50 to-blue-100 text-blue-700 border border-blue-200/50 dark:from-blue-900/30 dark:to-blue-800/20 dark:text-blue-400 dark:border-blue-800/30">
@@ -383,7 +352,6 @@ export function SeeImageToolView({
             </Badge>
           )}
         </div>
-
         <div className="text-xs text-zinc-500 dark:text-zinc-400">
           {actualToolTimestamp && !isStreaming
             ? formatTimestamp(actualToolTimestamp)

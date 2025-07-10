@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ChevronDown, User, LogIn, Lock, Bot, Zap, Code, FileText } from 'lucide-react'
+import { ChevronDown, User, Lock, Bot, Zap, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
     DropdownMenu,
@@ -8,10 +8,8 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import Image from 'next/image'
-
 const ChatDropdown = () => {
     const [isOpen, setIsOpen] = useState(false)
-
     return (
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
             <DropdownMenuTrigger asChild>
@@ -30,7 +28,6 @@ const ChatDropdown = () => {
                     </div>
                 </Button>
             </DropdownMenuTrigger>
-
             <DropdownMenuContent
                 align="end"
                 className="w-64 p-0 border"
@@ -48,7 +45,6 @@ const ChatDropdown = () => {
                         <span className="text-xs text-muted-foreground">Default</span>
                     </div>
                 </DropdownMenuItem>
-
                 <div className="relative">
                     {/* Dummy agents behind the overlay */}
                     <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-accent border-b m-0">
@@ -58,7 +54,6 @@ const ChatDropdown = () => {
                             <span className="text-xs text-muted-foreground">Help with coding</span>
                         </div>
                     </DropdownMenuItem>
-
                     <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-accent border-b m-0">
                         <Zap size={18} />
                         <div className="flex flex-col">
@@ -66,7 +61,6 @@ const ChatDropdown = () => {
                             <span className="text-xs text-muted-foreground">Fast content creation</span>
                         </div>
                     </DropdownMenuItem>
-
                     <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-accent m-0">
                         <FileText size={18} />
                         <div className="flex flex-col">
@@ -74,7 +68,6 @@ const ChatDropdown = () => {
                             <span className="text-xs text-muted-foreground">Analyze documents</span>
                         </div>
                     </DropdownMenuItem>
-
                     {/* Overlay like the upgrade component */}
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-transparent flex items-end justify-center">
                         <div className="w-full p-3">
@@ -91,5 +84,4 @@ const ChatDropdown = () => {
         </DropdownMenu>
     )
 }
-
 export default ChatDropdown

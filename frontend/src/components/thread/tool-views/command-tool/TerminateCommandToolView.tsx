@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Terminal,
+  _Terminal,
   CheckCircle,
   AlertTriangle,
   CircleDashed,
@@ -31,7 +31,7 @@ export function TerminateCommandToolView({
   isStreaming = false,
 }: ToolViewProps) {
   const { resolvedTheme } = useTheme();
-  const isDarkTheme = resolvedTheme === 'dark';
+
   const [progress, setProgress] = useState(0);
   const [showFullOutput, setShowFullOutput] = useState(true);
 

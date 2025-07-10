@@ -1,17 +1,14 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Settings, X, Sparkles, Key, AlertTriangle } from 'lucide-react';
+import { X, Sparkles, Key, AlertTriangle } from 'lucide-react';
 import { MCPConfiguration } from './types';
 import { useCredentialProfilesForMcp } from '@/hooks/react-query/mcp/use-credential-profiles';
-
 interface ConfiguredMcpListProps {
   configuredMCPs: MCPConfiguration[];
   onEdit: (index: number) => void;
   onRemove: (index: number) => void;
 }
-
 const MCPConfigurationItem: React.FC<{
   mcp: MCPConfiguration;
   index: number;
@@ -20,11 +17,9 @@ const MCPConfigurationItem: React.FC<{
 }> = ({ mcp, index, onEdit, onRemove }) => {
   const { data: profiles = [] } = useCredentialProfilesForMcp(mcp.qualifiedName);
   const selectedProfile = profiles.find(p => p.profile_id === mcp.selectedProfileId);
-  
   const hasDirectConfig = mcp.config && Object.keys(mcp.config).length > 0;
   const hasCredentialProfile = !!mcp.selectedProfileId && !!selectedProfile;
   const needsConfiguration = !hasCredentialProfile && !hasDirectConfig && !mcp.isCustom;
-
   return (
     <Card className="p-3">
       <div className="flex items-center justify-between">
@@ -74,14 +69,12 @@ const MCPConfigurationItem: React.FC<{
     </Card>
   );
 };
-
 export const ConfiguredMcpList: React.FC<ConfiguredMcpListProps> = ({
   configuredMCPs,
   onEdit,
   onRemove,
 }) => {
   if (configuredMCPs.length === 0) return null;
-
   return (
     <div className="space-y-2">
       {configuredMCPs.map((mcp, index) => (
