@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, ArrowDown, FileText, Info } from 'lucide-react';
 import { UnifiedMessage } from '@/components/thread/types';
-import { safeJsonParse } from '@/components/thread/utils';
+
 import Link from 'next/link';
 
 // Define the set of tags whose raw XML should be hidden during streaming

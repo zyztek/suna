@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { CodeRenderer } from './code-renderer';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { Monitor, Code, ExternalLink } from 'lucide-react';
 
 interface HtmlRendererProps {

@@ -1,14 +1,14 @@
 import React, { forwardRef, useEffect, useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Square, Loader2, ArrowUp } from 'lucide-react';
+import { Loader2, ArrowUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UploadedFile } from './chat-input';
 import { FileUploadHandler } from './file-upload-handler';
 import { VoiceRecorder } from './voice-recorder';
 import { ModelSelector } from './model-selector';
 import { ChatSettingsDropdown } from './chat-settings-dropdown';
-import { canAccessModel, SubscriptionStatus } from './_use-model-selection';
+import { SubscriptionStatus } from './_use-model-selection';
 import { isLocalMode } from '@/lib/config';
 import { useFeatureFlag } from '@/lib/feature-flags';
 import { TooltipContent } from '@/components/ui/tooltip';
@@ -139,8 +139,6 @@ export const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
             subscriptionStatus={subscriptionStatus}
             canAccessModel={canAccessModel}
             refreshCustomModels={refreshCustomModels}
-            billingModalOpen={billingModalOpen}
-            setBillingModalOpen={setBillingModalOpen}
           />
         } else if (enableAdvancedConfig || (customAgentsEnabled && !flagsLoading)) {
           return <ChatSettingsDropdown
@@ -162,8 +160,6 @@ export const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
             subscriptionStatus={subscriptionStatus}
             canAccessModel={canAccessModel}
             refreshCustomModels={refreshCustomModels}
-            billingModalOpen={billingModalOpen}
-            setBillingModalOpen={setBillingModalOpen}
           />
         }
       }

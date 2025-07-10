@@ -1,10 +1,10 @@
 import React, { useRef, useState, useCallback } from 'react';
-import { ArrowDown, CircleDashed, CheckCircle, AlertTriangle } from 'lucide-react';
+import { ArrowDown, CircleDashed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Markdown } from '@/components/ui/markdown';
 import { UnifiedMessage, ParsedContent, ParsedMetadata } from '@/components/thread/types';
 import { FileAttachmentGrid } from '@/components/thread/file-attachment';
-import { useFilePreloader, FileCache } from '@/hooks/react-query/files';
+import { useFilePreloader } from '@/hooks/react-query/files';
 import { useAuth } from '@/components/AuthProvider';
 import { Project } from '@/lib/api';
 import {
@@ -17,7 +17,7 @@ import { formatMCPToolDisplayName } from '@/components/thread/tool-views/mcp-too
 import { KortixLogo } from '@/components/sidebar/kortix-logo';
 import { AgentLoader } from './loader';
 import { parseXmlToolCalls, isNewXmlFormat, extractToolNameFromStream } from '@/components/thread/tool-views/xml-parser';
-import { parseToolResult } from '@/components/thread/tool-views/tool-result-parser';
+
 
 // Define the set of  tags whose raw XML should be hidden during streaming
 const HIDE_STREAMING_XML_TAGS = new Set([
@@ -145,7 +145,7 @@ export function renderMarkdownContent(
 
                     // Render ask tool content with attachment UI
                     contentParts.push(
-                        <div key={`ask-${match.index}-${index}`} className="space-y-3">
+                        <div key={`ask-${match?.index}-${index}`} className="space-y-3">
                             <Markdown className="text-sm prose prose-sm dark:prose-invert chat-markdown max-w-none break-words [&>:first-child]:mt-0 prose-headings:mt-3">{askText}</Markdown>
                             {renderAttachments(attachmentArray, fileViewerHandler, sandboxId, project)}
                         </div>
@@ -166,7 +166,7 @@ export function renderMarkdownContent(
                     }
 
                     contentParts.push(
-                        <div key={`tool-${match.index}-${index}`} className="my-1">
+                        <div key={`tool-${match?.index}-${index}`} className="my-1">
                             <button
                                 onClick={() => handleToolClick(messageId, toolName)}
                                 className="inline-flex items-center gap-1.5 py-1 px-1 pr-1.5 text-xs text-muted-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors cursor-pointer border border-neutral-200 dark:border-neutral-700/50"

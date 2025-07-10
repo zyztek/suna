@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Eraser, Palette, RotateCcw, Save } from 'lucide-react';
 
 interface PixelArtEditorProps {

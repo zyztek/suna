@@ -288,7 +288,7 @@ export const useModelSelection = () => {
           .join(' ');
         
         // Get model data from our central MODELS constant
-        const modelData = MODELS[shortName] || {};
+        const modelData = MODELS[shortName as keyof typeof MODELS] || {};
         const isPremium = model?.requires_subscription || modelData.tier === 'premium' || false;
         
         return {

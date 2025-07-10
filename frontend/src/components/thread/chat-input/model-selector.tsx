@@ -14,7 +14,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
-import { Check, ChevronDown, Search, AlertTriangle, Crown, ArrowUpRight, Brain, Plus, Edit, Trash } from 'lucide-react';
+import { Check, ChevronDown, Search, AlertTriangle, Crown, Plus, Edit, Trash } from 'lucide-react';
 import {
   ModelOption,
   SubscriptionStatus,
@@ -27,9 +27,9 @@ import {
   MODELS // Import the centralized MODELS constant
 } from './_use-model-selection';
 import { PaywallDialog } from '@/components/payment/paywall-dialog';
-import { BillingModal } from '@/components/billing/billing-modal';
+
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
+
 import { isLocalMode } from '@/lib/config';
 import { CustomModelDialog, CustomModelFormData } from './custom-model-dialog';
 
@@ -46,8 +46,6 @@ interface ModelSelectorProps {
   canAccessModel: (modelId: string) => boolean;
   subscriptionStatus: SubscriptionStatus;
   refreshCustomModels?: () => void;
-  billingModalOpen: boolean;
-  setBillingModalOpen: (open: boolean) => void;
   hasBorder?: boolean;
 }
 
@@ -58,8 +56,6 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
   canAccessModel,
   subscriptionStatus,
   refreshCustomModels,
-  billingModalOpen,
-  setBillingModalOpen,
   hasBorder = false,
 }) => {
   const [paywallOpen, setPaywallOpen] = useState(false);
@@ -68,7 +64,6 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
 
   // Custom models state
   const [customModels, setCustomModels] = useState<CustomModel[]>([]);
@@ -91,8 +86,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
     }
   }, [customModels]);
 
-  // Get current custom models from state
-  const currentCustomModels = customModels || [];
+
 
   // Enhance model options with capabilities - using a Map to ensure uniqueness
   const modelMap = new Map();
@@ -202,7 +196,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
   };
 
   const handleUpgradeClick = () => {
-    setBillingModalOpen(true);
+    setPaywallOpen(true);
   };
 
   const closeDialog = () => {
@@ -408,8 +402,8 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
     // Fix the highlighting logic to use the index parameter instead of searching in filteredOptions
     const isHighlighted = index === highlightedIndex;
     const isPremium = opt.requiresSubscription;
-    const isLowQuality = MODELS[opt.id]?.lowQuality || false;
-    const isRecommended = MODELS[opt.id]?.recommended || false;
+    const isLowQuality = MODELS[opt.id as keyof typeof MODELS]?.lowQuality || false;
+    const isRecommended = MODELS[opt.id as keyof typeof MODELS]?.recommended || false;
 
     return (
       <TooltipProvider key={opt.uniqueKey || `model-${opt.id}-${index}`}>
@@ -518,7 +512,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
             className="h-8 rounded-lg text-muted-foreground shadow-none border-none focus:ring-0 px-3"
           >
             <div className="flex items-center gap-1 text-sm font-medium">
-              {MODELS[selectedModel]?.lowQuality && (
+              {MODELS[selectedModel as keyof typeof MODELS]?.lowQuality && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -575,10 +569,10 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                               </div>
                               <div className="flex items-center gap-2">
                                 {/* Show capabilities */}
-                                {(MODELS[model.id]?.lowQuality || false) && (
+                                {(MODELS[model.id as keyof typeof MODELS]?.lowQuality || false) && (
                                   <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                                 )}
-                                {(MODELS[model.id]?.recommended || false) && (
+                                {(MODELS[model.id as keyof typeof MODELS]?.recommended || false) && (
                                   <span className="text-xs px-1.5 py-0.5 rounded-sm bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 font-medium">
                                     Recommended
                                   </span>
@@ -590,7 +584,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                             </DropdownMenuItem>
                           </div>
                         </TooltipTrigger>
-                        {MODELS[model.id]?.lowQuality && (
+                        {MODELS[model.id as keyof typeof MODELS]?.lowQuality && (
                           <TooltipContent side="left" className="text-xs max-w-xs">
                             <p>Basic model with limited capabilities</p>
                           </TooltipContent>
@@ -629,7 +623,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                                   </div>
                                   <div className="flex items-center gap-2">
                                     {/* Show capabilities */}
-                                    {MODELS[model.id]?.recommended && (
+                                    {MODELS[model.id as keyof typeof MODELS]?.recommended && (
                                       <span className="text-xs px-1.5 py-0.5 rounded-sm bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 font-medium whitespace-nowrap">
                                         Recommended
                                       </span>
