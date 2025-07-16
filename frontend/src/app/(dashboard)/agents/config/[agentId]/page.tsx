@@ -320,7 +320,8 @@ export default function AgentConfigurationPageRefactored() {
                       onStyleChange={handleStyleChange}
                     />
                   </TabsContent>
-                  <TabsContent value="configuration" className="flex-1 h-0 m-0 overflow-y-auto">
+                                  <TabsContent value="configuration" className="flex-1 h-0 m-0 overflow-y-auto">
+                  <div className="h-full">
                     <ConfigurationTab
                       agentId={agentId}
                       displayData={displayData}
@@ -329,7 +330,8 @@ export default function AgentConfigurationPageRefactored() {
                       onFieldChange={handleFieldChange}
                       onMCPChange={handleMCPChange}
                     />
-                  </TabsContent>
+                  </div>
+                </TabsContent>
                 </Tabs>
               </div>
             </div>
@@ -427,14 +429,16 @@ export default function AgentConfigurationPageRefactored() {
                 </TabsContent>
 
                 <TabsContent value="configuration" className="flex-1 h-0 m-0 overflow-y-auto">
-                  <ConfigurationTab
-                    agentId={agentId}
-                    displayData={displayData}
-                    versionData={versionData}
-                    isViewingOldVersion={isViewingOldVersion}
-                    onFieldChange={handleFieldChange}
-                    onMCPChange={handleMCPChange}
-                  />
+                  <div className="h-full">
+                    <ConfigurationTab
+                      agentId={agentId}
+                      displayData={displayData}
+                      versionData={versionData}
+                      isViewingOldVersion={isViewingOldVersion}
+                      onFieldChange={handleFieldChange}
+                      onMCPChange={handleMCPChange}
+                    />
+                  </div>
                 </TabsContent>
               </Tabs>
             </div>

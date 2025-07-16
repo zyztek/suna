@@ -259,8 +259,8 @@ export const AgentConfigModal: React.FC<AgentConfigModalProps> = ({
               </div>
             </TabsContent>
 
-            <TabsContent value="triggers" className="flex-1 m-0 mt-0 overflow-y-auto overflow-hidden">
-              <div className="h-full">
+            <TabsContent value="triggers" className="flex-1 m-0 mt-0 overflow-y-auto">
+              <div className="h-full p-4">
                 {selectedAgentId ? (
                   <AgentTriggersConfiguration agentId={selectedAgentId} />
                 ) : (
@@ -271,8 +271,8 @@ export const AgentConfigModal: React.FC<AgentConfigModalProps> = ({
               </div>
             </TabsContent>
 
-            <TabsContent value="workflows" className="flex-1 m-0 mt-0 overflow-y-auto overflow-hidden">
-              <div className="h-full">
+            <TabsContent value="workflows" className="flex-1 m-0 mt-0 overflow-y-auto">
+              <div className="h-full p-4">
                 {selectedAgentId ? (
                   <AgentWorkflowsConfiguration
                     agentId={selectedAgentId}

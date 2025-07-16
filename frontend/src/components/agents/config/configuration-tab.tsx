@@ -42,7 +42,7 @@ export function ConfigurationTab({
   onMCPChange,
 }: ConfigurationTabProps) {
   return (
-    <div className="p-4">
+    <div className="p-4 pb-8">
       <Accordion type="single" collapsible defaultValue="system" className="space-y-2">
         <AccordionItem 
           value="system" 
