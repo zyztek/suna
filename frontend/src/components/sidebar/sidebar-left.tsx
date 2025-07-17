@@ -173,57 +173,53 @@ export function SidebarLeft({
             </SidebarMenuButton>
           </Link>
           {!flagsLoading && customAgentsEnabled && (
-            <SidebarMenu>
-              <Collapsible
-                defaultOpen={pathname?.includes('/agents')}
-                className="group/collapsible"
-              >
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton
-                      tooltip="Agents"
+            <Collapsible
+              defaultOpen={pathname?.includes('/agents')}
+              className="group/collapsible"
+            >
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton
+                  tooltip="Agents"
+                >
+                  <Bot className="h-4 w-4" />
+                  <span>Agents</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton className={cn({
+                      'bg-accent text-accent-foreground font-medium': pathname === '/agents' && (searchParams.get('tab') === 'my-agents' || searchParams.get('tab') === null),
+                    })} asChild>
+                      <Link href="/agents?tab=my-agents">
+                        <Bot className="h-4 w-4" />
+                        <span>My Agents</span>
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton className={cn({
+                      'bg-accent text-accent-foreground font-medium': pathname === '/agents' && searchParams.get('tab') === 'marketplace',
+                    })} asChild>
+                      <Link href="/agents?tab=marketplace">
+                        <Store className="h-4 w-4" />
+                        <span>Marketplace</span>
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton 
+                      onClick={() => setShowNewAgentDialog(true)}
+                      className="cursor-pointer"
                     >
-                      <Bot className="h-4 w-4" />
-                      <span>Agents</span>
-                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton className={cn({
-                          'bg-accent text-accent-foreground font-medium': pathname === '/agents' && (searchParams.get('tab') === 'my-agents' || searchParams.get('tab') === null),
-                        })} asChild>
-                          <Link href="/agents?tab=my-agents">
-                            <Bot className="h-4 w-4" />
-                            <span>My Agents</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton className={cn({
-                          'bg-accent text-accent-foreground font-medium': pathname === '/agents' && searchParams.get('tab') === 'marketplace',
-                        })} asChild>
-                          <Link href="/agents?tab=marketplace">
-                            <Store className="h-4 w-4" />
-                            <span>Marketplace</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton 
-                          onClick={() => setShowNewAgentDialog(true)}
-                          className="cursor-pointer"
-                        >
-                          <Plus className="h-4 w-4" />
-                          <span>New Agent</span>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
-            </SidebarMenu>
+                      <Plus className="h-4 w-4" />
+                      <span>New Agent</span>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </Collapsible>
           )}
           {!flagsLoading && customAgentsEnabled && (
             <Link href="/settings/credentials">
