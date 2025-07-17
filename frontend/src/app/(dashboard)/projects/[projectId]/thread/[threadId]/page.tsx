@@ -670,6 +670,7 @@ export default function ThreadPage({
                 setIsSidePanelOpen(true);
                 userClosedPanelRef.current = false;
               }}
+              showTokenUsage={true}
             />
           </div>
         </div>

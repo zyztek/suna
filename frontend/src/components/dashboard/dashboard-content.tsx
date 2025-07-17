@@ -239,6 +239,7 @@ export function DashboardContent() {
               onAgentSelect={setSelectedAgentId}
               enableAdvancedConfig={true}
               onConfigureAgent={(agentId) => router.push(`/agents/config/${agentId}`)}
+              showTokenUsage={true}
             />
           </div>
           <Examples onSelectPrompt={setInputValue} />

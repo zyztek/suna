@@ -56,6 +56,7 @@ export interface ChatInputProps {
   enableAdvancedConfig?: boolean;
   onConfigureAgent?: (agentId: string) => void;
   hideAgentSelection?: boolean;
+  showTokenUsage?: boolean;
 }
 
 export interface UploadedFile {
@@ -94,6 +95,7 @@ export const ChatInput = forwardRef<ChatInputHandles, ChatInputProps>(
       enableAdvancedConfig = false,
       onConfigureAgent,
       hideAgentSelection = false,
+      showTokenUsage = false,
     },
     ref,
   ) => {
@@ -358,6 +360,7 @@ export const ChatInput = forwardRef<ChatInputHandles, ChatInputProps>(
                 selectedAgentId={selectedAgentId}
                 onAgentSelect={onAgentSelect}
                 hideAgentSelection={hideAgentSelection}
+                showTokenUsage={showTokenUsage}
               />
             </CardContent>
             

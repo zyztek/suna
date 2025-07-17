@@ -17,6 +17,8 @@ import { TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip';
 import { BillingModal } from '@/components/billing/billing-modal';
 import ChatDropdown from './chat-dropdown';
 import { handleFiles } from './file-upload-handler';
+import { TokenUsageDisplay } from './token-usage-display';
+import { useSubscription } from '@/hooks/react-query/subscriptions/use-subscriptions';
 
 interface MessageInputProps {
   value: string;
@@ -51,6 +53,7 @@ interface MessageInputProps {
   onAgentSelect?: (agentId: string | undefined) => void;
   enableAdvancedConfig?: boolean;
   hideAgentSelection?: boolean;
+  showTokenUsage?: boolean; // New prop to control token usage display
 }
 
 export const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
@@ -89,11 +92,13 @@ export const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
       onAgentSelect,
       enableAdvancedConfig = false,
       hideAgentSelection = false,
+      showTokenUsage = false,
     },
     ref,
   ) => {
     const [billingModalOpen, setBillingModalOpen] = useState(false);
     const { enabled: customAgentsEnabled, loading: flagsLoading } = useFeatureFlag('custom_agents');
+    const { data: subscriptionData } = useSubscription();
 
     useEffect(() => {
       const textarea = ref as React.RefObject<HTMLTextAreaElement>;
@@ -184,6 +189,14 @@ export const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
 
     return (
       <div className="relative flex flex-col w-full h-full gap-2 justify-between">
+        {/* Token Usage Display */}
+        {showTokenUsage && (
+          <TokenUsageDisplay
+            subscriptionData={subscriptionData}
+            onUpgradeClick={() => setBillingModalOpen(true)}
+            showUsageDisplay={showTokenUsage}
+          />
+        )}
 
         <div className="flex flex-col gap-1 px-2">
           <Textarea
@@ -223,7 +236,7 @@ export const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
 
           </div>
 
-          {subscriptionStatus === 'no_subscription' && !isLocalMode() &&
+          {!showTokenUsage && subscriptionStatus === 'no_subscription' && !isLocalMode() &&
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
@@ -277,7 +290,7 @@ export const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
             </Button>
           </div>
         </div>
-        {subscriptionStatus === 'no_subscription' && !isLocalMode() &&
+        {!showTokenUsage && subscriptionStatus === 'no_subscription' && !isLocalMode() &&
           <div className='sm:hidden absolute -bottom-8 left-0 right-0 flex justify-center'>
             <p className='text-xs text-amber-500 px-2 py-1'>
               Upgrade for better performance
