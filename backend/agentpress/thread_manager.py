@@ -222,7 +222,8 @@ class ThreadManager:
             processor_config: Configuration for the response processor
             tool_choice: Tool choice preference ("auto", "required", "none")
             native_max_auto_continues: Maximum number of automatic continuations when
-                                      finish_reason="tool_calls" (0 disables auto-continue)
+                                      finish_reason="tool_calls", "length", "context_length_exceeded", 
+                                      or "max_tokens" (0 disables auto-continue)
             max_xml_tool_calls: Maximum number of XML tool calls to allow (0 = no limit)
             include_xml_examples: Whether to include XML tool examples in the system prompt
             enable_thinking: Whether to enable thinking before making a decision
@@ -237,7 +238,7 @@ class ThreadManager:
         logger.info(f"Using model: {llm_model}")
         # Log parameters
         logger.info(f"Parameters: model={llm_model}, temperature={llm_temperature}, max_tokens={llm_max_tokens}")
-        logger.info(f"Auto-continue: max={native_max_auto_continues}, XML tool limit={max_xml_tool_calls}")
+        logger.info(f"Auto-continue: max={native_max_auto_continues} (for tool_calls, length, context limits), XML tool limit={max_xml_tool_calls}")
 
         # Log model info
         logger.info(f"🤖 Thread {thread_id}: Using model {llm_model}")
@@ -451,9 +452,11 @@ Here are the XML tools available with examples:
                     try:
                         if hasattr(response_gen, '__aiter__'):
                             async for chunk in cast(AsyncGenerator, response_gen):
-                                # Check if this is a finish reason chunk with tool_calls or xml_tool_limit_reached
+                                # Check if this is a finish reason chunk with tool_calls, xml_tool_limit_reached, or length/context issues
                                 if chunk.get('type') == 'finish':
-                                    if chunk.get('finish_reason') == 'tool_calls':
+                                    finish_reason = chunk.get('finish_reason')
+                                    
+                                    if finish_reason == 'tool_calls':
                                         # Only auto-continue if enabled (max > 0)
                                         if native_max_auto_continues > 0:
                                             logger.info(f"Detected finish_reason='tool_calls', auto-continuing ({auto_continue_count + 1}/{native_max_auto_continues})")
@@ -461,11 +464,19 @@ Here are the XML tools available with examples:
                                             auto_continue_count += 1
                                             # Don't yield the finish chunk to avoid confusing the client
                                             continue
-                                    elif chunk.get('finish_reason') == 'xml_tool_limit_reached':
+                                    elif finish_reason == 'xml_tool_limit_reached':
                                         # Don't auto-continue if XML tool limit was reached
                                         logger.info(f"Detected finish_reason='xml_tool_limit_reached', stopping auto-continue")
                                         auto_continue = False
                                         # Still yield the chunk to inform the client
+                                    elif finish_reason in ['length', 'context_length_exceeded', 'max_tokens']:
+                                        # Auto-continue when response was truncated due to length or context window limits
+                                        if native_max_auto_continues > 0:
+                                            logger.info(f"Detected finish_reason='{finish_reason}' (length/context limit), auto-continuing ({auto_continue_count + 1}/{native_max_auto_continues})")
+                                            auto_continue = True
+                                            auto_continue_count += 1
+                                            # Don't yield the finish chunk to avoid confusing the client
+                                            continue
 
                                 # Otherwise just yield the chunk normally
                                 yield chunk
