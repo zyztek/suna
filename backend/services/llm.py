@@ -102,6 +102,97 @@ async def handle_error(error: Exception, attempt: int, max_attempts: int) -> Non
     logger.debug(f"Waiting {delay} seconds before retry...")
     await asyncio.sleep(delay)
 
+def detect_error_and_suggest_fallback(error: Exception, current_model: str) -> tuple[bool, str, str]:
+    """
+    Detect specific error types and suggest appropriate fallback strategies.
+    
+    Args:
+        error: The exception that occurred
+        current_model: The current model being used
+        
+    Returns:
+        tuple[bool, str, str]: (should_fallback, fallback_model, error_type)
+        - should_fallback: Whether to attempt a fallback
+        - fallback_model: The suggested fallback model
+        - error_type: The type of error detected
+    """
+    error_str = str(error).lower()
+    
+    # Anthropic-specific errors
+    if "anthropicexception - overloaded" in error_str:
+        if not current_model.startswith("openrouter/"):
+            fallback_model = f"openrouter/{current_model}"
+            return True, fallback_model, "anthropic_overloaded"
+        return False, "", "anthropic_overloaded"
+    
+    # OpenRouter-specific errors
+    if "openrouter" in current_model.lower():
+        if "connection" in error_str or "timeout" in error_str:
+            # Try a different OpenRouter model
+            if "claude" in current_model.lower():
+                return True, "openrouter/anthropic/claude-sonnet-4", "openrouter_connection"
+            elif "gpt" in current_model.lower():
+                return True, "openrouter/openai/gpt-4o", "openrouter_connection"
+            elif "grok" in current_model.lower() or "xai" in current_model.lower():
+                return True, "openrouter/x-ai/grok-4", "openrouter_connection"
+        elif "rate limit" in error_str or "quota" in error_str:
+            # Try a different OpenRouter model for rate limiting
+            if "claude" in current_model.lower():
+                return True, "openrouter/anthropic/claude-3-5-sonnet", "openrouter_rate_limit"
+            elif "gpt" in current_model.lower():
+                return True, "openrouter/openai/gpt-4-turbo", "openrouter_rate_limit"
+    
+    # OpenAI-specific errors
+    if "openai" in current_model.lower() or "gpt" in current_model.lower():
+        if "rate limit" in error_str or "quota" in error_str:
+            return True, "openrouter/openai/gpt-4o", "openai_rate_limit"
+        elif "connection" in error_str or "timeout" in error_str:
+            return True, "openrouter/openai/gpt-4o", "openai_connection"
+        elif "service unavailable" in error_str or "internal server error" in error_str:
+            return True, "openrouter/openai/gpt-4o", "openai_service_unavailable"
+    
+    # xAI-specific errors
+    if "xai" in current_model.lower() or "grok" in current_model.lower():
+        if "rate limit" in error_str or "quota" in error_str:
+            return True, "openrouter/x-ai/grok-4", "xai_rate_limit"
+        elif "connection" in error_str or "timeout" in error_str:
+            return True, "openrouter/x-ai/grok-4", "xai_connection"
+    
+    # Generic connection/timeout errors
+    if "connection" in error_str or "timeout" in error_str:
+        if not current_model.startswith("openrouter/"):
+            # Try OpenRouter as a fallback for connection issues
+            if "claude" in current_model.lower():
+                return True, "openrouter/anthropic/claude-sonnet-4", "connection_timeout"
+            elif "gpt" in current_model.lower():
+                return True, "openrouter/openai/gpt-4o", "connection_timeout"
+            elif "grok" in current_model.lower() or "xai" in current_model.lower():
+                return True, "openrouter/x-ai/grok-4", "connection_timeout"
+    
+    # Generic rate limiting
+    if "rate limit" in error_str or "quota" in error_str:
+        if not current_model.startswith("openrouter/"):
+            # Try OpenRouter as a fallback for rate limiting
+            if "claude" in current_model.lower():
+                return True, "openrouter/anthropic/claude-sonnet-4", "rate_limit"
+            elif "gpt" in current_model.lower():
+                return True, "openrouter/openai/gpt-4o", "rate_limit"
+            elif "grok" in current_model.lower() or "xai" in current_model.lower():
+                return True, "openrouter/x-ai/grok-4", "rate_limit"
+    
+    # Service unavailable errors
+    if "service unavailable" in error_str or "internal server error" in error_str or "bad gateway" in error_str:
+        if not current_model.startswith("openrouter/"):
+            # Try OpenRouter as a fallback for service issues
+            if "claude" in current_model.lower():
+                return True, "openrouter/anthropic/claude-sonnet-4", "service_unavailable"
+            elif "gpt" in current_model.lower():
+                return True, "openrouter/openai/gpt-4o", "service_unavailable"
+            elif "grok" in current_model.lower() or "xai" in current_model.lower():
+                return True, "openrouter/x-ai/grok-4", "service_unavailable"
+    
+    return False, "", "unknown"
+
 def prepare_params(
     messages: List[Dict[str, Any]],
     model_name: str,
@@ -335,8 +426,17 @@ async def make_llm_api_call(
             await handle_error(e, attempt, MAX_RETRIES)
 
         except Exception as e:
+            # Check if this is a fallback-eligible error
+            should_fallback, fallback_model, error_type = detect_error_and_suggest_fallback(e, model_name)
+            
+            if should_fallback and attempt == MAX_RETRIES - 1:  # Only on last attempt
+                logger.warning(f"{error_type} detected on final attempt, suggesting fallback to {fallback_model}: {str(e)}")
+                # Don't retry, let the caller handle the fallback
+                raise e
+            
+            last_error = e
             logger.error(f"Unexpected error during API call: {str(e)}", exc_info=True)
-            raise LLMError(f"API call failed: {str(e)}")
+            await handle_error(e, attempt, MAX_RETRIES)
 
     error_msg = f"Failed to make API call after {MAX_RETRIES} attempts"
     if last_error:

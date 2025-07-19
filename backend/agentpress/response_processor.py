@@ -799,8 +799,14 @@ class ResponseProcessor:
             self.trace.event(name="error_processing_stream", level="ERROR", status_message=(f"Error processing stream: {str(e)}"))
             # Save and yield error status message
             
+            # Import the error detection function
+            from services.llm import detect_error_and_suggest_fallback
+            
+            # Check if this is a fallback-eligible error
+            should_fallback, fallback_model, error_type = detect_error_and_suggest_fallback(e, llm_model)
+            
             err_content = {"role": "system", "status_type": "error", "message": str(e)}
-            if (not "AnthropicException - Overloaded" in str(e)):
+            if not should_fallback:
                 err_msg_obj = await self.add_message(
                     thread_id=thread_id, type="status", content=err_content, 
                     is_llm_message=False, metadata={"thread_run_id": thread_run_id if 'thread_run_id' in locals() else None}
@@ -810,8 +816,8 @@ class ResponseProcessor:
                 logger.critical(f"Re-raising error to stop further processing: {str(e)}")
                 self.trace.event(name="re_raising_error_to_stop_further_processing", level="ERROR", status_message=(f"Re-raising error to stop further processing: {str(e)}"))
             else:
-                logger.error(f"AnthropicException - Overloaded detected - Falling back to OpenRouter: {str(e)}", exc_info=True)
-                self.trace.event(name="anthropic_exception_overloaded_detected", level="ERROR", status_message=(f"AnthropicException - Overloaded detected - Falling back to OpenRouter: {str(e)}"))
+                logger.error(f"{error_type} detected - Falling back to {fallback_model}: {str(e)}", exc_info=True)
+                self.trace.event(name=f"{error_type}_detected", level="ERROR", status_message=(f"{error_type} detected - Falling back to {fallback_model}: {str(e)}"))
             raise # Use bare 'raise' to preserve the original exception with its traceback
 
         finally:

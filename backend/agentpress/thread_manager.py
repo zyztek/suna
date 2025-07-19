@@ -477,10 +477,16 @@ Here are the XML tools available with examples:
                         if not auto_continue:
                             break
                     except Exception as e:
-                        if ("AnthropicException - Overloaded" in str(e)):
-                            logger.error(f"AnthropicException - Overloaded detected - Falling back to OpenRouter: {str(e)}", exc_info=True)
+                        # Import the error detection function
+                        from services.llm import detect_error_and_suggest_fallback
+                        
+                        # Check if this is a fallback-eligible error
+                        should_fallback, fallback_model, error_type = detect_error_and_suggest_fallback(e, llm_model)
+                        
+                        if should_fallback:
+                            logger.error(f"{error_type} detected - Falling back to {fallback_model}: {str(e)}", exc_info=True)
                             nonlocal llm_model
-                            llm_model = f"openrouter/{llm_model}"
+                            llm_model = fallback_model
                             auto_continue = True
                             continue # Continue the loop
                         else:
