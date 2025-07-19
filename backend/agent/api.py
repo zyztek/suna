@@ -1018,6 +1018,12 @@ async def initiate_agent_with_files(
     if not can_run:
         raise HTTPException(status_code=402, detail={"message": message, "subscription": subscription})
 
+    # Check project limits before creating a new project
+    from services.billing import check_project_limits
+    can_create_project, project_message, project_subscription = await check_project_limits(client, account_id)
+    if not can_create_project:
+        raise HTTPException(status_code=402, detail={"message": project_message, "subscription": project_subscription})
+
     try:
         # 1. Create Project
         placeholder_name = f"{prompt[:30]}..." if len(prompt) > 30 else prompt

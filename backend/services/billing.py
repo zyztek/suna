@@ -43,22 +43,22 @@ def get_model_pricing(model: str) -> tuple[float, float] | None:
 
 
 SUBSCRIPTION_TIERS = {
-    config.STRIPE_FREE_TIER_ID: {'name': 'free', 'minutes': 60, 'cost': 5},
-    config.STRIPE_TIER_2_20_ID: {'name': 'tier_2_20', 'minutes': 120, 'cost': 20 + 5},  # 2 hours
-    config.STRIPE_TIER_6_50_ID: {'name': 'tier_6_50', 'minutes': 360, 'cost': 50 + 5},  # 6 hours
-    config.STRIPE_TIER_12_100_ID: {'name': 'tier_12_100', 'minutes': 720, 'cost': 100 + 5},  # 12 hours
-    config.STRIPE_TIER_25_200_ID: {'name': 'tier_25_200', 'minutes': 1500, 'cost': 200 + 5},  # 25 hours
-    config.STRIPE_TIER_50_400_ID: {'name': 'tier_50_400', 'minutes': 3000, 'cost': 400 + 5},  # 50 hours
-    config.STRIPE_TIER_125_800_ID: {'name': 'tier_125_800', 'minutes': 7500, 'cost': 800 + 5},  # 125 hours
-    config.STRIPE_TIER_200_1000_ID: {'name': 'tier_200_1000', 'minutes': 12000, 'cost': 1000 + 5},  # 200 hours
+    config.STRIPE_FREE_TIER_ID: {'name': 'free', 'minutes': 60, 'cost': 5, 'project_limit': 3},
+    config.STRIPE_TIER_2_20_ID: {'name': 'tier_2_20', 'minutes': 120, 'cost': 20 + 5, 'project_limit': 10},  # 2 hours
+    config.STRIPE_TIER_6_50_ID: {'name': 'tier_6_50', 'minutes': 360, 'cost': 50 + 5, 'project_limit': 25},  # 6 hours
+    config.STRIPE_TIER_12_100_ID: {'name': 'tier_12_100', 'minutes': 720, 'cost': 100 + 5, 'project_limit': 50},  # 12 hours
+    config.STRIPE_TIER_25_200_ID: {'name': 'tier_25_200', 'minutes': 1500, 'cost': 200 + 5, 'project_limit': 100},  # 25 hours
+    config.STRIPE_TIER_50_400_ID: {'name': 'tier_50_400', 'minutes': 3000, 'cost': 400 + 5, 'project_limit': 200},  # 50 hours
+    config.STRIPE_TIER_125_800_ID: {'name': 'tier_125_800', 'minutes': 7500, 'cost': 800 + 5, 'project_limit': 500},  # 125 hours
+    config.STRIPE_TIER_200_1000_ID: {'name': 'tier_200_1000', 'minutes': 12000, 'cost': 1000 + 5, 'project_limit': 1000},  # 200 hours
     # Yearly tiers (same usage limits, different billing period)
-    config.STRIPE_TIER_2_20_YEARLY_ID: {'name': 'tier_2_20', 'minutes': 120, 'cost': 20 + 5},  # 2 hours/month, $204/year
-    config.STRIPE_TIER_6_50_YEARLY_ID: {'name': 'tier_6_50', 'minutes': 360, 'cost': 50 + 5},  # 6 hours/month, $510/year
-    config.STRIPE_TIER_12_100_YEARLY_ID: {'name': 'tier_12_100', 'minutes': 720, 'cost': 100 + 5},  # 12 hours/month, $1020/year
-    config.STRIPE_TIER_25_200_YEARLY_ID: {'name': 'tier_25_200', 'minutes': 1500, 'cost': 200 + 5},  # 25 hours/month, $2040/year
-    config.STRIPE_TIER_50_400_YEARLY_ID: {'name': 'tier_50_400', 'minutes': 3000, 'cost': 400 + 5},  # 50 hours/month, $4080/year
-    config.STRIPE_TIER_125_800_YEARLY_ID: {'name': 'tier_125_800', 'minutes': 7500, 'cost': 800 + 5},  # 125 hours/month, $8160/year
-    config.STRIPE_TIER_200_1000_YEARLY_ID: {'name': 'tier_200_1000', 'minutes': 12000, 'cost': 1000 + 5},  # 200 hours/month, $10200/year
+    config.STRIPE_TIER_2_20_YEARLY_ID: {'name': 'tier_2_20', 'minutes': 120, 'cost': 20 + 5, 'project_limit': 10},  # 2 hours/month, $204/year
+    config.STRIPE_TIER_6_50_YEARLY_ID: {'name': 'tier_6_50', 'minutes': 360, 'cost': 50 + 5, 'project_limit': 25},  # 6 hours/month, $510/year
+    config.STRIPE_TIER_12_100_YEARLY_ID: {'name': 'tier_12_100', 'minutes': 720, 'cost': 100 + 5, 'project_limit': 50},  # 12 hours/month, $1020/year
+    config.STRIPE_TIER_25_200_YEARLY_ID: {'name': 'tier_25_200', 'minutes': 1500, 'cost': 200 + 5, 'project_limit': 100},  # 25 hours/month, $2040/year
+    config.STRIPE_TIER_50_400_YEARLY_ID: {'name': 'tier_50_400', 'minutes': 3000, 'cost': 400 + 5, 'project_limit': 200},  # 50 hours/month, $4080/year
+    config.STRIPE_TIER_125_800_YEARLY_ID: {'name': 'tier_125_800', 'minutes': 7500, 'cost': 800 + 5, 'project_limit': 500},  # 125 hours/month, $8160/year
+    config.STRIPE_TIER_200_1000_YEARLY_ID: {'name': 'tier_200_1000', 'minutes': 12000, 'cost': 1000 + 5, 'project_limit': 1000},  # 200 hours/month, $10200/year
 }
 
 # Pydantic models for request/response validation
@@ -81,6 +81,8 @@ class SubscriptionStatus(BaseModel):
     minutes_limit: Optional[int] = None
     cost_limit: Optional[float] = None
     current_usage: Optional[float] = None
+    project_limit: Optional[int] = None # Added project limit
+    current_project_count: Optional[int] = None # Added current project count
     # Fields for scheduled changes
     has_schedule: bool = False
     scheduled_plan_name: Optional[str] = None
@@ -503,6 +505,63 @@ async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optiona
     
     return True, "OK", subscription
 
+async def check_project_limits(client, user_id: str) -> Tuple[bool, str, Optional[Dict]]:
+    """
+    Check if a user can create a new project based on their subscription and current project count.
+    
+    Returns:
+        Tuple[bool, str, Optional[Dict]]: (can_create, message, subscription_info)
+    """
+    if config.ENV_MODE == EnvMode.LOCAL:
+        logger.info("Running in local development mode - project limit checks are disabled")
+        return True, "Local development mode - project limits disabled", {
+            "price_id": "local_dev",
+            "plan_name": "Local Development",
+            "project_limit": "no limit"
+        }
+    
+    # Get current subscription
+    subscription = await get_user_subscription(user_id)
+    
+    # If no subscription, they can use free tier
+    if not subscription:
+        subscription = {
+            'price_id': config.STRIPE_FREE_TIER_ID,  # Free tier
+            'plan_name': 'free'
+        }
+    
+    # Extract price ID from subscription items
+    price_id = None
+    if subscription.get('items') and subscription['items'].get('data') and len(subscription['items']['data']) > 0:
+        price_id = subscription['items']['data'][0]['price']['id']
+    else:
+        price_id = subscription.get('price_id', config.STRIPE_FREE_TIER_ID)
+    
+    # Get tier info - default to free tier if not found
+    tier_info = SUBSCRIPTION_TIERS.get(price_id)
+    if not tier_info:
+        logger.warning(f"Unknown subscription tier: {price_id}, defaulting to free tier")
+        tier_info = SUBSCRIPTION_TIERS[config.STRIPE_FREE_TIER_ID]
+    
+    # Get current project count for the user
+    project_count_result = await client.table('projects').select('project_id', count='exact').eq('account_id', user_id).execute()
+    current_project_count = project_count_result.count or 0
+    
+    # Check if within project limits
+    project_limit = tier_info.get('project_limit', 3)  # Default to 3 for free tier
+    if current_project_count >= project_limit:
+        return False, f"Project limit of {project_limit} reached. You currently have {current_project_count} projects. Please upgrade your plan to create more projects.", {
+            **subscription,
+            'project_limit': project_limit,
+            'current_project_count': current_project_count
+        }
+    
+    return True, "OK", {
+        **subscription,
+        'project_limit': project_limit,
+        'current_project_count': current_project_count
+    }
+
 # API endpoints
 @router.post("/create-checkout-session")
 async def create_checkout_session(
@@ -909,13 +968,20 @@ async def get_subscription(
             # Default to free tier status if no active subscription for our product
             free_tier_id = config.STRIPE_FREE_TIER_ID
             free_tier_info = SUBSCRIPTION_TIERS.get(free_tier_id)
+            
+            # Get current project count for the user
+            project_count_result = await client.table('projects').select('project_id', count='exact').eq('account_id', current_user_id).execute()
+            current_project_count = project_count_result.count or 0
+            
             return SubscriptionStatus(
                 status="no_subscription",
                 plan_name=free_tier_info.get('name', 'free') if free_tier_info else 'free',
                 price_id=free_tier_id,
                 minutes_limit=free_tier_info.get('minutes') if free_tier_info else 0,
                 cost_limit=free_tier_info.get('cost') if free_tier_info else 0,
-                current_usage=current_usage
+                current_usage=current_usage,
+                project_limit=free_tier_info.get('project_limit', 3) if free_tier_info else 3,
+                current_project_count=current_project_count
             )
         
         # Extract current plan details
@@ -927,6 +993,10 @@ async def get_subscription(
              logger.warning(f"User {current_user_id} subscribed to unknown price {current_price_id}. Defaulting info.")
              current_tier_info = {'name': 'unknown', 'minutes': 0}
         
+        # Get current project count for the user
+        project_count_result = await client.table('projects').select('project_id', count='exact').eq('account_id', current_user_id).execute()
+        current_project_count = project_count_result.count or 0
+        
         status_response = SubscriptionStatus(
             status=subscription['status'], # 'active', 'trialing', etc.
             plan_name=subscription['plan'].get('nickname') or current_tier_info['name'],
@@ -937,6 +1007,8 @@ async def get_subscription(
             minutes_limit=current_tier_info['minutes'],
             cost_limit=current_tier_info['cost'],
             current_usage=current_usage,
+            project_limit=current_tier_info.get('project_limit', 3),
+            current_project_count=current_project_count,
             has_schedule=False # Default
         )
 
@@ -997,6 +1069,31 @@ async def check_status(
     except Exception as e:
         logger.error(f"Error checking billing status: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/check-project-limits")
+async def check_project_limits_endpoint(
+    current_user_id: str = Depends(get_current_user_id_from_jwt)
+):
+    """Check if the user can create a new project based on their subscription and current project count."""
+    try:
+        db = DBConnection()
+        client = await db.client
+        
+        can_create, message, subscription = await check_project_limits(client, current_user_id)
+        
+        return {
+            "can_create": can_create,
+            "message": message,
+            "subscription": {
+                "price_id": subscription.get('price_id', 'unknown'),
+                "plan_name": subscription.get('plan_name', 'unknown'),
+                "project_limit": subscription.get('project_limit', 'unknown'),
+                "current_project_count": subscription.get('current_project_count', 0)
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error checking project limits: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.post("/webhook")
 async def stripe_webhook(request: Request):

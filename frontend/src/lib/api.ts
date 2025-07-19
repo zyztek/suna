@@ -1606,6 +1606,8 @@ export interface SubscriptionStatus {
   minutes_limit?: number;
   cost_limit?: number;
   current_usage?: number;
+  project_limit?: number; // Added project limit
+  current_project_count?: number; // Added current project count
   // Fields for scheduled changes
   has_schedule: boolean;
   scheduled_plan_name?: string;
@@ -1930,6 +1932,59 @@ export const checkBillingStatus = async (): Promise<BillingStatusResponse> => {
     }
 
     console.error('Failed to check billing status:', error);
+    throw error;
+  }
+};
+
+export interface ProjectLimitsResponse {
+  can_create: boolean;
+  message: string;
+  subscription: {
+    price_id: string;
+    plan_name: string;
+    project_limit: number;
+    current_project_count: number;
+  };
+}
+
+export const checkProjectLimits = async (): Promise<ProjectLimitsResponse> => {
+  try {
+    const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new NoAccessTokenAvailableError();
+    }
+
+    const response = await fetch(`${API_URL}/billing/check-project-limits`, {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response
+        .text()
+        .catch(() => 'No error details available');
+      console.error(
+        `Error checking project limits: ${response.status} ${response.statusText}`,
+        errorText,
+      );
+      throw new Error(
+        `Error checking project limits: ${response.statusText} (${response.status})`,
+      );
+    }
+
+    return response.json();
+  } catch (error) {
+    if (error instanceof NoAccessTokenAvailableError) {
+      throw error;
+    }
+
+    console.error('Failed to check project limits:', error);
+    handleApiError(error, { operation: 'check project limits', resource: 'project limits' });
     throw error;
   }
 };

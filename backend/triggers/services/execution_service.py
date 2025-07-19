@@ -65,6 +65,12 @@ class SessionManager:
         thread_id = str(uuid.uuid4())
         account_id = agent_config.get('account_id')
         
+        # Check project limits before creating a new project
+        from services.billing import check_project_limits
+        can_create_project, project_message, project_subscription = await check_project_limits(client, account_id)
+        if not can_create_project:
+            raise Exception(f"Project limit exceeded: {project_message}")
+        
         placeholder_name = f"Trigger: {agent_config.get('name', 'Agent')} - {trigger_event.trigger_id[:8]}"
         await client.table('projects').insert({
             "project_id": project_id,
@@ -95,6 +101,12 @@ class SessionManager:
         
         project_id = str(uuid.uuid4())
         thread_id = str(uuid.uuid4())
+        
+        # Check project limits before creating a new project
+        from services.billing import check_project_limits
+        can_create_project, project_message, project_subscription = await check_project_limits(client, account_id)
+        if not can_create_project:
+            raise Exception(f"Project limit exceeded: {project_message}")
         
         await client.table('projects').insert({
             "project_id": project_id,

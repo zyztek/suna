@@ -5,14 +5,30 @@ import {
   createProject, 
   updateProject, 
   deleteProject,
-  Project 
+  Project,
+  checkProjectLimits
 } from '@/lib/api';
 import { toast } from 'sonner';
 import { projectKeys } from './keys';
 
 export const useCreateProject = createMutationHook(
-  (data: { name: string; description: string; accountId?: string }) => 
-    createProject(data, data.accountId),
+  async (data: { name: string; description: string; accountId?: string }) => {
+    // Check project limits before creating
+    try {
+      const limits = await checkProjectLimits();
+      if (!limits.can_create) {
+        throw new Error(limits.message);
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('Project limit')) {
+        toast.error(error.message);
+        throw error;
+      }
+      // For other errors, let the backend handle the limit check
+    }
+    
+    return createProject(data, data.accountId);
+  },
   {
     onSuccess: () => {
       toast.success('Project created successfully');

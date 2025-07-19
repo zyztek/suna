@@ -105,7 +105,7 @@ export default function AccountBillingStatus({ accountId, returnUrl }: Props) {
 
       {subscriptionData ? (
         <>
-          <div className="mb-6">
+          <div className="mb-6 space-y-3">
             <div className="rounded-lg border bg-background p-4">
               <div className="flex justify-between items-center gap-4">
                 <span className="text-sm font-medium text-foreground/90">
@@ -120,6 +120,18 @@ export default function AccountBillingStatus({ accountId, returnUrl }: Props) {
                     Usage logs
                   </Link>
                 </Button>
+              </div>
+            </div>
+            
+            <div className="rounded-lg border bg-background p-4">
+              <div className="flex justify-between items-center gap-4">
+                <span className="text-sm font-medium text-foreground/90">
+                  Projects
+                </span>
+                <span className="text-sm font-medium text-card-title">
+                  {subscriptionData.current_project_count || 0} /{' '}
+                  {subscriptionData.project_limit || '∞'}
+                </span>
               </div>
             </div>
           </div>
@@ -149,8 +161,8 @@ export default function AccountBillingStatus({ accountId, returnUrl }: Props) {
         </>
       ) : (
         <>
-          <div className="mb-6">
-            <div className="rounded-lg border bg-background p-4 gap-4">
+          <div className="mb-6 space-y-3">
+            <div className="rounded-lg border bg-background p-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-foreground/90">
                   Current Plan
@@ -159,7 +171,9 @@ export default function AccountBillingStatus({ accountId, returnUrl }: Props) {
                   Free
                 </span>
               </div>
+            </div>
 
+            <div className="rounded-lg border bg-background p-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-foreground/90">
                   Agent Usage This Month
@@ -167,6 +181,18 @@ export default function AccountBillingStatus({ accountId, returnUrl }: Props) {
                 <span className="text-sm font-medium text-card-title">
                   ${subscriptionData?.current_usage?.toFixed(2) || '0'} /{' '}
                   ${subscriptionData?.cost_limit || '0'}
+                </span>
+              </div>
+            </div>
+            
+            <div className="rounded-lg border bg-background p-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-foreground/90">
+                  Projects
+                </span>
+                <span className="text-sm font-medium text-card-title">
+                  {subscriptionData?.current_project_count || 0} /{' '}
+                  {subscriptionData?.project_limit || '3'}
                 </span>
               </div>
             </div>
