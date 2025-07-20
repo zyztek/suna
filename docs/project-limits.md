@@ -11,13 +11,7 @@ The project limits feature ensures that users on free accounts have a reasonable
 | Subscription Tier | Project Limit | Description |
 |-------------------|---------------|-------------|
 | Free | 3 projects | Basic tier for new users |
-| Tier 2 ($20/month) | 10 projects | Entry-level paid tier |
-| Tier 6 ($50/month) | 25 projects | Mid-tier plan |
-| Tier 12 ($100/month) | 50 projects | Professional tier |
-| Tier 25 ($200/month) | 100 projects | Business tier |
-| Tier 50 ($400/month) | 200 projects | Enterprise tier |
-| Tier 125 ($800/month) | 500 projects | Large enterprise |
-| Tier 200 ($1000/month) | 1000 projects | Maximum tier |
+| All Paid Tiers | 100,000 projects | Unlimited for practical purposes |
 
 ## Implementation Details
 
