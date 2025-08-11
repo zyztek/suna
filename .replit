@@ -1,0 +1,8 @@
+modules = ["nodejs-20", "python-3.12", "web", "docker", "nix", "gcloud", "bash"]
+run = "git clone https://github.com/kortix-ai/suna.git && cd suna && python setup.py && python start.py"
+
+[nix]
+channel = "stable-25_05"
+
+[deployment]
+run = ["sh", "-c", "git clone https://github.com/kortix-ai/suna.git && cd suna && python setup.py && python start.py"]
