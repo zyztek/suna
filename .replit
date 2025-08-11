@@ -5,4 +5,5 @@ run = "git clone https://github.com/kortix-ai/suna.git && cd suna && python setu
 channel = "stable-25_05"
 
 [deployment]
-run = ["sh", "-c", "git clone https://github.com/kortix-ai/suna.git && cd suna && python setup.py && python start.py"]
+run = ["sh", "-c", "cd backend && python -m uvicorn api:app --host 0.0.0.0 --port 5000"]
+build = ["sh", "-c", "cd frontend && npm install && npm run build"]
