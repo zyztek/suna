@@ -5,5 +5,25 @@ run = "git clone https://github.com/kortix-ai/suna.git && cd suna && python setu
 channel = "stable-25_05"
 
 [deployment]
-run = ["sh", "-c", "cd backend && python -m uvicorn api:app --host 0.0.0.0 --port 5000"]
+run = ["sh", "-c", "./deploy.sh"]
 build = ["sh", "-c", "cd frontend && npm install && npm run build"]
+
+[workflows]
+runButton = "Run"
+
+[[workflows.workflow]]
+name = "Run"
+author = 43101684
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "rm -rf suna"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git clone https://github.com/kortix-ai/suna.git"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd suna && python setup.py && python start.py"
